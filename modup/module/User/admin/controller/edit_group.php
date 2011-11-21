@@ -10,11 +10,19 @@ if (!User::perm('view groups'))
 Admin::set('title', 'Edit Group');
 Admin::set('header', 'Edit Group');
 
-$gt = Doctrine::getTable('UserGroup');
-$group = $gt->find(URI_PART_4);
-if ($group === FALSE)
+if (!defined('URI_PART_4'))
 {
-    header('Location: /admin/');
+    Admin::notify(Admin::TYPE_ERROR, "Invalid group");
+    header('Location: /admin/module/User/groups/');
+    exit;
+}
+
+$ugc = MonDB::selectCollection('user_group');
+$group = $ugc->findOne(array('name' => URI_PART_4));
+if (is_null($group))
+{
+    Admin::notify(Admin::TYPE_ERROR, "That group does not exist");
+    header('Location: /admin/module/User/groups/');
     exit;
 }
 // {{{ layout
@@ -22,10 +30,10 @@ $layout = new Field();
 $layout->add_layout(
     array(
         'field' => Field::layout('text'),
-        'name' => 'name',
+        'name' => 'nice_name',
         'type' => 'text',
         'value' => array(
-            'data' => $group->name
+            'data' => $group['nice_name'],
         )
     )
 );
@@ -44,14 +52,14 @@ foreach (User::permissions() as $mod => $perms)
                     'checkbox',
                     array(
                         'data' => array(
-                            'options' => $perm
+                            'options' => $perm,
                         )
                     )
                 ),
                 'name' => $mod.'_'.$perm_group,
                 'type' => 'checkbox',
                 'value' => array(
-                    'data' => $group->permission
+                    'data' => $group['permission'],
                 )
             )
         );
@@ -69,20 +77,26 @@ $layout->add_layout(
 //{{{ form submitted
 if (isset($_POST['form']))
 {
+    $success = FALSE;
     $gpost = $layout->acts('post', $_POST['group']);
-    $layout->merge($_POST['group']);
-    $gpost['permission'] = array();
+    $new_data['permission'] = array();
     foreach ($perm_mods as $mod => $groups)
     {
         foreach ($groups as $perm_group)
         {
-            $gpost['permission'] = array_merge($gpost['permission'], $gpost[$mod.'_'.$perm_group]);
+            $new_data['permission'] = array_merge($new_data['permission'], $gpost[$mod.'_'.$perm_group]);
         }
     }
-    $group->merge($gpost);
-    if ($group->isValid())
+    // $success = $ugc->update(array('_id' => $group['_id']), array('$set' => $new_data), array('safe' => TRUE));
+    $success = $ugc->update(array('_id' => $group['_id']), array('$set' => $new_data));
+    if ($success)
     {
-        $group->save();
+        Admin::notify(Admin::TYPE_SUCCESS, 'Group successfully updated');
+        $layout->merge($_POST['group']);
+    }
+    else
+    {
+        Admin::notify(Admin::TYPE_ERROR, 'There was a problem updating the group');
     }
 }
 
@@ -97,7 +111,7 @@ $rows[] = array(
     'label' => array(
         'text' => 'Name'
     ),
-    'fields' => $layout->get_layout('name'),
+    'fields' => $layout->get_layout('nice_name'),
 );
 $form->add_group(
     array(

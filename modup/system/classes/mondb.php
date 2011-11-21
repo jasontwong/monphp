@@ -23,7 +23,7 @@ class MonDB
         {
             return call_user_func_array(array($this->db, $name), $arguments);
         }
-        throw new Exception('MongoDB function does not exist');
+        throw new MonDBException('That method does not exist');
     }
     // }}}
     // {{{ public static function __callStatic ($name, $arguments)
@@ -35,9 +35,19 @@ class MonDB
         {
             return call_user_func_array(array($db, $name), $arguments);
         }
-        throw new Exception('MongoDB function does not exist');
+        throw new MonDBException('That method does not exist');
     }
     // }}}
+    // {{{ public function __get ($name)
+    public function __get ($name)
+    {
+        return $this->db->$name;
+    }
+    // }}}
+}
+
+class MonDBException extends Exception
+{
 }
 
 ?>

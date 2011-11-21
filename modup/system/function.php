@@ -24,25 +24,6 @@ function ake($key, $array)
 }
 
 //}}}
-//{{{ function array_append($array, $values)
-/**
- * Appends an array with the values of another
- * The values of the second array will be tacked on to the end of the first,
- * which will result in the loss of the keys.
- * @param array $array
- * @param array $values
- * @return array
- */
-function array_append($array, $values)
-{
-    foreach ($values as $value)
-    {
-        $array[] = $value;
-    }
-    return $array;
-}
-
-//}}}
 //{{{ function array_clean($array)
 /**
  * Goes one level into array and removes empty elements
@@ -121,6 +102,44 @@ function array_drill($array)
 }
 
 //}}}
+//{{{ function array_join($master)
+/**
+ * This is similar to array_merge with the exception that
+ * only the keys of the master array will be returned
+ */
+function array_join($master)
+{
+    return array_intersect_key(call_user_func_array('array_merge', func_get_args()), $master);
+}
+
+//}}}
+// {{{ function array_to_xml($root_element_name, $array)
+/**
+ * Return associative array as XML string
+ *
+ * @param string $root_element_name     top level xml name
+ * @param string $array                 associative array needed to turned into XML
+ */
+function array_to_xml($root_element_name, $array)
+{
+    $xml = new SimpleXMLElement("<{$root_element_name}></{$root_element_name}>");
+    $f = create_function('$f,$c,$a','
+            foreach ($a as $k => $v) 
+            {
+                if (is_array($v)) 
+                {
+                    $ch = $c->addChild($k);
+                    $f($f,$ch,$v);
+                } 
+                else 
+                {
+                    $c->addChild($k,$v);
+                }
+            }');
+    $f($f,$xml,$array);
+    return $xml->asXML();
+} 
+// }}}
 //{{{ function available_filename($filename)
 /**
  * Get an available filename
@@ -324,6 +343,28 @@ function file_extension($filename)
 }
 
 //}}}
+//{{{ function file_mime_type($filename)
+/**
+ * Get the mime_type of the file
+ * @param string $filename
+ * @return string
+ */
+function file_mime_type($filename)
+{
+    if (version_compare(PHP_VERSION, '5.3.0', '>='))
+    {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE); // return mime type ala mimetype extension
+        $mime = finfo_file($finfo, $filename);
+        finfo_close($finfo);
+    }
+    else
+    {
+        $mime = mime_content_type($filename);
+    }
+    return $mime;
+}
+
+//}}}
 //{{{ function filter_extensions($c)
 /**
  * Callback for array_filter to get all Extension classes
@@ -333,13 +374,38 @@ function filter_extensions($c)
     return substr($c, 0, 9) === 'Extension' && strlen($c) > 9;
 }
 //}}}
-//{{{ function is_slug($slug)
-function is_slug($slug)
+// {{{ function hex_to_rgb($color)
+/**
+ *
+ */
+function hex_to_rgb($color)
 {
-    return preg_match('/^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$/', $slug);
+    if ($color[0] == '#')
+    {
+        $color = substr($color, 1);
+    }
+
+    if (strlen($color) == 6)
+    {
+        list($r, $g, $b) = array($color[0].$color[1],
+                                 $color[2].$color[3],
+                                 $color[4].$color[5]);
+    }
+    elseif (strlen($color) == 3)
+    {
+        list($r, $g, $b) = array($color[0].$color[0], $color[1].$color[1], $color[2].$color[2]);
+    }
+    else
+    {
+        return false;
+    }
+
+    $r = hexdec($r); $g = hexdec($g); $b = hexdec($b);
+
+    return array($r, $g, $b);
 }
 
-//}}}
+// }}}
 //{{{ function hsc($string, $ent = ENT_QUOTES, $enc = 'UTF-8')
 /**
  * shortcut for htmlspecialchars()
@@ -348,6 +414,63 @@ function hsc($string, $ent = ENT_QUOTES, $enc = 'UTF-8')
 {
     return htmlspecialchars($string, $ent, $enc);
 }
+//}}}
+//{{{ function is_email($email)
+// follows ~99.99% of RFC 2822 according to http://www.regular-expressions.info/email.html
+function is_email($email)
+{
+    $regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
+    $result = preg_match($regex, $email);
+    return (bool)$result;
+}
+//}}}
+//{{{ function is_mobile()
+// adapted from http://code.google.com/p/php-mobile-detect/
+function is_mobile()
+{
+    static $mobility = NULL;
+
+    if (is_null($mobility))
+    {
+        $mobility = FALSE;
+        $devices = array(
+            "android"       => "android",
+            "blackberry"    => "blackberry",
+            "iphone"        => "(iphone|ipod)",
+            "opera"         => "opera mini",
+            "palm"          => "(avantgo|blazer|elaine|hiptop|palm|plucker|xiino)",
+            "windows"       => "windows ce; (iemobile|ppc|smartphone)",
+            "generic"       => "(kindle|mobile|mmp|midp|o2|pda|pocket|psp|symbian|smartphone|treo|up.browser|up.link|vodafone|wap)"
+        );
+
+        $userAgent = &$_SERVER['HTTP_USER_AGENT'];
+        $accept = &$_SERVER['HTTP_ACCEPT'];
+
+        if ((isset($_SERVER['HTTP_X_WAP_PROFILE'])|| isset($_SERVER['HTTP_PROFILE'])) ||
+            (strpos($accept,'text/vnd.wap.wml') > 0 || strpos($accept,'application/vnd.wap.xhtml+xml') > 0))
+            {
+                $mobility = TRUE;
+            } 
+            else 
+            {
+                foreach ($devices as $device => $regexp) 
+                {
+                    if (!$mobility && preg_match("/" . $regexp . "/i", $userAgent))
+                    {
+                        $mobility = TRUE;
+                    }
+                }
+            }
+    }
+    return $mobility;
+}
+//}}}
+//{{{ function is_slug($slug)
+function is_slug($slug)
+{
+    return preg_match('/^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$/', $slug);
+}
+
 //}}}
 //{{{ function prepend_name($key, $name)
 /**
@@ -387,196 +510,6 @@ function random_string($length = 10, $base = 62)
 }
 
 //}}}
-//{{{ function rm_resource_dir($path, $rm_path = TRUE)
-/**
- * Recursively remove files and directories
- * @param string $path file path
- * @param boolean $rm_path remove path directory if TRUE
- * @return boolean
- */
-function rm_resource_dir($path, $rm_path = TRUE)
-{
-    if (is_dir($path))
-    {
-        $files = scandir($path);
-        if ($files !== FALSE)
-        {
-            foreach ($files as $file)
-            {
-                if (!($file === '.' || $file === '..'))
-                {
-                    if (!rm_resource_dir(rtrim($path,'/').'/'.$file))
-                    {
-                        unlink($path.'/'.$file);
-                    }
-                }
-            }
-        }
-        if ($rm_path)
-        {
-            rmdir($path);
-        }
-        return TRUE;
-    }
-    return FALSE;
-}
-
-//}}}
-//{{{ function slugify($name)
-function slugify($name)
-{
-    // Characters to process. All other characters will be dropped
-    $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKKLMNOPQRSTUVWXYZ-_ ';
-    // Characters to replace with hyphens
-    $hyphened = '-_ ';
-    $o = '';
-    $last_char = '';
-    $length = strlen($name);
-    for ($i = 0; $i < $length; ++$i)
-    {
-        $char = substr($name, $i, 1);
-        if (strpos($chars, $char) !== FALSE)
-        {
-            if (strpos($hyphened, $char) === FALSE)
-            {
-                $o .= $char;
-                $last_char = $char;
-            }
-            else
-            {
-                if ($last_char !== '-')
-                {
-                    $o .= '-';
-                    $last_char = '-';
-                }
-            }
-        }
-    }
-    return strtolower($o);
-}
-
-//}}}
-//{{{ function time_zones()
-/**
- * Returns an array of country named time zones
- */
-function time_zones()
-{
-    $zones = DateTimeZone::listIdentifiers();
-    $continents = array('Africa', 'America', 'Antarctica', 'Arctic', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian', 'Pacific');
-    $locations = array();
-    foreach ($zones as $zone)
-    {
-        $zone = explode('/', $zone);
-        if (in_array($zone[0], $continents) && isset($zone[1]) && $zone[1] !== '')
-        {
-            $locations[$zone[0]][$zone[0].'/'.$zone[1]] = str_replace('_', ' ', $zone[1]);
-        }
-    }
-    foreach ($locations as &$zones)
-    {
-        asort($zones);
-    }
-    return $locations;
-}
-
-//}}}
-//{{{ function test_db_settings($db)
-function test_db_settings($db)
-{
-    try
-    {
-        foreach ($db['options'] as $k => $v)
-        {
-            if (!strlen($v))
-            {
-                unset($db['options'][$k]);
-            }
-        }
-        $mondb = new Mongo($db['server'], $db['options']);
-        unset($mondb);
-        return TRUE;
-    }
-    catch (Exception $e)
-    {
-        return FALSE;
-    }
-}
-
-//}}}
-//{{{ function place_ids($rows)
-/**
- * Converts doctrine rows to another array with ids becoming the array keys
- * 
- * @param array $rows database rows with id key
- * @return array
- */
-function place_ids($rows)
-{
-    $result = array();
-    foreach ($rows as $row)
-    {
-        $result[$row['id']] = $row;
-    }
-    return $result;
-}
-//}}}
-// {{{ function word_split($str, $words = 15, $random = FALSE)
-/**
- *
- * @param string $str The text string to split
- * @param integer $words The number of words to extract. Defaults to 15
- */
-function word_split($str, $words = 15, $random = FALSE)
-{
-    if ($random)
-    {
-	    $arr = preg_split("/[\s]+/", $str);
-        $max_start = count($arr) - $words;
-        $start = mt_rand(0, $max_start);
-    }
-    else
-    {
-	    $arr = preg_split("/[\s]+/", $str, $words + 1);
-        $start = 0;
-    }
-	$arr = array_slice($arr, $start, $words);
-	return implode(' ',$arr);
-}
-
-// }}}
-// {{{ function hex_to_rgb($color)
-/**
- *
- */
-function hex_to_rgb($color)
-{
-    if ($color[0] == '#')
-    {
-        $color = substr($color, 1);
-    }
-
-    if (strlen($color) == 6)
-    {
-        list($r, $g, $b) = array($color[0].$color[1],
-                                 $color[2].$color[3],
-                                 $color[4].$color[5]);
-    }
-    elseif (strlen($color) == 3)
-    {
-        list($r, $g, $b) = array($color[0].$color[0], $color[1].$color[1], $color[2].$color[2]);
-    }
-    else
-    {
-        return false;
-    }
-
-    $r = hexdec($r); $g = hexdec($g); $b = hexdec($b);
-
-    return array($r, $g, $b);
-}
-
-// }}}
 // {{{ function rgb_to_hex($r, $g=-1, $b=-1)
 /**
  *
@@ -622,66 +555,38 @@ function rgb_to_yuv($r, $g=-1, $b=-1)
 }
 
 // }}}
-//{{{ function is_mobile()
-// adapted from http://code.google.com/p/php-mobile-detect/
-function is_mobile()
+//{{{ function rm_resource_dir($path, $rm_path = TRUE)
+/**
+ * Recursively remove files and directories
+ * @param string $path file path
+ * @param boolean $rm_path remove path directory if TRUE
+ * @return boolean
+ */
+function rm_resource_dir($path, $rm_path = TRUE)
 {
-    static $mobility = NULL;
-
-    if (is_null($mobility))
+    if (is_dir($path))
     {
-        $mobility = FALSE;
-        $devices = array(
-            "android"       => "android",
-            "blackberry"    => "blackberry",
-            "iphone"        => "(iphone|ipod)",
-            "opera"         => "opera mini",
-            "palm"          => "(avantgo|blazer|elaine|hiptop|palm|plucker|xiino)",
-            "windows"       => "windows ce; (iemobile|ppc|smartphone)",
-            "generic"       => "(kindle|mobile|mmp|midp|o2|pda|pocket|psp|symbian|smartphone|treo|up.browser|up.link|vodafone|wap)"
-        );
-
-        $userAgent = &$_SERVER['HTTP_USER_AGENT'];
-        $accept = &$_SERVER['HTTP_ACCEPT'];
-
-        if ((isset($_SERVER['HTTP_X_WAP_PROFILE'])|| isset($_SERVER['HTTP_PROFILE'])) ||
-            (strpos($accept,'text/vnd.wap.wml') > 0 || strpos($accept,'application/vnd.wap.xhtml+xml') > 0))
+        $files = scandir($path);
+        if ($files !== FALSE)
+        {
+            foreach ($files as $file)
             {
-                $mobility = TRUE;
-            } 
-            else 
-            {
-                foreach ($devices as $device => $regexp) 
+                if (!($file === '.' || $file === '..'))
                 {
-                    if (!$mobility && preg_match("/" . $regexp . "/i", $userAgent))
+                    if (!rm_resource_dir(rtrim($path,'/').'/'.$file))
                     {
-                        $mobility = TRUE;
+                        unlink($path.'/'.$file);
                     }
                 }
             }
+        }
+        if ($rm_path)
+        {
+            rmdir($path);
+        }
+        return TRUE;
     }
-    return $mobility;
-}
-//}}}
-//{{{ function file_mime_type($filename)
-/**
- * Get the mime_type of the file
- * @param string $filename
- * @return string
- */
-function file_mime_type($filename)
-{
-    if (version_compare(PHP_VERSION, '5.3.0', '>='))
-    {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE); // return mime type ala mimetype extension
-        $mime = finfo_file($finfo, $filename);
-        finfo_close($finfo);
-    }
-    else
-    {
-        $mime = mime_content_type($filename);
-    }
-    return $mime;
+    return FALSE;
 }
 
 //}}}
@@ -722,41 +627,105 @@ function size_readable($size, $max = null, $system = 'si', $retstring = '%01.2f 
     return sprintf($retstring, $size, $sys['prefix'][$i]);
 }
 // }}}
-// {{{ function array_to_xml($root_element_name, $array)
-/**
- * Return associative array as XML string
- *
- * @param string $root_element_name     top level xml name
- * @param string $array                 associative array needed to turned into XML
- */
-function array_to_xml($root_element_name, $array)
+//{{{ function slugify($name, $replacement = '-')
+function slugify($name, $replacement = '-')
 {
-    $xml = new SimpleXMLElement("<{$root_element_name}></{$root_element_name}>");
-    $f = create_function('$f,$c,$a','
-            foreach ($a as $k => $v) 
+    // Characters to process. All other characters will be dropped
+    $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKKLMNOPQRSTUVWXYZ-_ ';
+    // Characters to replace with hyphens
+    $hyphened = '-_ ';
+    $o = '';
+    $last_char = '';
+    $length = strlen($name);
+    for ($i = 0; $i < $length; ++$i)
+    {
+        $char = substr($name, $i, 1);
+        if (strpos($chars, $char) !== FALSE)
+        {
+            if (strpos($hyphened, $char) === FALSE)
             {
-                if (is_array($v)) 
+                $o .= $char;
+                $last_char = $char;
+            }
+            else
+            {
+                if ($last_char !== $replacement)
                 {
-                    $ch = $c->addChild($k);
-                    $f($f,$ch,$v);
-                } 
-                else 
-                {
-                    $c->addChild($k,$v);
+                    $o .= $replacement;
+                    $last_char = $replacement;
                 }
-            }');
-    $f($f,$xml,$array);
-    return $xml->asXML();
-} 
-// }}}
-//{{{ function is_email($email)
-// follows ~99.99% of RFC 2822 according to http://www.regular-expressions.info/email.html
-function is_email($email)
-{
-    $regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
-    $result = preg_match($regex, $email);
-    return (bool)$result;
+            }
+        }
+    }
+    return strtolower($o);
 }
+
 //}}}
+//{{{ function test_db_settings($db)
+function test_db_settings($db)
+{
+    try
+    {
+        $db['options'] = array_clean($db['options']);
+        $mondb = new Mongo($db['server'], $db['options']);
+        unset($mondb);
+        return TRUE;
+    }
+    catch (Exception $e)
+    {
+        return FALSE;
+    }
+}
+
+//}}}
+//{{{ function time_zones()
+/**
+ * Returns an array of country named time zones
+ */
+function time_zones()
+{
+    $zones = DateTimeZone::listIdentifiers();
+    $continents = array('Africa', 'America', 'Antarctica', 'Arctic', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian', 'Pacific');
+    $locations = array();
+    foreach ($zones as $zone)
+    {
+        $zone = explode('/', $zone);
+        if (in_array($zone[0], $continents) && isset($zone[1]) && $zone[1] !== '')
+        {
+            $locations[$zone[0]][$zone[0].'/'.$zone[1]] = str_replace('_', ' ', $zone[1]);
+        }
+    }
+    foreach ($locations as &$zones)
+    {
+        asort($zones);
+    }
+    return $locations;
+}
+
+//}}}
+// {{{ function word_split($str, $words = 15, $random = FALSE)
+/**
+ *
+ * @param string $str The text string to split
+ * @param integer $words The number of words to extract. Defaults to 15
+ */
+function word_split($str, $words = 15, $random = FALSE)
+{
+    if ($random)
+    {
+	    $arr = preg_split("/[\s]+/", $str);
+        $max_start = count($arr) - $words;
+        $start = mt_rand(0, $max_start);
+    }
+    else
+    {
+	    $arr = preg_split("/[\s]+/", $str, $words + 1);
+        $start = 0;
+    }
+	$arr = array_slice($arr, $start, $words);
+	return implode(' ',$arr);
+}
+
+// }}}
 
 ?>

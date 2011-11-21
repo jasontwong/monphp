@@ -16,21 +16,14 @@ $layout->add_layout(
     array(
         'field' => Field::layout('text'),
         'name' => 'name',
-        'type' => 'text'
+        'type' => 'text',
     )
 );
 $layout->add_layout(
     array(
         'field' => Field::layout('text'),
         'name' => 'nice_name',
-        'type' => 'text'
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => Field::layout('hidden'),
-        'name' => 'id',
-        'type' => 'hidden',
+        'type' => 'text',
     )
 );
 $layout->add_layout(
@@ -42,17 +35,9 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('password_confirm_sha1'),
+        'field' => Field::layout('password_confirm'),
         'name' => 'pass',
-        'type' => 'password_confirm_sha1'
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => Field::layout('hidden'),
-        'name' => 'hidden',
-        'type' => 'hidden',
-        'hidden' => array('data')
+        'type' => 'password_confirm',
     )
 );
 foreach (User::permissions() as $mod => $perms)
@@ -70,7 +55,7 @@ foreach (User::permissions() as $mod => $perms)
                     'checkbox',
                     array(
                         'data' => array(
-                            'options' => $perm
+                            'options' => $perm,
                         )
                     )
                 ),
@@ -81,12 +66,9 @@ foreach (User::permissions() as $mod => $perms)
     }
 }
 $groups = array();
-foreach (User::find_groups() as $id => $group)
+foreach (User::find_groups() as $name => $group)
 {
-    if (is_numeric($id))
-    {
-        $groups[$id] = $group['name'];
-    }
+    $groups[$name] = $group['nice_name'];
 }
 $layout->add_layout(
     array(
@@ -94,7 +76,7 @@ $layout->add_layout(
             'checkbox',
             array(
                 'data' => array(
-                    'options' => $groups
+                    'options' => $groups,
                 )
             )
         ),
@@ -108,7 +90,7 @@ $layout->add_layout(
             'submit_reset',
             array(
                 'submit' => array(
-                    'text' => 'Save'
+                    'text' => 'Save',
                 )
             )
         ),
@@ -132,6 +114,17 @@ if (isset($_POST['form']))
     }
     if (strlen($upost['pass']))
     {
+        $uac = MonDB::selectCollection('user_account');
+        $user = array();
+        $user['name'] = User::ID_ADMIN;
+        $user['nice_name'] = User::USER_ADMIN;
+        $user['salt'] = random_string(5);
+        $user['pass'] = sha1($user['salt'].$data['password']);
+        $user['email'] = $data['email'];
+        $user['permission'] = array('admin');
+        $user['group'] = array($group);
+        $user['group_ids'] = array($group['_id']);
+        $uac->insert($user, array('safe' => TRUE));
         $user = new UserAccount;
         $user->merge($upost);
         $user->save();

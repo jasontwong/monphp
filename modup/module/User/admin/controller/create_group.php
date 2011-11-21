@@ -14,7 +14,7 @@ $layout = new Field();
 $layout->add_layout(
     array(
         'field' => Field::layout('text'),
-        'name' => 'name',
+        'name' => 'nice_name',
         'type' => 'text'
     )
 );
@@ -58,19 +58,19 @@ if (isset($_POST['form']))
     $gpost = $layout->acts('post', $_POST['group']);
     $layout->merge($_POST['group']);
     $gpost['permission'] = array();
-    foreach ($perm_mods as $mod => $groups)
+    foreach ($perm_mods as $mod => &$groups)
     {
-        foreach ($groups as $group)
+        foreach ($groups as &$group)
         {
             $gpost['permission'] = array_merge($gpost['permission'], $gpost[$mod.'_'.$group]);
         }
     }
-    if (strlen($gpost['name']))
+    if (strlen($gpost['nice_name']))
     {
-        $group = new UserGroup;
-        $group->merge($gpost);
-        $group->save();
-        header('Location: /admin/module/User/edit_group/'.$group->id.'/');
+        $ugc = MonDB::selectCollection('user_group');
+        $gpost['name'] = slugify($gpost['nice_name']);
+        $ugc->save($gpost, array('safe' => TRUE));
+        header('Location: /admin/module/User/edit_group/' . $gpost['name'] . '/');
         exit;
     }
 }
@@ -86,7 +86,7 @@ $rows[] = array(
     'label' => array(
         'text' => 'Name'
     ),
-    'fields' => $layout->get_layout('name'),
+    'fields' => $layout->get_layout('nice_name'),
 );
 $form->add_group(
     array(

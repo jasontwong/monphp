@@ -121,7 +121,7 @@ class User
                 $info['group_ids'][] = $group['_id'];
             }
             $user = array_merge($user, $info);
-            $uac->save($user);
+            $uac->save($user, array('safe' => TRUE));
         }
     }
 
@@ -164,52 +164,49 @@ class User
      */
     public function hook_install_form_process($data, $extra)
     {
-        $hash = deka(FALSE, $extra, 'hashed')
-            ? $data['password'] 
-            : sha1($data['password']);
-        $uad = new UserAccount();
-        $uad->id = User::ID_ADMIN;
-        $uad->name = User::USER_ADMIN;
-        $uad->pass = $hash;
-        $uad->email = $data['email'];
-        $uad->permission = array('admin');
-        $uad->save();
+        $uac = MonDB::selectCollection('user_account');
+        $ugc = MonDB::selectCollection('user_group');
 
-        $gad = new UserGroup();
-        $gad->name = User::GROUP_ADMIN;
-        $gad->permission = array('admin');
-        $gad->save();
+        $group = array();
+        $group['name'] = User::ID_ADMIN;
+        $group['nice_name'] = User::GROUP_ADMIN;
+        $group['permission'] = array('admin');
+        $ugc->insert($group, array('safe' => TRUE));
 
-        $guad = new UserGrouping();
-        $guad->user_id = $uad->id;
-        $guad->group_id = $gad->id;
-        $guad->save();
+        $user = array();
+        $user['name'] = User::ID_ADMIN;
+        $user['nice_name'] = User::USER_ADMIN;
+        $user['salt'] = random_string(5);
+        $user['pass'] = sha1($user['salt'].$data['password']);
+        $user['email'] = $data['email'];
+        $user['permission'] = array('admin');
+        $user['group'] = array($group);
+        $user['group_ids'] = array($group['_id']);
+        $uac->insert($user, array('safe' => TRUE));
 
-        $gm = new UserGroup();
-        $gm->name = 'member';
-        $gm->permission = array('edit self');
-        $gm->save();
+        $group = array();
+        $group['name'] = 'member';
+        $group['nice_name'] = 'Member';
+        $group['permission'] = array('edit_self');
+        $ugc->insert($group, array('safe' => TRUE));
 
-        $uan = new UserAccount();
-        $uan->id = User::ID_ANONYMOUS;
-        $uan->name = User::USER_ANONYMOUS;
-        $uan->pass = sha1(random_string(40));
-        $uan->email = '';
-        $uan->permission = array();
-        $uan->save();
+        $group = array();
+        $group['name'] = 'anonymous';
+        $group['nice_name'] = 'Anonymous';
+        $group['permission'] = array();
+        $ugc->insert($group, array('safe' => TRUE));
 
-        $gan = new UserGroup();
-        $gan->name = User::GROUP_ANONYMOUS;
-        $gan->permission = array();
-        $gan->save();
-
-        $guan = new UserGrouping();
-        $guan->user_id = $uan->id;
-        $guan->group_id = $gan->id;
-        $guan->save();
-
+        $user = array();
+        $user['name'] = User::ID_ANONYMOUS;
+        $user['nice_name'] = User::USER_ANONYMOUS;
+        $user['salt'] = random_string(5);
+        $user['pass'] = sha1($user['salt'].random_string(40));
+        $user['email'] = '';
+        $user['permission'] = array();
+        $user['group'] = array($group);
+        $user['group_ids'] = array($group['_id']);
+        $uac->insert($user, array('safe' => TRUE));
     }
-
     //}}}
     //{{{ public function hook_user_perm()
     public function hook_user_perm()
@@ -264,11 +261,6 @@ class User
     public function hook_admin_js_header()
     {
         $js = array();
-        if (strpos(URI_PATH, '/admin/module/User/edit_user/') === 0 || 
-            URI_PATH === '/admin/login/')
-            {
-                $js[] = '/file/module/User/sha1.js';
-            }
         return $js;
     }
 
@@ -287,9 +279,9 @@ class User
                 'type' => 'text'
             ),
             'pass' => array(
-                'field' => Field::layout('password_sha1'),
+                'field' => Field::layout('password'),
                 'name' => 'pass',
-                'type' => 'password_sha1'
+                'type' => 'password'
             )
         );
         $group = array( 
@@ -318,12 +310,12 @@ class User
         $account = $this->is_account($data['name'], $data['pass']);
         if ($account)
         {
-            $_SESSION['user']['name'] = $account['name'];
-            $_SESSION['user']['pass'] = $account['pass'];
             $uac = MonDB::selectCollection('user_account');
-            $user = $uac->findOne(array('name' => $account['name']));
-            $user['logged_in'] = time();
+            $user = $uac->findOne(array('name' => $data['name']));
+            $user['logged_in'] = new MongoDate();
             $uac->save($user);
+            $_SESSION['user']['name'] = $user['name'];
+            $_SESSION['user']['pass'] = $user['pass'];
             $results = array(
                 'success' => TRUE,
             );
@@ -360,7 +352,7 @@ class User
         if (User::perm('edit self'))
         {
             $links = array_merge($links, array(
-                '<a href="/admin/module/User/edit_user/'.self::$user->user['id'].'/">Edit Your Account</a>',
+                '<a href="/admin/module/User/edit_user/'.self::$user->user['name'].'/">Edit Your Account</a>',
             ));
         }
         if (User::perm('view users'))
@@ -617,10 +609,7 @@ class User
         $user = MonDB::selectCollection('user_account')->findOne(array('name' => $name));
         if (!is_null($user) && $user['pass'] === sha1($user['salt'].$pass))
         {
-            return array(
-                'name' => $user->name,
-                'pass' => $user->pass
-            );
+            return TRUE;
         }
         return FALSE;
     }
@@ -1314,7 +1303,6 @@ class UserInfo
             'name' => User::USER_ANONYMOUS,
             'salt' => random_string(5),
             'email' => '',
-            'joined' => '',
             'permission' => array(),
             'setting' => array()
         );
@@ -1332,7 +1320,7 @@ class UserInfo
             $ugc = MonDB::selectCollection('user_account');
             $user = $ugc->findOne(array('_id' => $info['_id']));
             $user = array_merge($user, $info);
-            $ugc->save($user);
+            $ugc->save($user, array('safe' => TRUE));
         }
     }
 

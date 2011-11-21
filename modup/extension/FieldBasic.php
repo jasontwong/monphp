@@ -268,7 +268,8 @@ class ExtensionFieldBasic
             'password' => array(
                 'attr' => array(
                     'class' => 'password',
-                    'type' => 'password'
+                    'type' => 'password',
+                    'autocomplete' => 'off',
                 ),
                 'element' => Field::ELEMENT_INPUT,
             ),
@@ -276,7 +277,8 @@ class ExtensionFieldBasic
                 'label' => 'Confirm password',
                 'attr' => array(
                     'class' => 'password password_confirm',
-                    'type' => 'password'
+                    'type' => 'password',
+                    'autocomplete' => 'off',
                 ),
                 'element' => Field::ELEMENT_INPUT,
             )
