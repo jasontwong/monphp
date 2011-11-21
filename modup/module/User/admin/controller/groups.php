@@ -10,9 +10,7 @@ if (!User::perm('view groups'))
 Admin::set('title', 'User Groups');
 Admin::set('header', 'User Groups');
 
-$groups = Doctrine_Query::create()
-          ->select('id, name')
-          ->from('UserGroup');
+$groups = iterator_to_array(MonDB::selectCollection('user_group')->find());
 /*
 if (!User::check_group(User::GROUP_ADMIN))
 {

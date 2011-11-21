@@ -2,7 +2,7 @@
 
 if (!User::perm('edit users'))
 {
-    if (User::i('id') === URI_PART_4 && (!User::perm('edit self')))
+    if (User::i('name') === URI_PART_4 && (!User::perm('edit self')))
     {
         Admin::set('title', 'Permission Denied');
         Admin::set('header', 'Permission Denied');
@@ -13,22 +13,28 @@ if (!User::perm('edit users'))
 Admin::set('title', 'Edit Account');
 Admin::set('header', 'Edit Account');
 
-if (User::i('id') === URI_PART_4)
+if (!defined('URI_PART_4'))
 {
-    $edit_self = TRUE;
-    $ui = new UserInfo(User::i('name'));
-    $user = $ui->user;
-    $settings = User::setting();
+    Admin::notify(Admin::TYPE_ERROR, "Invalid user");
+    header('Location: /admin/module/User/users/');
+    exit;
 }
-else
+
+$uac = MonDB::selectCollection('user_account');
+$ua = $uac->findOne(array('name' => URI_PART_4));
+
+if (is_null($ua))
 {
-    $edit_self = FALSE;
-    $uat = Doctrine::getTable('UserAccount');
-    $ua = $uat->find(URI_PART_4);
-    $ui = new UserInfo($ua->name);
-    $user = $ui->user;
-    $ua->free();
+    Admin::notify(Admin::TYPE_ERROR, "That user does not exist");
+    header('Location: /admin/module/User/users/');
+    exit;
 }
+
+$edit_self = User::i('name') === URI_PART_4;
+$ui = new UserInfo($ua['name']);
+$user = $ui->user;
+$settings = User::setting();
+
 //{{{ layout
 $layout = new Field();
 $layout->add_layout(
@@ -53,16 +59,6 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('hidden'),
-        'name' => 'id',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => $user['id']
-        )
-    )
-);
-$layout->add_layout(
-    array(
         'field' => Field::layout('text'),
         'name' => 'email',
         'type' => 'text',
@@ -73,9 +69,9 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('password_confirm_sha1'),
-        'name' => 'pass',
-        'type' => 'password_confirm_sha1'
+        'field' => Field::layout('password_confirm'),
+        'name' => 'password',
+        'type' => 'password_confirm'
     )
 );
 foreach (User::permissions() as $mod => $perms)
@@ -107,16 +103,13 @@ foreach (User::permissions() as $mod => $perms)
     }
 }
 $groups = array();
-foreach (User::find_groups() as $id => $group)
+foreach (User::find_groups() as $name => $group)
 {
-    if (is_numeric($id))
-    {
-        $groups[$id] = $group['name'];
-    }
+    $groups[$name] = $group['name'];
 }
 foreach ($user['group'] as &$ugroup)
 {
-    $ugroup = $ugroup['id'];
+    $ugroup = $ugroup['name'];
 }
 $layout->add_layout(
     array(
@@ -171,8 +164,7 @@ if ($edit_self && is_array(deka('',$settings,'admin','quicklinks')))
 if (isset($_POST['form']))
 {
     $upost = $layout->acts('post', $_POST['user']);
-    unset($_POST['user']['pass']['password'], $_POST['user']['pass']['password_confirm']);
-    $layout->merge($_POST['user']);
+    unset($_POST['user']['password']['password'], $_POST['user']['password']['password_confirm']);
     $upost['permission'] = array();
     foreach ($perm_mods as $mod => $groups)
     {
@@ -187,6 +179,7 @@ if (isset($_POST['form']))
     //{{{ current user
     if ($edit_self)
     {
+        $layout->merge($_POST['user']);
         if (eka($_POST, 'settings', 'admin'))
         {
             $spost['admin'] = $layout->acts('post', $_POST['settings']['admin']);
@@ -221,20 +214,20 @@ if (isset($_POST['form']))
             User::update('permission', $upost['permission']);
         }
         $fields = array('email');
-        if (strlen($upost['pass']))
+        if (strlen($upost['password']))
         {
-            $fields[] = 'pass';
+            $fields[] = 'password';
         }
         foreach ($upost as $k => $v)
         {
             if (in_array($k, $fields))
             {
-                if ($k === 'pass')
+                if ($k === 'password')
                 {
                     if ($v)
                     {
                         $v = sha1($user['salt'].$v);
-                        User::update($k, $v);
+                        User::update('pass', $v);
                     }
                 }
                 else
@@ -249,12 +242,9 @@ if (isset($_POST['form']))
     //{{{ other user
     else
     {
-        $ugt = Doctrine::getTable('UserGrouping');
-        $ua = $uat->findOneById(URI_PART_4);
-        $groups = $ugt->findByUserId(URI_PART_4);
-        if (strlen($upost['pass']))
+        if (strlen($upost['password']))
         {
-            $upost['pass'] = sha1($user['salt'].$upost['pass']);
+            $upost['pass'] = sha1($user['salt'].$upost['password']);
         }
         else
         {
@@ -264,23 +254,29 @@ if (isset($_POST['form']))
         {
             unset($upost['permission']);
         }
-        $ua->merge($upost);
-        $ua->save();
-        if (User::has_perm('edit permissions'))
+        if (ake('groups', $upost))
         {
-            $groups->delete();
-            foreach ($upost['group'] as $i => $gid)
+            $groups = iterator_to_array(MonDB::selectCollection('user_group')->find(array('name' => array('$in' => $upost['groups']))));
+            $upost['group'] = array();
+            $upost['group_ids'] = array();
+            foreach ($groups as &$group)
             {
-                $group = new UserGrouping;
-                $group->user_id = $ua->id;
-                $group->group_id = $gid;
-                $group->save();
-                $group->free();
-                unset($group);
+                $upost['group'][] = $group;
+                $upost['group_ids'][] = $group['_id'];
             }
         }
-        $ua->free();
-        unset($ua);
+        $user = array_join($user, $upost);
+        unset($user['_id']);
+        $success = $uac->update(array('_id' => $ua['_id']), array('$set' => $user), array('safe' => TRUE));
+        if (deka(FALSE, $success, 'ok'))
+        {
+            Admin::notify(Admin::TYPE_SUCCESS, 'User successfully updated');
+            $layout->merge($_POST['user']);
+        }
+        else
+        {
+            Admin::notify(Admin::TYPE_ERROR, 'There was a problem updating the user');
+        }
     }
 
     //}}}
@@ -317,7 +313,7 @@ $rows[] = array(
     'label' => array(
         'text' => 'New Password'
     ),
-    'fields' => $layout->get_layout('pass'),
+    'fields' => $layout->get_layout('password'),
 );
 
 $form->add_group(

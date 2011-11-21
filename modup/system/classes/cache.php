@@ -41,10 +41,7 @@ class Cache
                 'data' => serialize($value),
                 'expire' => $time === 0 ? 0 : time() + $time,
             );
-            $cdc->update($query, array('$set' => $data), array(
-                'safe' => TRUE, 
-                'upsert' => TRUE,
-            ));
+            $cdc->update($query, array('$set' => $data), array('upsert' => TRUE));
             return TRUE;
         }
         catch (Exception $e)
@@ -162,7 +159,7 @@ class Cache
             $cdc = MonDB::selectCollection('cache_data');
             if ($seconds === 0)
             {
-                $cdc->remove($query, array('safe' => TRUE));
+                $cdc->remove($query);
             }
             else
             {
@@ -171,7 +168,7 @@ class Cache
                     'expire' => time() - 1,
                     'lockout' => time() + $seconds,
                 );
-                $return = $cdc->update($query, array('$set' => $data), array('safe' => TRUE));
+                $return = $cdc->update($query, array('$set' => $data));
                 if (is_null($return))
                 {
                     return self::REMOVE_ITEM_MISSING;
@@ -213,7 +210,7 @@ class Cache
             $cdc = MonDB::selectCollection('cache_data');
             if ($seconds === 0)
             {
-                $cdc->remove($query, array('safe' => TRUE));
+                $cdc->remove($query);
             }
             else
             {
@@ -222,10 +219,7 @@ class Cache
                     'expire' => time() - 1,
                     'lockout' => time() + $seconds,
                 );
-                $return = $cdc->update($query, array('$set' => $data), array(
-                    'safe' => TRUE, 
-                    'multiple' => TRUE,
-                ));
+                $return = $cdc->update($query, array('$set' => $data), array('multiple' => TRUE));
                 if (is_null($return))
                 {
                     return self::REMOVE_ITEM_MISSING;

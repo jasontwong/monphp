@@ -77,14 +77,14 @@ class Data
                         'data' => self::query($fp['type'], $fp['name']),
                         'autoload' => self::$autoload[$fp['type']][$fp['name']],
                     );
-                    $sdc->update(array('id' => $id), array('$set' => $data), array('safe' => TRUE));
+                    $sdc->update(array('id' => $id), array('$set' => $data));
                 }
             }
             foreach (self::$adds as $add)
             {
                 $add['data'] = self::query($add['type'], $add['name']);
                 $add['autoload'] = self::$autoload[$add['type']][$add['name']];
-                $sdc->insert($add, array('safe' => TRUE));
+                $sdc->insert($add);
             }
             self::$updates = array();
             self::$adds = array();

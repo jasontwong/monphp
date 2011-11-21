@@ -36,7 +36,7 @@ $layout->add_layout(
 $layout->add_layout(
     array(
         'field' => Field::layout('password_confirm'),
-        'name' => 'pass',
+        'name' => 'password',
         'type' => 'password_confirm',
     )
 );
@@ -112,37 +112,32 @@ if (isset($_POST['form']))
             $upost['permission'] = array_merge($upost['permission'], $upost[$mod.'_'.$group]);
         }
     }
-    if (strlen($upost['pass']))
+    if (strlen($upost['password']))
     {
         $uac = MonDB::selectCollection('user_account');
         $user = array();
-        $user['name'] = User::ID_ADMIN;
-        $user['nice_name'] = User::USER_ADMIN;
+        $user['name'] = '';
+        $user['nice_name'] = '';
         $user['salt'] = random_string(5);
-        $user['pass'] = sha1($user['salt'].$data['password']);
-        $user['email'] = $data['email'];
-        $user['permission'] = array('admin');
-        $user['group'] = array($group);
-        $user['group_ids'] = array($group['_id']);
-        $uac->insert($user, array('safe' => TRUE));
-        $user = new UserAccount;
-        $user->merge($upost);
-        $user->save();
-        $huser = $user->toArray();
-        //$huser['groups'] = $upost['groups'];
+        $user['pass'] = sha1($user['salt'].$upost['password']);
+        $user['email'] = '';
+        $user['permission'] = array();
+        $user['group'] = array();
+        $user['group_ids'] = array();
         if (ake('groups', $upost))
         {
-            foreach ($upost['groups'] as $gid)
+            $groups = iterator_to_array(MonDB::selectCollection('user_group')->find(array('name' => array('$in' => $upost['groups']))));
+            $upost['group'] = array();
+            $upost['group_ids'] = array();
+            foreach ($groups as &$group)
             {
-                $group = new UserGrouping;
-                $group->user_id = $user->id;
-                //$group->user_id = 1;
-                $group->group_id = (int)$gid;
-                $group->save();
+                $upost['group'][] = $group;
+                $upost['group_ids'][] = $group['_id'];
             }
         }
-        //module::h('workflow_task', 'Workflow', 'User', 'user create', $huser);
-        header('Location: /admin/module/User/edit_user/'.$user->id.'/');
+        $user = array_join($user, $upost);
+        $uac->insert($user);
+        header('Location: /admin/module/User/edit_user/' . $user['name'] . '/');
         exit;
     }
 }
@@ -176,7 +171,7 @@ $rows[] = array(
     'label' => array(
         'text' => 'New Password'
     ),
-    'fields' => $layout->get_layout('pass'),
+    'fields' => $layout->get_layout('password'),
 );
 $form->add_group(
     array(

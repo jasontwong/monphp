@@ -77,7 +77,6 @@ $layout->add_layout(
 //{{{ form submitted
 if (isset($_POST['form']))
 {
-    $success = FALSE;
     $gpost = $layout->acts('post', $_POST['group']);
     $new_data['permission'] = array();
     foreach ($perm_mods as $mod => $groups)
@@ -87,9 +86,8 @@ if (isset($_POST['form']))
             $new_data['permission'] = array_merge($new_data['permission'], $gpost[$mod.'_'.$perm_group]);
         }
     }
-    // $success = $ugc->update(array('_id' => $group['_id']), array('$set' => $new_data), array('safe' => TRUE));
-    $success = $ugc->update(array('_id' => $group['_id']), array('$set' => $new_data));
-    if ($success)
+    $success = $ugc->update(array('_id' => $group['_id']), array('$set' => $new_data), array('safe' => TRUE));
+    if (deka(FALSE, $success, 'ok'))
     {
         Admin::notify(Admin::TYPE_SUCCESS, 'Group successfully updated');
         $layout->merge($_POST['group']);

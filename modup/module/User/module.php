@@ -60,12 +60,10 @@ class User
         $uag = MonDB::selectCollection('user_group');
         $uac->ensureIndex(array('name' => 1), array(
             'unique' => 1, 
-            'safe' => 1, 
             'dropDups' => 1,
         ));
         $uag->ensureIndex(array('name' => 1), array(
             'unique' => 1, 
-            'safe' => 1, 
             'dropDups' => 1,
         ));
         self::find_info();
@@ -121,7 +119,7 @@ class User
                 $info['group_ids'][] = $group['_id'];
             }
             $user = array_merge($user, $info);
-            $uac->save($user, array('safe' => TRUE));
+            $uac->save($user);
         }
     }
 
@@ -171,7 +169,7 @@ class User
         $group['name'] = User::ID_ADMIN;
         $group['nice_name'] = User::GROUP_ADMIN;
         $group['permission'] = array('admin');
-        $ugc->insert($group, array('safe' => TRUE));
+        $ugc->insert($group);
 
         $user = array();
         $user['name'] = User::ID_ADMIN;
@@ -182,19 +180,19 @@ class User
         $user['permission'] = array('admin');
         $user['group'] = array($group);
         $user['group_ids'] = array($group['_id']);
-        $uac->insert($user, array('safe' => TRUE));
+        $uac->insert($user);
 
         $group = array();
         $group['name'] = 'member';
         $group['nice_name'] = 'Member';
         $group['permission'] = array('edit_self');
-        $ugc->insert($group, array('safe' => TRUE));
+        $ugc->insert($group);
 
         $group = array();
         $group['name'] = 'anonymous';
         $group['nice_name'] = 'Anonymous';
         $group['permission'] = array();
-        $ugc->insert($group, array('safe' => TRUE));
+        $ugc->insert($group);
 
         $user = array();
         $user['name'] = User::ID_ANONYMOUS;
@@ -205,7 +203,7 @@ class User
         $user['permission'] = array();
         $user['group'] = array($group);
         $user['group_ids'] = array($group['_id']);
-        $uac->insert($user, array('safe' => TRUE));
+        $uac->insert($user);
     }
     //}}}
     //{{{ public function hook_user_perm()
@@ -1320,7 +1318,7 @@ class UserInfo
             $ugc = MonDB::selectCollection('user_account');
             $user = $ugc->findOne(array('_id' => $info['_id']));
             $user = array_merge($user, $info);
-            $ugc->save($user, array('safe' => TRUE));
+            $ugc->save($user);
         }
     }
 

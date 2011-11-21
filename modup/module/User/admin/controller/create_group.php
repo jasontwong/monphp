@@ -69,7 +69,7 @@ if (isset($_POST['form']))
     {
         $ugc = MonDB::selectCollection('user_group');
         $gpost['name'] = slugify($gpost['nice_name']);
-        $ugc->save($gpost, array('safe' => TRUE));
+        $ugc->save($gpost);
         header('Location: /admin/module/User/edit_group/' . $gpost['name'] . '/');
         exit;
     }
