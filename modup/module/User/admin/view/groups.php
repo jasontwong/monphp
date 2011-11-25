@@ -8,8 +8,8 @@
             <td colspan='2'>Total groups: <?php echo count($groups) ?></td>
         </tr>
         <tr>
-            <th>id</th>
             <th>name</th>
+            <th>display name</th>
         </tr>
     </thead>
     <tfoot>
@@ -21,17 +21,17 @@
         <?php foreach ($groups as $group): ?>
 
             <?php
-                $id = $group['id'];
-                $name = htmlentities($group['name']);
+                $name = $group['name'];
+                $nice_name = htmlentities($group['nice_name']);
                 if (User::perm('edit groups'))
                 {
-                    $id = '<a href="/admin/module/User/edit_group/'.$group['id'].'/">'.$id.'</a>';
-                    $name = '<a href="/admin/module/User/edit_group/'.$group['id'].'/">'.$name.'</a>';
+                    $name = '<a href="/admin/module/User/edit_group/'.$group['name'].'/">'.$name.'</a>';
+                    $nice_name = '<a href="/admin/module/User/edit_group/'.$group['nice_name'].'/">'.$nice_name.'</a>';
                 }
             ?>
             <tr>
-                <td><?php echo $id ?></td>
                 <td><?php echo $name ?></td>
+                <td><?php echo $nice_name ?></td>
             </tr>
 
         <?php endforeach ?>

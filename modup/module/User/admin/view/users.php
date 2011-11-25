@@ -12,7 +12,6 @@
             <td colspan='4'>Total users: <?php echo count($users) ?></td>
         </tr>
         <tr>
-            <th>id</th>
             <th>username</th>
             <th>name</th>
             <th>email</th>
@@ -28,19 +27,16 @@
         <?php foreach ($users as $user): ?>
 
             <?php
-                $id = $user['id'];
                 $username = htmlentities($user['name']);
                 $name = htmlentities($user['nice_name']);
                 $email = htmlentities($user['email']);
-                $joined = htmlentities(date('F jS, Y', $user['joined']));
+                $joined = htmlentities(date('F jS, Y', $user['_id']->getTimestamp()));
                 if (User::perm('edit users'))
                 {
-                    $id = '<a href="'.$href.'/'.$user['id'].'/">'.$id.'</a>';
-                    $username = '<a href="'.$href.'/'.$user['id'].'/">'.$username.'</a>';
+                    $username = '<a href="'.$href.'/'.$user['name'].'/">'.$username.'</a>';
                 }
             ?>
             <tr>
-                <td><?php echo $id ?></td>
                 <td><?php echo $username ?></td>
                 <td><?php echo $name ?></td>
                 <td><?php echo $email ?></td>

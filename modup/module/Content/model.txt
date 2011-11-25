@@ -1,0 +1,38 @@
+[entry]
+    - _id (numeric)
+    - title
+    - slug
+    - created
+    - updated
+    - data
+
+[entry_revision]
+    - _id
+    - entry_id
+    - revision
+    - entry
+
+[entry_type]
+    - _id (numeric)
+    - name
+    - nice_name
+    - description
+    - ordering
+
+[field]
+    - _id
+    - display_name
+    - entry_type_id
+    - weight
+    - fields
+        - name
+        - type
+        - description
+        - multiple
+        - weight
+        - meta
+            - name
+            - label
+            - required
+            - meta
+            - default_data
