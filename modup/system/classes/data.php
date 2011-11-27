@@ -151,37 +151,23 @@ class Data
         self::init();
         self::$changed = TRUE;
         $signature = array('type' => $type, 'name' => $name);
-        $result = Module::h('data_validate', $type, $name, $data);
-        // module doesn't exist/didn't use hook
-        if (empty($result))
+        if (eka(self::$data, $type, $name))
         {
-            $go = TRUE;
-        }
-        else
-        {
-            $go = $result[$type]['success'];
-            $data = $result[$type]['data'];
-        }
-        if ($go)
-        {
-            if (eka(self::$data, $type, $name))
+            if (!in_array($signature, self::$adds))
             {
-                if (!in_array($signature, self::$adds))
+                self::$updates[self::$id[$type][$name]] = $signature;
+                if (!is_null($autoload))
                 {
-                    self::$updates[self::$id[$type][$name]] = $signature;
-                    if (!is_null($autoload))
-                    {
-                        self::$autoload[$type][$name] = $autoload;
-                    }
+                    self::$autoload[$type][$name] = $autoload;
                 }
             }
-            elseif (!in_array($signature, self::$adds))
-            {
-                self::$adds[] = $signature;
-                self::$autoload[$type][$name] = is_null($autoload) ? FALSE : $autoload;
-            }
-            self::$data[$type][$name] = $data;
         }
+        elseif (!in_array($signature, self::$adds))
+        {
+            self::$adds[] = $signature;
+            self::$autoload[$type][$name] = is_null($autoload) ? FALSE : $autoload;
+        }
+        self::$data[$type][$name] = $data;
     }
     //}}}
     //{{{ public static function settings_form()

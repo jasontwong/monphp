@@ -12,7 +12,7 @@ Admin::set('header', 'Settings');
 
 $default_key = '_Site';
 $settings_key = URI_PART_2;
-$layouts = Module::h('data_info', $settings_key);
+$layouts = Module::h('settings_fields', $settings_key);
 
 // {{{ default site settings
 if (empty($layouts))
@@ -114,7 +114,11 @@ if (isset($_POST['form']))
     {
         foreach ($settings as $name => $data)
         {
-            Data::update($settings_key, $name, $data);
+            $result = Module::h('data_validate', $settings_key, $name, $data);
+            if (empty($result) || deka(FALSE, $result, $settings_key, 'success'))
+            {
+                Data::update($settings_key, $name, $data);
+            }
         }
     }
 }

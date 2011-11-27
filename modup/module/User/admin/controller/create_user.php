@@ -137,6 +137,7 @@ if (isset($_POST['form']))
         }
         $user = array_join($user, $upost);
         $uac->insert($user);
+        Admin::log(Admin::TYPE_NOTICE, 'User ' . $user['name'] . ' created');
         header('Location: /admin/module/User/edit_user/' . $user['name'] . '/');
         exit;
     }

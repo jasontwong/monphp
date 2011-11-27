@@ -39,7 +39,13 @@ $settings = User::setting();
 $layout = new Field();
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => Field::layout('text',
+            array(
+                'data' => array(
+                    'disabled' => 'disabled',
+                ),
+            )
+        ),
         'name' => 'name',
         'type' => 'text',
         'value' => array(
@@ -271,6 +277,7 @@ if (isset($_POST['form']))
         if (deka(FALSE, $success, 'ok'))
         {
             Admin::notify(Admin::TYPE_SUCCESS, 'User successfully updated');
+            Admin::log(Admin::TYPE_NOTICE, 'User ' . $user['name'] . ' updated');
             $layout->merge($_POST['user']);
         }
         else

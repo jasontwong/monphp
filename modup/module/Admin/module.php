@@ -28,27 +28,18 @@ class Admin
     }
 
     //}}}
-    //{{{ public function hook_user_perm()
-    public function hook_user_perm()
-    {
-        $perms = array(
-            'admin access' => 'Can access admin back end',
-            'admin settings' => 'Can change system and module settings',
-        );
-        $settings = array_keys(Module::h('data_info'));
-        foreach ($settings as $mod)
-        {
-            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
-        }
-        return array(
-            'Admin' => $perms
-        );
-    }
-
-    //}}}
     //{{{ public function hook_active()
     public function hook_active()
     {
+        $logging = Data::query('Admin', 'logging');
+        if (is_null($logging))
+        {
+            Data::update('Admin', 'logging', TRUE);
+            Data::save();
+        }
+        $alc = MonDB::selectCollection('admin_log');
+        $alc->ensureIndex(array('username' => 1, 'type' => 1));
+
         $static_routes = array(
             '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}',
             '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}.php'
@@ -75,6 +66,24 @@ class Admin
                 }
             }
         }
+    }
+
+    //}}}
+    //{{{ public function hook_user_perm()
+    public function hook_user_perm()
+    {
+        $perms = array(
+            'admin access' => 'Can access admin back end',
+            'admin settings' => 'Can change system and module settings',
+        );
+        $settings = array_keys(Module::h('data_info'));
+        foreach ($settings as $mod)
+        {
+            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
+        }
+        return array(
+            'Admin' => $perms
+        );
     }
 
     //}}}
@@ -129,8 +138,8 @@ class Admin
     }
 
     //}}}
-    //{{{ public function hook_data_info()
-    public function hook_data_info()
+    //{{{ public function hook_settings_fields()
+    public function hook_settings_fields()
     {
         $hidden = is_file(Data::query('Admin', 'logo', 'name'))
             ? array('delete')
@@ -185,8 +194,8 @@ class Admin
     }
 
     //}}}
-    //{{{ public function hook_data_validate($name, $data)
-    public function hook_data_validate($name, $data)
+    //{{{ public function hook_settings_validate($name, $data)
+    public function hook_settings_validate($name, $data)
     {
         $success = FALSE;
         switch ($name)
@@ -790,6 +799,91 @@ class Admin
     }
 
     //}}}
+    //{{{ public static function append($name, $value)
+    /**
+     * Appends an array for use in the admin templates
+     *
+     * @param string $name variable name
+     * @param mixed $value value to store
+     * @return void
+     */
+    public static function append($name, $value)
+    {
+        self::$v[$name][] = $value;
+    }
+
+    //}}}
+    //{{{ public static function bounce($permission)
+    /**
+     * Checks current user if they have permission. Sets denied message if not.
+     *
+     * @param string $permission
+     * @return boolean
+     */
+    public static function bounce($permission)
+    {
+    }
+    //}}}
+    //{{{ public static function get($name, $default = NULL)
+    /**
+     * Gets a variable for use in the admin templates
+     *
+     * @param string $name variable name
+     * @param mixed $default default value if doesn't exist
+     * @return mixed, null if name doesn't exist
+     */
+    public static function get($name, $default = NULL)
+    {
+        return isset(self::$v[$name]) ? self::$v[$name] : $default;
+    }
+
+    //}}}
+    //{{{ public static function log($type, $messages)
+    public static function log($type, $messages)
+    {
+        $logging = Data::query('Admin', 'logging');
+        if (!is_null($logging) && $logging)
+        {
+            if (is_string($messages))
+            {
+                $messages = array($messages);
+            }
+            $log = array(
+                'user' => User::i('name'),
+                'type' => $type,
+                'messages' => $messages,
+            );
+            $alc = MonDB::selectCollection('admin_log');
+            $alc->insert($log);
+        }
+    }
+    
+    //}}}
+    //{{{ public static function notify($type, $messages)
+    public static function notify($type, $messages)
+    {
+        if (is_string($messages))
+        {
+            $messages = array($messages);
+        }
+        switch ($type)
+        {
+            case self::TYPE_NOTICE:
+                $_SESSION['admin']['messages']['notice'] = $messages;
+            break;
+            case self::TYPE_SUCCESS:
+                $_SESSION['admin']['messages']['success'] = $messages;
+            break;
+            case self::TYPE_ERROR:
+                $_SESSION['admin']['messages']['error'] = $messages;
+            break;
+            case self::TYPE_IMPORTANT:
+                $_SESSION['admin']['messages']['important'] = $messages;
+            break;
+        }
+    }
+    
+    //}}}
     //{{{ public static function quick_form($form)
     /**
      * Used for consistent admin backend forms and ease of use
@@ -858,20 +952,6 @@ class Admin
     }
 
     //}}}
-    //{{{ public static function append($name, $value)
-    /**
-     * Appends an array for use in the admin templates
-     *
-     * @param string $name variable name
-     * @param mixed $value value to store
-     * @return void
-     */
-    public static function append($name, $value)
-    {
-        self::$v[$name][] = $value;
-    }
-
-    //}}}
     //{{{ public static function set($name, $value)
     /**
      * Sets a variable for use in the admin templates
@@ -885,56 +965,6 @@ class Admin
         self::$v[$name] = $value;
     }
 
-    //}}}
-    //{{{ public static function get($name, $default = NULL)
-    /**
-     * Gets a variable for use in the admin templates
-     *
-     * @param string $name variable name
-     * @param mixed $default default value if doesn't exist
-     * @return mixed, null if name doesn't exist
-     */
-    public static function get($name, $default = NULL)
-    {
-        return isset(self::$v[$name]) ? self::$v[$name] : $default;
-    }
-
-    //}}}
-    //{{{ public static function bounce($permission)
-    /**
-     * Checks current user if they have permission. Sets denied message if not.
-     *
-     * @param string $permission
-     * @return boolean
-     */
-    public static function bounce($permission)
-    {
-    }
-    //}}}
-    //{{{ public static function notify($type, $messages)
-    public static function notify($type, $messages)
-    {
-        if (is_string($messages))
-        {
-            $messages = array($messages);
-        }
-        switch ($type)
-        {
-            case self::TYPE_NOTICE:
-                $_SESSION['admin']['messages']['notice'] = $messages;
-            break;
-            case self::TYPE_SUCCESS:
-                $_SESSION['admin']['messages']['success'] = $messages;
-            break;
-            case self::TYPE_ERROR:
-                $_SESSION['admin']['messages']['error'] = $messages;
-            break;
-            case self::TYPE_IMPORTANT:
-                $_SESSION['admin']['messages']['important'] = $messages;
-            break;
-        }
-    }
-    
     //}}}
 }
 

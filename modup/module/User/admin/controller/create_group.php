@@ -70,6 +70,7 @@ if (isset($_POST['form']))
         $ugc = MonDB::selectCollection('user_group');
         $gpost['name'] = slugify($gpost['nice_name']);
         $ugc->save($gpost);
+        Admin::log(Admin::TYPE_NOTICE, 'Group ' . $gpost['name'] . ' created');
         header('Location: /admin/module/User/edit_group/' . $gpost['name'] . '/');
         exit;
     }

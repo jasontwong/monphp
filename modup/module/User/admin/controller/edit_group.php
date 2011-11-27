@@ -90,6 +90,7 @@ if (isset($_POST['form']))
     if (deka(FALSE, $success, 'ok'))
     {
         Admin::notify(Admin::TYPE_SUCCESS, 'Group successfully updated');
+        Admin::log(Admin::TYPE_NOTICE, 'Group ' . $group['name'] . ' updated');
         $layout->merge($_POST['group']);
     }
     else

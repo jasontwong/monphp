@@ -26,59 +26,15 @@ class Content
     public static $types = NULL;
 
     //}}}
-    //{{{ public function hook_user_perm()
-    public function hook_user_perm()
-    {
-        $types = self::get_entry_types();
-        $perms_array = array_fill_keys(
-            array('type', 'entry_add', 'entry_edit', 'entry_view'),
-            array()
-        );
-        foreach ($types as $type)
-        {
-            $id = &$type['id'];
-            $name = &$type['name'];
-            $perms_array['type']['edit content type-'.$id] = 'Edit content type &ldquo;'.$name.'&rdquo;';
-            $perms_array['entry_add']['add content entries type-'.$id] = 'Add new content entries for &ldquo;'.$name.'&rdquo; content types';
-            $perms_array['entry_edit']['edit content entries type-'.$id] = 'Edit content entries for &ldquo;'.$name.'&rdquo; content types';
-            $perms_array['entry_view']['view content entries type-'.$id] = 'View content entries for &ldquo;'.$name.'&rdquo; content types in the admin back end';
-        }
-        asort($perms_array['type']);
-        asort($perms_array['entry_add']);
-        asort($perms_array['entry_edit']);
-        asort($perms_array['entry_view']);
-
-        $perms['General']['add content type'] = 'Add content types';
-        $perms['General']['edit content type'] = 'Edit all content types';
-        $perms['General'] = array_merge($perms['General'], $perms_array['type']);
-        $perms['General']['add content entries type'] = 'Add new content entries for all content types';
-        $perms['General'] = array_merge($perms['General'], $perms_array['entry_add']);
-        $perms['General']['edit content entries type'] = 'Edit content entries for all content types';
-        $perms['General'] = array_merge($perms['General'], $perms_array['entry_edit']);
-        $perms['General']['view content entries type'] = 'View content entries for all content types in the admin back end';
-        $perms['General'] = array_merge($perms['General'], $perms_array['entry_view']);
-
-        $module_perms = Module::h('content_perms', Module::TARGET_ALL, $types);
-        foreach ($module_perms as $module => $mod_perms)
-        {
-            $perms = array_merge($perms, $mod_perms);
-        }
-        foreach ($types as $type)
-        {
-            $id = &$type['id'];
-            $name = '&ldquo;'.$type['name'].'&rdquo;';
-            if ($type['ordering'])
-            {
-                $perms['Ordering']['edit order-'.$id] = 'Manually order entries of content type '.$name;
-            }
-        }
-        return $perms;
-    }
-
-    //}}}
     //{{{ public function hook_active()
     public function hook_active()
     {
+        $db = new MonDB;
+        $db->content_entry->ensureIndex(array('entry_type_id' => 1, 'weight' => 1, 'updated' => -1));
+        $db->content_entry->ensureIndex(array('slug' => 1, 'entry_type_id' => 1));
+        $db->content_entry_revision->ensureIndex(array('entry_id' => 1, 'revision' => -1));
+        $db->content_entry_type->ensureIndex(array('name' => 1));
+        $db->content_entry_type->ensureIndex(array('_id' => 1, 'field_groups.weight' => 1, 'field_groups.fields.weight' => 1));
     }
 
     //}}}
@@ -279,29 +235,6 @@ class Content
     }
 
     //}}}
-    //{{{ public function hook_data_info()
-    public function hook_data_info()
-    {
-        $autoslug = array(
-            'field' => Field::layout(
-                'text',
-                array(
-                    'data' => array(
-                        'label' => 'Auto-slug replacement character'
-                    )
-                )
-            ),
-            'name' => 'autoslug',
-            'type' => 'text',
-            'value' => array(
-                'data' => Data::query('Content', 'autoslug')
-            )
-        );
-
-        return array($autoslug);
-    }
-
-    //}}}
     //{{{ public function hook_rpc($action, $params = NULL)
     /**
      * Implementation of hook_rpc
@@ -323,104 +256,76 @@ class Content
     }
 
     //}}}
-    //{{{ public function hook_search_results($terms)
-    public function hook_search_results($terms)
+    //{{{ public function hook_settings_fields()
+    public function hook_settings_fields()
     {
-        $cdata_sql = '';
-        foreach ($terms as $k => &$term)
-        {
-            $term = '%'.$term.'%';
-            $cdata_sql .= $k === 0
-                ? 'fd.cdata LIKE ?'
-                : ' OR fd.cdata LIKE ?';
-            $cdata_sql .= ' OR et.title LIKE ?';
-            // $datas->orWhere('fd.cdata LIKE ?', '%'.$term.'%');
-        }
-        $datas = Doctrine_Query::create()
-                 ->select('em.id as mid, fd.cdata, em.revision as revision')
-                 ->from('ContentFieldData fd')
-                 ->leftJoin('fd.ContentEntryMeta em')
-                 ->leftJoin('em.ContentEntryTitle et')
-                 ->where('fd.revision = em.revision')
-                 ->andWhere($cdata_sql);
-        // this is needed for searching multiple columns, 
-        // add another $terms array for each column
-        $fetch_array = array_merge($terms, $terms);
-        sort($fetch_array);
-        $cdatas = $datas->fetchArray($fetch_array);
-        $temp['cdata'] = $temp['ids'] = array();
-        // choose cdata that has the most information instead of group by
-        foreach ($cdatas as $k => $v)
-        {
-            $temp_key = array_search($v['mid'], $temp['ids']);
-            $cdata_count[$k] = 1;
-            if ($temp_key !== FALSE)
-            {
-                if (strlen($temp['cdata'][$temp_key]) > strlen($v['cdata']))
-                {
-                    unset(
-                        $cdatas[$k],
-                        $cdata_count[$k]
-                    );
-                    continue;
-                }
-                else
-                {
-                    $cdata_count[$k] = $cdata_count[$temp_key]+1;
-                    unset(
-                        $temp['cdata'][$temp_key],
-                        $temp['ids'][$temp_key],
-                        $cdatas[$temp_key],
-                        $cdata_count[$temp_key]
-                    );
-                }
-            }
-            $temp['ids'][$k] = $v['mid'];
-            $temp['cdata'][$k] = $v['cdata'];
-        }
-        if (isset($cdata_count))
-        {
-            array_multisort($cdata_count, SORT_DESC, $cdatas);
-        }
-        unset(
-            $temp,
-            $temp_key,
-            $cdata_count
+        $autoslug = array(
+            'field' => Field::layout(
+                'text',
+                array(
+                    'data' => array(
+                        'label' => 'Auto-slug replacement character'
+                    )
+                )
+            ),
+            'name' => 'autoslug',
+            'type' => 'text',
+            'value' => array(
+                'data' => Data::query('Content', 'autoslug')
+            )
         );
-        $titles = Doctrine_Query::create()
-                  ->select('et.title, et.slug, et.revision, et.content_entry_meta_id as mid, etype.name, etype.id, em.id')
-                  ->from('ContentEntryTitle et')
-                  ->leftJoin('et.ContentEntryMeta em')
-                  ->leftJoin('em.ContentEntryType etype')
-                  ->where('et.revision = em.revision')
-                  ->fetchArray();
-        $results = array();
-        //TODO this can definitely be optimized somehow
-        foreach ($titles as $title)
+
+        return array($autoslug);
+    }
+
+    //}}}
+    //{{{ public function hook_user_perm()
+    public function hook_user_perm()
+    {
+        $types = self::get_entry_types();
+        $perms_array = array_fill_keys(
+            array('type', 'entry_add', 'entry_edit', 'entry_view'),
+            array()
+        );
+        foreach ($types as $type)
         {
-            foreach ($cdatas as $k => $cdata)
+            $id = &$type['id'];
+            $name = &$type['name'];
+            $perms_array['type']['edit content type-'.$id] = 'Edit content type &ldquo;'.$name.'&rdquo;';
+            $perms_array['entry_add']['add content entries type-'.$id] = 'Add new content entries for &ldquo;'.$name.'&rdquo; content types';
+            $perms_array['entry_edit']['edit content entries type-'.$id] = 'Edit content entries for &ldquo;'.$name.'&rdquo; content types';
+            $perms_array['entry_view']['view content entries type-'.$id] = 'View content entries for &ldquo;'.$name.'&rdquo; content types in the admin back end';
+        }
+        asort($perms_array['type']);
+        asort($perms_array['entry_add']);
+        asort($perms_array['entry_edit']);
+        asort($perms_array['entry_view']);
+
+        $perms['General']['add content type'] = 'Add content types';
+        $perms['General']['edit content type'] = 'Edit all content types';
+        $perms['General'] = array_merge($perms['General'], $perms_array['type']);
+        $perms['General']['add content entries type'] = 'Add new content entries for all content types';
+        $perms['General'] = array_merge($perms['General'], $perms_array['entry_add']);
+        $perms['General']['edit content entries type'] = 'Edit content entries for all content types';
+        $perms['General'] = array_merge($perms['General'], $perms_array['entry_edit']);
+        $perms['General']['view content entries type'] = 'View content entries for all content types in the admin back end';
+        $perms['General'] = array_merge($perms['General'], $perms_array['entry_view']);
+
+        $module_perms = Module::h('content_perms', Module::TARGET_ALL, $types);
+        foreach ($module_perms as $module => $mod_perms)
+        {
+            $perms = array_merge($perms, $mod_perms);
+        }
+        foreach ($types as $type)
+        {
+            $id = &$type['id'];
+            $name = '&ldquo;'.$type['name'].'&rdquo;';
+            if ($type['ordering'])
             {
-                if ($cdata['mid'] == $title['mid'] && $cdata['revision'] == $title['revision'])
-                {
-                    $r_data['title'] = $title['title'];
-                    $r_data['snippet'] = $cdata['cdata'];
-                    $r_data['keys'] = array(
-                        'id' => $title['ContentEntryMeta']['id'],
-                        'slug' => $title['slug'],
-                        'other' => array(
-                            'type' => $title['ContentEntryMeta']['ContentEntryType']['name'],
-                        ),
-                    );
-                    $results[] = $r_data;
-                    unset($cdatas[$k]);
-                }
-                elseif ($cdata['mid'] == $title['mid'] && $cdata['revision'] != $title['revision'])
-                {
-                    unset($cdatas[$k]);
-                }
+                $perms['Ordering']['edit order-'.$id] = 'Manually order entries of content type '.$name;
             }
         }
-        return $results;
+        return $perms;
     }
 
     //}}}
@@ -587,24 +492,30 @@ class Content
         $data = (array)json_decode($json['data']);
         $ids = array_values($data);
         $type = $json['type'];
+        $result['success'] = FALSE;
         try
         {
-            $cemt = Doctrine::getTable('ContentEntryMeta');
-            $entries = $cemt->findByIds($ids)->execute();
+            $query = array(
+                '_id' => array(
+                    '$in' => $ids,
+                ),
+            );
+            $cec = MonDB::selectCollection('content_entry');
+            $entries = iterator_to_array($cec->find($query));
             foreach ($entries as &$entry)
             {
-                $eid = $entry->id;
-                if (in_array($eid, $data))
+                $weight = array_search($entry['_id'], $data);
+                if (is_numeric($weight))
                 {
-                    $entry->weight = array_search($eid, $data);
+                    $entry['weight'] = $weight;
+                    $cec->save($entry);
                 }
             }
-            $entries->save();
             $result['success'] = TRUE;
             $meta['content_entry_type_id'] = $type;
             Module::h('content_order_entries_success', Module::TARGET_ALL, $meta);
         }
-        catch (Doctrine_Validator_Exception $e)
+        catch (Exception $e)
         {
             $result['success'] = FALSE;
         }
@@ -679,27 +590,25 @@ class Content
         }
         if (!$has_cache || is_null($type))
         {
-            $d = Doctrine_Query::create()
-                    ->select('m.id as meta_id, y.name as type, t.title, t.slug')
-                    ->from('ContentEntryTitle t')
-                    ->leftJoin('t.ContentEntryMeta m')
-                    ->leftJoin('m.ContentEntryType y')
-                    ->where('m.revision = t.revision')
-                    ->orderBy('y.name ASC, t.slug ASC');
+            $db = new MonDB;
+            $query = array();
             if (!is_null($type))
             {
-                $d->andWhere('y.name = ?', $type);
+                $cet = $db->content_entry_type->findOne(array('name' => $type), array('_id'));
+                $query['entry_type_id'] = $cet['_id'];
             }
-            $rows = $d->fetchArray();
-            $mapping = array();
-            foreach ($rows as $row)
+            else
             {
-                $mapping[] = array(
-                    'id' => $row['meta_id'],
-                    'title' => $row['title'],
-                    'slug' => $row['slug']
-                );
+                $cet = $db->content_entry_type->find(array(), array('_id'));
+                $ids = array();
+                foreach ($cet => $et)
+                {
+                    $ids[] = $et['_id'];
+                }
+                $query['entry_type_id'] = array('$in' => $ids);
             }
+            $entries = $db->content_entry->find($query, array('_id', 'title', 'slug'));
+            $mapping = iterator_to_array($entries);
         }
         if ($use_cache && !$has_cache)
         {

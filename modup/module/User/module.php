@@ -312,6 +312,7 @@ class User
             $user = $uac->findOne(array('name' => $data['name']));
             $user['logged_in'] = new MongoDate();
             $uac->save($user);
+            Admin::log(Admin::TYPE_SUCCESS, 'User ' . $user['name'] . ' logged in');
             $_SESSION['user']['name'] = $user['name'];
             $_SESSION['user']['pass'] = $user['pass'];
             $results = array(
@@ -320,6 +321,7 @@ class User
         }
         else
         {
+            Admin::log(Admin::TYPE_ERROR, 'User ' . $user['name'] . ' failed to log in');
             $results = array(
                 'success' => FALSE,
                 'messages' => array(
