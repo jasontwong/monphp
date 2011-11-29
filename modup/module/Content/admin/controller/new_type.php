@@ -5,7 +5,7 @@ $layout = new Field();
 $layout->add_layout(
     array(
         'field' => Field::layout('text'),
-        'name' => 'name',
+        'name' => 'nice_name',
         'type' => 'text'
     )
 );
@@ -75,7 +75,7 @@ $form->label = array(
 $type_group = array(
     'rows' => array(
         array(
-            'fields' => $layout->get_layout('name'),
+            'fields' => $layout->get_layout('nice_name'),
             'label' => array(
                 'text' => 'Name'
             ),
@@ -90,7 +90,7 @@ $type_group = array(
 );
 $form->add_group($type_group, 'content_type');
 
-$hook_forms = Module::h('content_new_type_form', Module::TARGET_ALL, &$layout);
+$hook_forms = Module::h('content_new_type_form', Module::TARGET_ALL, $layout);
 foreach ($hook_forms as $module => $h_forms)
 {
     $form->add_group($h_forms);
@@ -116,6 +116,8 @@ if (isset($_POST['content_type']))
     {
         $ptype = $layout->acts('post', $_POST['content_type']);
         $layout->merge($_POST['content_type']);
+        var_dump($ptype);
+        exit;
         $type = Content::save_entry_type($ptype);
         Content::save_field_group(
             array(
@@ -123,7 +125,7 @@ if (isset($_POST['content_type']))
                 'content_entry_type_id' => $type['id']
             )
         );
-        Module::h('content_new_type_process', Module::TARGET_ALL, &$layout, $type, $_POST);
+        Module::h('content_new_type_process', Module::TARGET_ALL, $layout, $type, $_POST);
         header('Location: /admin/module/Content/edit_type/'.$type['id'].'/');
         exit;
     }

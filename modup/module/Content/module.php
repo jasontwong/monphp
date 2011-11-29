@@ -601,7 +601,7 @@ class Content
             {
                 $cet = $db->content_entry_type->find(array(), array('_id'));
                 $ids = array();
-                foreach ($cet => $et)
+                foreach ($cet as $et)
                 {
                     $ids[] = $et['_id'];
                 }
@@ -622,6 +622,7 @@ class Content
     {
         $entries = array();
 
+        /*
         $type = Doctrine_Query::create()
                 ->select('et.id, et.ordering')
                 ->from('ContentEntryType et')
@@ -647,6 +648,7 @@ class Content
             $entries[$ei]['entry'] = $row;
             ++$ei;
         }
+        */
 
         return $entries;
     }
@@ -668,95 +670,6 @@ class Content
         $types = dql_exec($dt_spec, array($id));
         $type = $types[0]['name'];
         return self::get_entries_details_by_type_name($type, $use_cache, $expire);
-
-        // old code
-        $entries = array();
-
-        $dt_dspec = array(
-            'select' => array(
-                'em.id', 'em.created', 'em.revision',
-                'eti.title as title', 'eti.slug as slug', 
-                'eti.modified as modified', 'em.content_entry_type_id as type_id'
-            ),
-            'from' => 'ContentEntryMeta em',
-            'leftJoin' => 'em.ContentEntryTitle eti',
-            'where' => 'em.content_entry_type_id = ?',
-            'andWhere' => 'eti.revision = em.revision',
-            'orderBy' => 'eti.modified DESC'
-        );
-        $dt_spec = array_merge($dt_dspec, $spec);
-        $rows = dql_exec($dt_spec, array($id));
-        $entries_map = array();
-        $ei = 0;
-        foreach ($rows as $row)
-        {
-            $entries[$ei]['entry'] = $row;
-            $entries_map[$row['id']] = $ei;
-            ++$ei;
-        }
-
-        $data = array();
-        $df_dql = Doctrine_Query::create()
-                    ->select('
-                        fd.cdata, fd.bdata, fd.akey, fd.meta, 
-                        ft.name as name, ft.multiple as multiple,
-                        ft.id as type_id, ft.type as type_type,
-                        fm.id as meta_id, fm.name as meta_name,
-                        em.id as entry_meta_id
-                    ')
-                    ->from('ContentFieldData fd')
-                    ->leftJoin('fd.ContentEntryMeta em')
-                    ->leftJoin('fd.ContentFieldMeta fm')
-                    ->leftJoin('fm.ContentFieldType ft')
-                    ->where('em.content_entry_type_id = ?')
-                    ->andWhere('em.revision = fd.revision');
-        $field_rows = $df_dql->execute(array($id), Doctrine::HYDRATE_ARRAY);
-
-        $field_data_raw = array();
-        $field_types = array();
-        foreach ($field_rows as $row)
-        {
-            if (!is_null($row['type_id']))
-            {
-                $field_data_raw[$row['entry_meta_id']][$row['type_id']][$row['meta_name']][$row['akey']][] = $row;
-                $field_types[$row['entry_meta_id']][$row['type_id']] = array(
-                    'type' => $row['type_type'], 
-                    'multiple' => (bool)$row['multiple'],
-                    'name' => $row['name'],
-                );
-            }
-        }
-
-        foreach ($field_types as $entry_meta_id => $field_type)
-        {
-            $data = array();
-            foreach ($field_type as $type_id => $type_info)
-            {
-                $field_data = Field::quick_act('read', $type_info['type'], $field_data_raw[$entry_meta_id][$type_id]);
-                $temp = array();
-                if ($type_info['multiple'])
-                {
-                    foreach ($field_data as $mkey => $fd)
-                    {
-                        foreach ($fd as $akey => $cdata)
-                        {
-                            $temp[$akey][$mkey] = $cdata;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach ($field_data as $mkey => $fd)
-                    {
-                        $temp[$mkey] = array_pop($fd);
-                    }
-                }
-                $data[$type_info['name']] = $temp;
-            }
-            $entries[$entries_map[$entry_meta_id]]['data'] = $data;
-        }
-
-        return $entries;
     }
     //}}}
     //{{{ public function get_entries_details_by_type_name($name, $use_cache = TRUE, $expire = 0)
@@ -771,6 +684,7 @@ class Content
         {
             $entries = array();
 
+            /*
             $type = Doctrine_Query::create()
                     ->from('ContentEntryType et')
                     ->where('et.name = ?')
@@ -824,15 +738,12 @@ class Content
             $field_types = array();
             foreach ($field_rows as $row)
             {
-                /*
-                $field_data_raw[$row->entry_meta_id][$row->type_id][$row->meta_name][$row->akey][] = $row;
-                $field_types[$row->entry_meta_id][$row->type_id] = array(
-                    'type' => $row->type_type, 
-                    'multiple' => (bool)$row->multiple,
-                    'name' => $row->name,
-                );
-                */
-                //*
+                // $field_data_raw[$row->entry_meta_id][$row->type_id][$row->meta_name][$row->akey][] = $row;
+                // $field_types[$row->entry_meta_id][$row->type_id] = array(
+                    // 'type' => $row->type_type, 
+                    // 'multiple' => (bool)$row->multiple,
+                    // 'name' => $row->name,
+                // );
                 if (!is_null($row['type_id']))
                 {
                     if (!is_null($row['type_id']))
@@ -845,7 +756,6 @@ class Content
                         );
                     }
                 }
-                //*/
             }
 
             foreach ($field_types as $entry_meta_id => $field_type)
@@ -876,6 +786,7 @@ class Content
                 }
                 $entries[$entries_map[$entry_meta_id]]['data'] = $data;
             }
+            */
         }
         if ($use_cache && !$has_cache)
         {
@@ -1012,26 +923,6 @@ class Content
         $types = dql_exec($dt_spec, array($id));
         $type = $types[0]['name'];
         return self::get_entry_details_by_slug_and_type_name($slug, $type, $use_cache, $expire);
-
-        // can we remove this?
-        $dql = Doctrine_Query::create()
-                ->select('
-                    em.id as id, em.created as created, em.revision as revision,
-                    eti.title, eti.slug, eti.modified
-                ')
-                ->from('ContentEntryTitle eti')
-                ->leftJoin('eti.ContentEntryMeta em')
-                ->where('eti.slug = ?')
-                ->andWhere('em.content_entry_type_id = ?')
-                ->andWhere('eti.revision = em.revision');
-
-        $entry['entry'] = array_pop($dql->execute(array($slug, $type_id), Doctrine::HYDRATE_ARRAY));
-        $entry['data'] = self::get_field_data_by_entry_id_and_revision(
-            $entry['entry']['id'],
-            $entry['entry']['revision']
-        );
-
-        return $entry;
     }
     //}}}
     //{{{ public function get_entry_details_by_slug_and_type_name($slug, $type, $use_cache = TRUE, $expire = 0)
@@ -1045,6 +936,7 @@ class Content
         }
         if (!$use_cache || !$has_cache)
         {
+            /*
             $dql = Doctrine_Query::create()
                     ->select('
                         em.id as id, em.created as created, em.revision as revision,
@@ -1062,6 +954,7 @@ class Content
                 $entry['entry']['id'],
                 $entry['entry']['revision']
             );
+            */
         }
         if ($use_cache && !$has_cache)
         {
@@ -1188,6 +1081,7 @@ class Content
      */
     public function get_entry_types($params = array(), $spec = array())
     {
+        /*
         $dspec = array(
             'select' => array(
                 'ety.id', 'ety.name', 'ety.description', 
@@ -1200,12 +1094,15 @@ class Content
         );
         $s = array_merge($dspec, $spec);
         return dql_exec($s, $params);
+        */
+        return array();
     }
     //}}}
     //{{{ public function get_field_data_by_entry_id_and_revision($id, $revision)
     public function get_field_data_by_entry_id_and_revision($id, $revision)
     {
         $data = array();
+        /*
         $df_dql = Doctrine_Query::create()
                     ->select('
                         fd.cdata, fd.bdata, fd.akey, fd.meta, 
@@ -1258,6 +1155,7 @@ class Content
             }
             $data[$type_info['name']] = $temp;
         }
+        */
 
         return $data;
     }
@@ -1285,6 +1183,8 @@ class Content
     //{{{ public function get_field_details_by_entry_type_name($name)
     public function get_field_details_by_entry_type_name($name)
     {
+        $tree = array();
+        /*
         $dql = Doctrine_Query::create()
                ->from('ContentFieldMeta fm')
                ->leftJoin('fm.ContentFieldType ft')
@@ -1295,7 +1195,6 @@ class Content
         $details = array();
         $groups = array();
         $types = array();
-        $tree = array();
         foreach ($rows as $row)
         {
             $field_type = $row['ContentFieldType'];
@@ -1316,6 +1215,7 @@ class Content
             $tree[$group_name]['fields'][$field_type['id']]['meta'][$row['name']] = $row;
             unset($tree[$group_name]['fields'][$field_type['id']]['meta'][$row['name']]['ContentFieldType']);
         }
+        */
         return $tree;
     }
     //}}}
@@ -1479,6 +1379,7 @@ class Content
     //{{{ public function get_entries_titles_by_type_and_field_name($type, $field_name, $field_search)
     public function get_entries_titles_by_type_and_field_name($type, $field_name, $field_search)
     {
+        /*
         $dql = Doctrine_Query::create()
                ->select('
                     fd.id, em.id, et.id, fm.id, ft.id,
@@ -1506,6 +1407,8 @@ class Content
             $dql->andWhere('fd.cdata = ?', $field_search);
         }
         return $dql->execute(array(), Doctrine::HYDRATE_ARRAY);
+        */
+        return array();
     }
 
     //}}}
@@ -1545,6 +1448,7 @@ class Content
     //{{{ public function save_entry($entry)
     public function save_entry($entry)
     {
+        /*
         $cem = new ContentEntryMeta;
         $cem->content_entry_type_id = $entry['meta']['content_entry_type_id'];
         $cem->save();
@@ -1625,6 +1529,7 @@ class Content
             }
         }
         */
+        return array();
     }
     //}}}
     //{{{ public function save_entry_type($entry_type)
@@ -1777,10 +1682,8 @@ class Content
 
         // incomplete, more deletes follow. but at this point the speed is the
         // same or sometimes better
-        //*/
 
         // tests show this is as fast or faster than tailored DQLs
-        //*
         $cett = Doctrine_Core::getTable('ContentEntryType');
         $type = $cett->findById($id);
         $type->delete();
@@ -1802,9 +1705,11 @@ class Content
     //{{{ public function delete_field_group_by_id($id)
     public function delete_field_group_by_id($id)
     {
+        /*
         $cfgt = Doctrine_Core::getTable('ContentFieldGroup');
         $group = $cfgt->findById($id);
         $group->delete();
+        */
     }
     //}}}
 

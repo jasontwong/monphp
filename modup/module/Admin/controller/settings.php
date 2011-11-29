@@ -121,6 +121,7 @@ if (isset($_POST['form']))
             }
         }
     }
+    Data::save();
 }
 
 //}}}

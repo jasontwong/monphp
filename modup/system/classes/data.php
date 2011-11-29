@@ -77,7 +77,8 @@ class Data
                         'data' => self::query($fp['type'], $fp['name']),
                         'autoload' => self::$autoload[$fp['type']][$fp['name']],
                     );
-                    $sdc->update(array('id' => $id), array('$set' => $data));
+                    $_id = new MongoId($id); 
+                    $sdc->update(array('_id' => $_id), array('$set' => $data));
                 }
             }
             foreach (self::$adds as $add)
@@ -255,7 +256,7 @@ class Data
         $type = &$row['type'];
         $name = &$row['name'];
         self::$data[$type][$name] = $row['data'];
-        self::$id[$type][$name] = $row['_id'];
+        self::$id[$type][$name] = $row['_id']->{'$id'};
         self::$autoload[$type][$name] = $row['autoload'];
     }
     //}}}
