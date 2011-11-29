@@ -458,16 +458,15 @@ class ContentField
     //{{{ public static function field_meta_relationship()
     public static function field_meta_relationship()
     {
-        $cett = Doctrine::getTable('ContentEntryType');
-        $types = $cett->findAll();
+        $types = MonDB::selectCollection('content_entry_type')->find();
         $field = '<select>';
         $options = array();
         foreach ($types as $type)
         {
-            $id = $type['id'];
             $name = $type['name'];
-            $field .= "<option value='{$id}'>{$name}</option>";
-            $options[$id] = $name;
+            $nice_name = $type['nice_name'];
+            $field .= "<option value='{$name}'>{$nice_name}</option>";
+            $options[$name] = $nice_name;
         }
         $field .= '</select>';
 
@@ -491,14 +490,13 @@ class ContentField
     //{{{ public static function field_meta_relationship_multiple()
     public static function field_meta_relationship_multiple()
     {
-        $cett = Doctrine::getTable('ContentEntryType');
-        $types = $cett->findAll();
+        $types = MonDB::selectCollection('content_entry_type')->find();
         $field = '';
         foreach ($types as $type)
         {
-            $id = $type['id'];
             $name = $type['name'];
-            $field .= "<label><input type='checkbox' value='{$id}' />{$name}</label>";
+            $nice_name = $type['nice_name'];
+            $field .= "<label><input type='checkbox' value='{$name}' />{$nice_name}</label>";
         }
 
         return array(
@@ -680,6 +678,8 @@ class ContentField
                 $types[] = $_FILES['data']['type'][$key]['data'];
             }
             $akey = 0;
+            // GridFS?
+            /*
             foreach ($names as $k => $name)
             {
                 $src = $temps[$k];
@@ -719,6 +719,7 @@ class ContentField
                     }
                 }
             }
+            */
         }
         return array('data' => $d);
     }

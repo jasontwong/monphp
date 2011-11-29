@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(function() {
 //{{{ add another link behavior
 var content_multiple_remove = $('<div class="remove">&times; Remove field</div>'),
     content_multiple_move_down = $('<a href="javascript:;" class="move_down">Move down</a>'),

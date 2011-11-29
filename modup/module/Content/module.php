@@ -98,6 +98,10 @@ class Content
                 {
                     $js[] = '/admin/static/Content/field.js/';
                 }
+                if (URI_PART_3 === 'fields')
+                {
+                    $js[] = '/admin/static/Content/field.type.js/';
+                }
             }
         }
         if (strpos(URI_PATH, '/admin/module/Content/edit_entry/') !== FALSE)
