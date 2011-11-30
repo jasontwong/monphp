@@ -62,6 +62,26 @@ $layout->add_layout(
 );
 
 // }}}
+//{{{ form submission
+if (isset($_POST['content_type']))
+{
+    try
+    {
+        $ptype = $layout->acts('post', $_POST['content_type']);
+        $layout->merge($_POST['content_type']);
+        $type = Content::save_entry_type($ptype);
+        Module::h('content_new_type_process', Module::TARGET_ALL, $layout, $type, $_POST);
+        Admin::notify(Admin::TYPE_SUCCESS, 'Successfully created');
+        header('Location: /admin/module/Content/edit_type/'.$type['name'].'/');
+        exit;
+    }
+    catch(Exception $e)
+    {
+        Admin::notify(Admin::TYPE_SUCCESS, 'There was an error creating this type.');
+    }
+}
+
+//}}}
 //{{{ form build
 $form = new FormBuilderRows;
 $form->attr = array(
@@ -107,44 +127,6 @@ $form->add_group(
 );
 
 $fh = $form->build();
-
-//}}}
-//{{{ form submission
-if (isset($_POST['content_type']))
-{
-    try
-    {
-        $ptype = $layout->acts('post', $_POST['content_type']);
-        $layout->merge($_POST['content_type']);
-        var_dump($ptype);
-        exit;
-        $type = Content::save_entry_type($ptype);
-        Content::save_field_group(
-            array(
-                'name' => $type['name'], 
-                'content_entry_type_id' => $type['id']
-            )
-        );
-        Module::h('content_new_type_process', Module::TARGET_ALL, $layout, $type, $_POST);
-        header('Location: /admin/module/Content/edit_type/'.$type['id'].'/');
-        exit;
-    }
-    catch(Doctrine_Validator_Exception $e)
-    {
-        $records = $e->getInvalidRecords();
-        foreach ($records as $record)
-        {
-            $errors = $record->getErrorStack()->toArray();
-            foreach ($errors as $name => $messages)
-            {
-                foreach ($messages as $message)
-                {
-                    Admin::append('notices', $message);
-                }
-            }
-        }
-    }
-}
 
 //}}}
 

@@ -1,4 +1,3 @@
-
 <?php if (count($entry_types)): ?>
     <ul>
 
@@ -6,7 +5,7 @@
             
             <li>
                 <span class='name'>
-                    <a href='/admin/module/Content/edit_type/<?php echo $entry_type['id'] ?>/'><?php echo htmlentities($entry_type['name'], ENT_QUOTES) ?></a></li>
+                    <a href='/admin/module/Content/edit_type/<?php echo $entry_type['name'] ?>/'><?php echo htmlentities($entry_type['nice_name'], ENT_QUOTES) ?></a></li>
                 </span>
                 <?php if (strlen($entry_type['description'])): ?>
                     <span class='description'>
@@ -19,4 +18,3 @@
 
     </ul>
 <?php endif ?>
-

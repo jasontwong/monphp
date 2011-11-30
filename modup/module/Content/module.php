@@ -33,7 +33,8 @@ class Content
         $db->content_entry->ensureIndex(array('entry_type_id' => 1, 'weight' => 1, 'updated' => -1));
         $db->content_entry->ensureIndex(array('slug' => 1, 'entry_type_id' => 1));
         $db->content_entry_revision->ensureIndex(array('entry_id' => 1, 'revision' => -1));
-        $db->content_entry_type->ensureIndex(array('name' => 1));
+        $db->content_entry_type->ensureIndex(array('name' => 1), array('unique' => 1, 'dropDups' => 1));
+        $db->content_entry_type->ensureIndex(array('field_groups.name' => 1), array('unique' => 1, 'dropDups' => 1));
         $db->content_entry_type->ensureIndex(array('_id' => 1, 'field_groups.weight' => 1, 'field_groups.fields.weight' => 1));
     }
 
@@ -60,14 +61,14 @@ class Content
             foreach ($types as $type)
             {
                 $name = &$type['name'];
-                $id = &$type['id'];
-                if (User::has_perm('add content entries type', 'add content entries type-'.$id))
+                $nice_name = &$type['nice_name'];
+                if (User::has_perm('add content entries type', 'add content entries type-'.$name))
                 {
-                    $links['Add'][] = "<a href='$uri/new_entry/$id/'>$name</a>";
+                    $links['Add'][] = "<a href='$uri/new_entry/$name/'>$nice_name</a>";
                 }
-                if (User::has_perm('view content entries type', 'view content entries type-'.$id))
+                if (User::has_perm('view content entries type', 'view content entries type-'.$name))
                 {
-                    $links['Edit'][] = "<a href='$uri/edit_entries/?filter[limit][data]=25&filter[type][data]=$id'>$name</a>";
+                    $links['Edit'][] = "<a href='$uri/edit_entries/?filter[limit][data]=25&filter[type][data]=$name'>$nice_name</a>";
                 }
             }
         }
@@ -181,7 +182,7 @@ class Content
         {
             $types = self::get_entry_types(
                 array(), 
-                array('select' => array('id', 'name'))
+                array('name', 'nice_name')
             );
 
             if ($can_add)
@@ -201,20 +202,20 @@ class Content
             {
                 foreach ($types as $type)
                 {
-                    $id = &$type['id'];
                     $name = &$type['name'];
+                    $nice_name = &$type['nice_name'];
 
                     if ($can_add)
                     {
-                        $title = 'Add New '.$name;
-                        $href = '/admin/module/Content/new_entry/'.$id.'/';
+                        $title = 'Add New '.$nice_name;
+                        $href = '/admin/module/Content/new_entry/'.$name.'/';
                         $add_entries[] = '<li><a href="'.$href.'">'.$title.'</a></li>';
                     }
 
                     if ($can_edit)
                     {
-                        $title = 'Filter by '.$name;
-                        $href = '/admin/module/Content/edit_entries/?filter[type][data]='.$id;
+                        $title = 'Filter by '.$nice_name;
+                        $href = '/admin/module/Content/edit_entries/?filter[type][data]='.$name;
                         $edit_entries[] = '<li><a href="'.$href.'">'.$title.'</a></li>';
                     }
                 }
@@ -657,23 +658,26 @@ class Content
         return $entries;
     }
     //}}}
-    //{{{ public function get_entries_details_by_type_id($id, $spec = array(), $use_cache = TRUE, $expire = 0)
+    //{{{ public function get_entries_details_by_type_id($id, $fields = array(), $use_cache = TRUE, $expire = 0)
     /**
      * Returns multiple entries. Data set format is like get_entry_details
      */
-    public function get_entries_details_by_type_id($id, $spec = array(), $use_cache = TRUE, $expire = 0)
+    public function get_entries_details_by_type_id($id, $fields = array(), $use_cache = TRUE, $expire = 0)
     {
-        $dt_dspec = array(
+        /*
+        $dt_dfields = array(
             'select' => array(
                 'ety.id', 'ety.name'
             ),
             'from' => 'ContentEntryType ety',
             'where' => 'ety.id = ?'
         );
-        $dt_spec = array_merge($dt_dspec, $spec);
-        $types = dql_exec($dt_spec, array($id));
+        $dt_fields = array_merge($dt_dfields, $fields);
+        $types = dql_exec($dt_fields, array($id));
         $type = $types[0]['name'];
         return self::get_entries_details_by_type_name($type, $use_cache, $expire);
+        */
+        return array();
     }
     //}}}
     //{{{ public function get_entries_details_by_type_name($name, $use_cache = TRUE, $expire = 0)
@@ -804,11 +808,12 @@ class Content
     /**
      * This tries to be very minimal, getting as little info as needed.
      */
-    public function get_entries_details($params = array(), $spec = array())
+    public function get_entries_details($query = array(), $fields = array())
     {
         $entry = array();
 
-        $dt_dspec = array(
+        /*
+        $dt_dfields = array(
             'select' => array(
                 'em.id', 'em.created', 'em.revision',
                 'em.weight', 
@@ -820,9 +825,9 @@ class Content
             'where' => 'em.id IN ?',
             'andWhere' => 'eti.revision = em.revision'
         );
-        $dt_params =& $params;
-        $dt_spec = array_merge($dt_dspec, $spec);
-        $entries = dql_exec($dt_spec, $dt_params);
+        $dt_query =& $query;
+        $dt_fields = array_merge($dt_dfields, $fields);
+        $entries = dql_exec($dt_fields, $dt_query);
 
         $results = array();
         foreach ($entries as &$entry)
@@ -845,6 +850,8 @@ class Content
             $results[] = $result;
         }
         return $results;
+        */
+        return array();
     }
     //}}}
     //{{{ public function get_entries_details_by_ids($ids, $use_cache = TRUE, $expire = 0)
@@ -869,11 +876,12 @@ class Content
     /**
      * This tries to be very minimal, getting as little info as needed.
      */
-    public function get_entry_details($params = array(), $spec = array())
+    public function get_entry_details($query = array(), $fields = array())
     {
         $entry = array();
 
-        $dt_dspec = array(
+        /*
+        $dt_dfields = array(
             'select' => array(
                 'em.id', 'em.created', 'em.revision',
                 'eti.title as title', 'eti.slug as slug', 
@@ -884,14 +892,15 @@ class Content
             'where' => 'em.id = ?',
             'andWhere' => 'eti.revision = em.revision'
         );
-        $dt_params =& $params;
-        $dt_spec = array_merge($dt_dspec, $spec);
-        $entry['entry'] = array_pop(dql_exec($dt_spec, $dt_params));
+        $dt_query =& $query;
+        $dt_fields = array_merge($dt_dfields, $fields);
+        $entry['entry'] = array_pop(dql_exec($dt_fields, $dt_query));
 
         $entry['data'] = self::get_field_data_by_entry_id_and_revision(
             $entry['entry']['id'],
             $entry['entry']['revision']
         );
+        */ 
         return $entry;
     }
     //}}}
@@ -917,16 +926,19 @@ class Content
     //{{{ public function get_entry_details_by_slug_and_type_id($slug, $type_id, $use_cache = TRUE, $expire = 0)
     public function get_entry_details_by_slug_and_type_id($slug, $type_id, $use_cache = TRUE, $expire = 0)
     {
-        $dt_dspec = array(
+        /*
+        $dt_dfields = array(
             'select' => array(
                 'ety.id', 'ety.name'
             ),
             'from' => 'ContentEntryType ety',
             'where' => 'ety.id = ?'
         );
-        $types = dql_exec($dt_spec, array($id));
+        $types = dql_exec($dt_fields, array($id));
         $type = $types[0]['name'];
         return self::get_entry_details_by_slug_and_type_name($slug, $type, $use_cache, $expire);
+        */
+        return array();
     }
     //}}}
     //{{{ public function get_entry_details_by_slug_and_type_name($slug, $type, $use_cache = TRUE, $expire = 0)
@@ -968,25 +980,17 @@ class Content
         return $entry;
     }
     //}}}
-    //{{{ public function get_entry_type($params = array(), $spec = array())
-    public function get_entry_type($params = array(), $spec = array())
+    //{{{ public function get_entry_type($query = array(), $fields = array())
+    public function get_entry_type($query = array(), $fields = array())
     {
-        $dspec = array(
-            'select' => array(
-                'ety.id', 'ety.name', 'ety.description', 
-                'ety.ordering', 'ety.stack'
-            ),
-            'from' => 'ContentEntryType ety',
-            'where' => 'ety.id = ?'
-        );
-        $s = array_merge($dspec, $spec);
-        return array_pop(dql_exec($s, $params));
+        return MonDB::selectCollection('content_entry_type')->findOne($query, $fields);
     }
     //}}}
-    //{{{ public function get_entry_type_by_entry_id($id, $spec = array())
-    public function get_entry_type_by_entry_id($id, $spec = array())
+    //{{{ public function get_entry_type_by_entry_id($id, $fields = array())
+    public function get_entry_type_by_entry_id($id, $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array(
                 'em.id',
                 'ety.id as entry_type_id', 
@@ -997,22 +1001,17 @@ class Content
             'leftJoin' => 'em.ContentEntryType ety',
             'where' => 'em.id = ?'
         );
-        $s = array_merge($dspec, $spec);
+        $s = array_merge($dfields, $fields);
         return array_pop(dql_exec($s, array($id)));
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_entry_type_by_id($id, $spec = array())
-    public function get_entry_type_by_id($id, $spec = array())
+    //{{{ public function get_entry_type_by_name($name, $fields = array())
+    public function get_entry_type_by_name($name, $fields = array())
     {
-        $dspec = array('where' => 'ety.id = ?');
-        return self::get_entry_type(array($id), array_merge($dspec, $spec));
-    }
-    //}}}
-    //{{{ public function get_entry_type_by_name($name, $spec = array())
-    public function get_entry_type_by_name($name, $spec = array())
-    {
-        $dspec = array('where' => 'ety.name = ?');
-        return self::get_entry_type(array($name), array_merge($dspec, $spec));
+        $query = array('name' => $name);
+        return self::get_entry_type($query, $fields);
     }
     //}}}
     //{{{ public function get_entry_type_details_by_id($id)
@@ -1033,10 +1032,11 @@ class Content
         return $details;
     }
     //}}}
-    //{{{ public function get_entry_type_fields($params = array(), $spec = array())
-    public function get_entry_type_fields($params = array(), $spec = array())
+    //{{{ public function get_entry_type_fields($query = array(), $fields = array())
+    public function get_entry_type_fields($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array(
                 'fg.id', 'fg.weight', 'fg.name', 
             ),
@@ -1044,8 +1044,8 @@ class Content
             'where' => 'fg.id = ?',
             'orderBy' => 'fg.weight asc'
         );
-        $s = array_merge($dspec, $spec);
-        $groups = dql_exec($s, $params);
+        $s = array_merge($dfields, $fields);
+        $groups = dql_exec($s, $query);
         $type['groups'] = $groups;
         $group_ids = array();
         $group_map = array();
@@ -1063,43 +1063,31 @@ class Content
             $group_map[$gid]['fields'][] = $field;
         }
         return $type;
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_entry_type_fields_by_id($id, $spec = array())
-    public function get_entry_type_fields_by_id($id, $spec = array())
+    //{{{ public function get_entry_type_fields_by_id($id, $fields = array())
+    public function get_entry_type_fields_by_id($id, $fields = array())
     {
-        $dspec = array('where' => 'fg.content_entry_type_id = ?');
-        return self::get_entry_type_fields(array($id), array_merge($dspec, $spec));
+        $dfields = array('where' => 'fg.content_entry_type_id = ?');
+        return self::get_entry_type_fields(array($id), array_merge($dfields, $fields));
     }
     //}}}
-    //{{{ public function get_entry_type_fields_by_name($name, $spec = array())
-    public function get_entry_type_fields_by_name($name, $spec = array())
+    //{{{ public function get_entry_type_fields_by_name($name, $fields = array())
+    public function get_entry_type_fields_by_name($name, $fields = array())
     {
-        $dspec = array('where' => 'fg.name = ?');
-        return self::get_entry_type_fields(array($name), array_merge($dspec, $spec));
+        $dfields = array('where' => 'fg.name = ?');
+        return self::get_entry_type_fields(array($name), array_merge($dfields, $fields));
     }
     //}}}
-    //{{{ public function get_entry_types($params = array(), $spec = array())
+    //{{{ public function get_entry_types($query = array(), $fields = array())
     /**
      * Gets entry types
      */
-    public function get_entry_types($params = array(), $spec = array())
+    public function get_entry_types($query = array(), $fields = array())
     {
-        /*
-        $dspec = array(
-            'select' => array(
-                'ety.id', 'ety.name', 'ety.description', 
-                'ety.ordering', 'ety.stack'
-            ),
-            'from' => 'ContentEntryType ety',
-            'orderBy' => 'ety.name asc',
-            'limit' => 0,
-            'offset' => 0
-        );
-        $s = array_merge($dspec, $spec);
-        return dql_exec($s, $params);
-        */
-        return array();
+        return MonDB::selectCollection('content_entry_type')->find($query, $fields);
     }
     //}}}
     //{{{ public function get_field_data_by_entry_id_and_revision($id, $revision)
@@ -1223,41 +1211,48 @@ class Content
         return $tree;
     }
     //}}}
-    //{{{ public function get_field_group($params = array(), $spec = array())
-    public function get_field_group($params = array(), $spec = array())
+    //{{{ public function get_field_group($query = array(), $fields = array())
+    public function get_field_group($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array('fg.id', 'fg.name', 'fg.weight'),
             'from' => 'ContentFieldGroup fg',
             'where' => 'fg.id = ?'
         );
-        $s = array_merge($dspec, $spec);
-        return array_pop(dql_exec($s, $params));
+        $s = array_merge($dfields, $fields);
+        return array_pop(dql_exec($s, $query));
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_field_group_by_id($id, $spec = array())
-    public function get_field_group_by_id($id, $spec = array())
+    //{{{ public function get_field_group_by_id($id, $fields = array())
+    public function get_field_group_by_id($id, $fields = array())
     {
-        $dspec = array('where' => 'fg.id = ?');
-        return self::get_field_group(array($id), array_merge($dspec, $spec));
+        $dfields = array('where' => 'fg.id = ?');
+        return self::get_field_group(array($id), array_merge($dfields, $fields));
     }
     //}}}
-    //{{{ public function get_field_group_by_type_id($id, $spec = array())
-    public function get_field_group_by_type_id($id, $spec = array())
+    //{{{ public function get_field_group_by_type_id($id, $fields = array())
+    public function get_field_group_by_type_id($id, $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array('fg.id', 'fg.name', 'fg.weight'),
             'from' => 'ContentFieldGroup fg',
             'where' => 'fg.content_entry_type_id = ?'
         );
-        $s = array_merge($dspec, $spec);
+        $s = array_merge($dfields, $fields);
         return dql_exec($s, array($id));
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_field_group_details($params = array(), $spec = array())
-    public function get_field_group_details($params = array(), $spec = array())
+    //{{{ public function get_field_group_details($query = array(), $fields = array())
+    public function get_field_group_details($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array(
                 'ft.id', 'ft.name', 'ft.type', 'ft.content_field_group_id',
                 'ft.weight', 'ft.multiple', 'ft.description'
@@ -1268,33 +1263,38 @@ class Content
                 'ft.content_field_group_id asc', 'ft.weight asc', 'ft.name asc'
             )
         );
-        $s = array_merge($dspec, $spec);
-        return dql_exec($s, $params);
+        $s = array_merge($dfields, $fields);
+        return dql_exec($s, $query);
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_field_meta($params = array(), $spec = array())
-    public function get_field_meta($params = array(), $spec = array())
+    //{{{ public function get_field_meta($query = array(), $fields = array())
+    public function get_field_meta($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array(
                 'fm.id', 'fm.name', 'fm.label', 'fm.required',
                 'fm.meta', 'fm.default_data'
             ),
             'from' => 'ContentFieldMeta fm'
         );
-        $nspec = array_merge($dspec, $spec);
-        $metas = dql_exec($nspec, $params);
+        $nfields = array_merge($dfields, $fields);
+        $metas = dql_exec($nfields, $query);
         return $metas;
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_field_meta_by_type_id($id, $spec = array())
-    public function get_field_meta_by_type_id($id, $spec = array())
+    //{{{ public function get_field_meta_by_type_id($id, $fields = array())
+    public function get_field_meta_by_type_id($id, $fields = array())
     {
-        $dspec = array('where' => 'fm.content_field_type_id = ?');
-        $nspec = array_merge($dspec, $spec);
+        $dfields = array('where' => 'fm.content_field_type_id = ?');
+        $nfields = array_merge($dfields, $fields);
         $param = array($id);
         $metas = array();
-        $rows = self::get_field_meta($param, $nspec);
+        $rows = self::get_field_meta($param, $nfields);
         foreach ($rows as $row)
         {
             $metas[$row['name']] = $row;
@@ -1302,34 +1302,38 @@ class Content
         return $metas;
     }
     //}}}
-    //{{{ public function get_field_type($params = array(), $spec = array())
-    public function get_field_type($params = array(), $spec = array())
+    //{{{ public function get_field_type($query = array(), $fields = array())
+    public function get_field_type($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array(
                 'ft.id', 'ft.name', 'ft.type', 'ft.weight',
                 'ft.multiple', 'ft.description'
             ),
             'from' => 'ContentFieldType ft'
         );
-        $s = array_merge($dspec, $spec);
-        return dql_exec($s, $params);
+        $s = array_merge($dfields, $fields);
+        return dql_exec($s, $query);
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_field_type_by_id($id, $spec = array())
-    public function get_field_type_by_id($id, $spec = array())
+    //{{{ public function get_field_type_by_id($id, $fields = array())
+    public function get_field_type_by_id($id, $fields = array())
     {
-        $dspec = array('where' => 'ft.id = ?');
-        $nspec = array_merge($dspec, $spec);
+        $dfields = array('where' => 'ft.id = ?');
+        $nfields = array_merge($dfields, $fields);
         $param = array($id);
-        $type = array_pop(self::get_field_type($param, $nspec));
+        $type = array_pop(self::get_field_type($param, $nfields));
         return $type;
     }
     //}}}
-    //{{{ public function get_latest_entries_created($params = array(), $spec = array())
-    public function get_latest_entries_created($params = array(), $spec = array())
+    //{{{ public function get_latest_entries_created($query = array(), $fields = array())
+    public function get_latest_entries_created($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array(
                 'em.id as id', 'em.created as created', 'eti.modified',
                 'eti.title', 'eti.slug'
@@ -1341,14 +1345,17 @@ class Content
             'limit' => 10,
             'offset' => 0
         );
-        $s = array_merge($dspec, $spec);
-        return dql_exec($s, $params);
+        $s = array_merge($dfields, $fields);
+        return dql_exec($s, $query);
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_latest_entries_modified($params = array(), $spec = array())
-    public function get_latest_entries_modified($params = array(), $spec = array())
+    //{{{ public function get_latest_entries_modified($query = array(), $fields = array())
+    public function get_latest_entries_modified($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array(
                 'em.id as id', 'em.created as created', 'eti.modified',
                 'eti.title', 'eti.slug'
@@ -1360,14 +1367,17 @@ class Content
             'limit' => 10,
             'offset' => 0
         );
-        $s = array_merge($dspec, $spec);
-        return dql_exec($s, $params);
+        $s = array_merge($dfields, $fields);
+        return dql_exec($s, $query);
+        */
+        return array();
     }
     //}}}
-    //{{{ public function get_most_revised_entries($params = array(), $spec = array())
-    public function get_most_revised_entries($params = array(), $spec = array())
+    //{{{ public function get_most_revised_entries($query = array(), $fields = array())
+    public function get_most_revised_entries($query = array(), $fields = array())
     {
-        $dspec = array(
+        /*
+        $dfields = array(
             'select' => array('em.id as id', 'em.revisions as revisions', 'eti.title'),
             'from' => 'ContentEntryTitle eti',
             'leftJoin' => 'eti.ContentEntryMeta em',
@@ -1376,8 +1386,10 @@ class Content
             'limit' => 10,
             'offset' => 0
         );
-        $s = array_merge($dspec, $spec);
-        return dql_exec($s, $params);
+        $s = array_merge($dfields, $fields);
+        return dql_exec($s, $query);
+        */
+        return array();
     }
     //}}}
     //{{{ public function get_entries_titles_by_type_and_field_name($type, $field_name, $field_search)
@@ -1426,6 +1438,7 @@ class Content
     //{{{ public function search_entry_title_by_title($title, $spec = array())
     public function search_entry_title_by_title($title, $spec = array())
     {
+        /*
         $dspec = array(
             'select' => array(
                 'eti.id', 'eti.modified', 'eti.title', 'eti.slug'
@@ -1437,6 +1450,8 @@ class Content
         );
         $s = array_merge($dspec, $spec);
         return dql_exec($s, array($title));
+        */
+        return array();
     }
 
     //}}}
@@ -1508,7 +1523,6 @@ class Content
             $data_rows->save();
         }
         return $cem['id'];
-        /*
         $cfmt = Doctrine::getTable('ContentFieldMeta');
         foreach ($data as $type_id => $fm)
         {
@@ -1539,95 +1553,22 @@ class Content
     //{{{ public function save_entry_type($entry_type)
     public function save_entry_type($entry_type)
     {
-        $type = new ContentEntryType;
-        if (eka($entry_type, 'id'))
+        $etc = MonDB::selectCollection('content_entry_type');
+        if (!ake('_id', $entry_type))
         {
-            $type->assignIdentifier($entry_type['id']);
+            $entry_type['name'] = slugify($entry_type['nice_name']);
+            $entry_type['ordering'] = FALSE;
+            $entry_type['field_groups'] = array(
+                array(
+                    'name' => $entry_type['name'],
+                    'nice_name' => $entry_type['nice_name'],
+                    'weight' => 0,
+                    'fields' => array(),
+                ),
+            );
         }
-        $type->merge($entry_type);
-        if (empty($entry_type['description']))
-        {
-            $type->description = ' ';
-        }
-        $type->save();
-        return $type;
-    }
-    //}}}
-    //{{{ public function save_field_group($field_group)
-    public function save_field_group($field_group)
-    {
-        $group = new ContentFieldGroup;
-        if (eka($field_group, 'id'))
-        {
-            $group->assignIdentifier($field_group['id']);
-        }
-        $group->merge($field_group);
-        $group->save();
-        return $group;
-    }
-    //}}}
-    //{{{ public function save_field($field)
-    public function save_field($field, $layout)
-    {
-        // TODO DOES NOT WORK YET
-        /*
-        $type = array(
-            'name' => $field['name'],
-            'type' => $field['type']['type'],
-            'weight' => $field['weight'],
-            'content_field_group_id' => $field['content_field_group_id'],
-            'multiple' => $field['multiple'],
-            'description' => $field['description']
-        );
-        */
-        $cft = new ContentFieldType;
-        $cft->merge($field);
-        $cft->save();
-
-        $field_type = &$cft;
-        $fmeta = $layout->meta($field_type->type);
-        foreach (Field::layout($field_type->type, $field_type->id) as $name => $field)
-        {
-            $field_meta = new ContentFieldMeta;
-            if (is_array($fmeta))
-            {
-                foreach ($fmeta as $key => $meta)
-                {
-                    if ($key === $name)
-                    {
-                        // TODO make another loop if the meta type has multiple keys
-                        $mdata = $layout->acts('post', $meta['type'], array('meta', array('data' => $_POST['field']['meta'][$name])));
-                        if ($mdata !== FALSE)
-                        {
-                            $field_meta->meta = $mdata;
-                        }
-                        break;
-                    }
-                }
-            }
-            $field_meta->name = $name;
-            $field_meta->content_field_type_id = $field_type->id;
-            if ($field_meta->isValid())
-            {
-                $field_meta->save();
-            }
-            else
-            {
-                $field_type->delete();
-            }
-            $field_meta->free();
-        }
-        /*
-        $metas = $field['type'];
-        foreach ($metas['type'] as $meta)
-        {
-            $meta_row = Field::layout($meta, $cft->id);
-            $meta_row['content_field_type_id'] = $cft->id;
-            $cfm = new ContentFieldMeta;
-            $cfm->merge($meta_row);
-            $cfm->save();
-        }
-        */
+        $etc->save($entry_type);
+        return $entry_type;
     }
     //}}}
 

@@ -15,19 +15,19 @@
                 </tr>
             </tfoot>
             <tbody>
-                <?php foreach ($field_groups['groups'] as $id => $field_group): ?>
+                <?php foreach ($field_groups as $field_group): ?>
 
                     <tr>
                         <th colspan='4'>
-                            <a href='/admin/module/Content/edit_field_group/<?php echo $field_group['id'] ?>/'><?php echo htmlentities($field_group['name'], ENT_QUOTES) ?></a>
+                            <a href='/admin/module/Content/edit_field_group/<?php echo $field_group['name'] ?>/'><?php echo htmlentities($field_group['nice_name'], ENT_QUOTES) ?></a>
                         </th>
                     </tr>
 
                     <?php foreach ($field_group['fields'] as $field): ?>
 
                         <tr>
-                            <td><input type='checkbox' class='checkbox' name='f[]' value='<?php echo $field['id'] ?>'></td>
-                            <td><a href='/admin/module/Content/edit_field/<?php echo $field['id'] ?>/'><?php echo htmlentities($field['name'], ENT_QUOTES) ?></a></td>
+                            <td><input type='checkbox' class='checkbox' name='f[]' value='<?php echo $field['name'] ?>'></td>
+                            <td><a href='/admin/module/Content/edit_field/<?php echo $field['name'] ?>/'><?php echo htmlentities($field['nice_name'], ENT_QUOTES) ?></a></td>
                             <td><?php echo $field['type'] ?></td>
                             <td><?php echo $field['description'] ?></td>
                         </tr>

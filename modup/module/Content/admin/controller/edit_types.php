@@ -12,7 +12,7 @@ Admin::set('header', 'Select Which Entry Type to Edit');
 
 $entry_types = Content::get_entry_types(
     array(), 
-    array('select' => array('ety.id', 'ety.name', 'ety.description'))
+    array('name', 'nice_name', 'description')
 );
 
 

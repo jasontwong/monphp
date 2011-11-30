@@ -7,10 +7,7 @@ if (!User::perm('edit content type'))
     return;
 }
 
-$entry_type = Content::get_entry_type_by_id(
-    URI_PART_4,
-    array('select' => array('ety.name'))
-);
+$entry_type = Content::get_entry_type_by_name(URI_PART_4);
 
 if (!$entry_type)
 {
@@ -18,24 +15,14 @@ if (!$entry_type)
     exit;
 }
 
-Admin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['name'], ENT_QUOTES).'&rdquo; Field Groups');
-Admin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['name'], ENT_QUOTES).'&rdquo; Field Groups');
+Admin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Field Groups');
+Admin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Field Groups');
 // {{{ layout
 $layout = new Field();
 $layout->add_layout(
     array(
-        'field' => Field::layout('hidden'),
-        'name' => 'content_entry_type_id',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => URI_PART_4
-        )
-    )
-);
-$layout->add_layout(
-    array(
         'field' => Field::layout('text'),
-        'name' => 'name',
+        'name' => 'nice_name',
         'type' => 'text'
     )
 );
@@ -43,7 +30,10 @@ $layout->add_layout(
     array(
         'field' => Field::layout('text'),
         'name' => 'weight',
-        'type' => 'text'
+        'type' => 'text',
+        'value' => array(
+            'data' => 0,
+        ),
     )
 );
 $layout->add_layout(
@@ -59,20 +49,32 @@ $layout->add_layout(
 if (isset($_POST['form']))
 {
     $data = $layout->acts('post', $_POST['field_group']);
+    var_dump($data);
+    exit;
     try
     {
-        Content::save_field_group($data);
+        $data['name'] = slugify($data['nice_name']);
+        $data['fields'] = array();
+        if (!is_numeric($data['weight']))
+        {
+            $data['weight'] = 0;
+        }
+        $entry_type['field_groups'][] = $data;
+        Content::save_entry_type($entry_type);
+        Admin::notify(Admin::TYPE_SUCCESS, 'Group successfully created.');
+        header('Location: /admin/module/Content/edit_type/' . $entry_type['name'] . '/');
+        exit;
     }
     catch (Exception $e)
     {
         $layout->merge($_POST['field_group']);
-        echo 'error';
+        Admin::notify(Admin::TYPE_ERROR, 'There was an error creating the group.');
     }
 }
 
 //}}}
 //{{{ field group form build
-$field_groups = Content::get_entry_type_fields_by_id(URI_PART_4);
+$field_groups = $entry_type['field_groups'];
 $gform = new FormBuilderRows;
 $gform->attr = array(
     'action' => URI_PATH,
@@ -85,11 +87,7 @@ $gform->add_group(
     array(
         'rows' => array(
             array(
-                'fields' => $layout->get_layout('content_entry_type_id'),
-                'hidden' => TRUE
-            ),
-            array(
-                'fields' => $layout->get_layout('name'),
+                'fields' => $layout->get_layout('nice_name'),
                 'label' => array(
                     'text' => 'Name'
                 ),

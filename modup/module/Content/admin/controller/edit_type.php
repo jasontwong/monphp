@@ -7,31 +7,27 @@ if (!User::perm('edit content type'))
     return;
 }
 
-$entry_type = Content::get_entry_type_by_id(URI_PART_4);
+$entry_type = Content::get_entry_type_by_name(URI_PART_4);
 if (!$entry_type)
 {
-    header('Location: /admin/');
+    header('Location: /admin/module/Content/edit_types/');
     exit;
 }
 
-Admin::set('title', 'Edit Content Type &ldquo;'.htmlentities($entry_type['name'], ENT_QUOTES).'&rdquo;');
-Admin::set('header', 'Edit Content Type &ldquo;'.htmlentities($entry_type['name'], ENT_QUOTES).'&rdquo;');
+Admin::set('title', 'Edit Content Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
+Admin::set('header', 'Edit Content Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
 
 $other_links = Module::h('content_edit_type_other_links', Module::TARGET_ALL, URI_PART_4);
 
 //{{{ layout
-$stacks = array(
-    ContentEntryType::STACK_TOP => 'top',
-    ContentEntryType::STACK_BOTTOM => 'bottom'
-);
 $layout = new Field();
 $layout->add_layout(
     array(
         'field' => Field::layout('text'),
-        'name' => 'name',
+        'name' => 'nice_name',
         'type' => 'text',
         'value' => array(
-            'data' => $entry_type['name']
+            'data' => $entry_type['nice_name']
         )
     )
 );
@@ -52,23 +48,6 @@ $layout->add_layout(
         'type' => 'checkbox_boolean',
         'value' => array(
             'data' => $entry_type['ordering']
-        )
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => Field::layout(
-            'radio',
-            array(
-                'data' => array(
-                    'options' => $stacks
-                )
-            )
-        ),
-        'name' => 'stack',
-        'type' => 'radio',
-        'value' => array(
-            'data' => $entry_type['stack']
         )
     )
 );
@@ -118,7 +97,7 @@ $tform->add_group(
     array(
         'rows' => array(
             array(
-                'fields' => $layout->get_layout('name'),
+                'fields' => $layout->get_layout('nice_name'),
                 'label' => array(
                     'text' => 'Name'
                 ),
@@ -135,18 +114,12 @@ $tform->add_group(
                     'text' => 'Manually ordered'
                 )
             ),
-            array(
-                'fields' => $layout->get_layout('stack'),
-                'label' => array(
-                    'text' => 'If entries can be manually ordered, where should new ones go?'
-                )
-            ),
         )
     ),
     'content_type'
 );
 
-$hook_forms = Module::h('content_edit_type_form', Module::TARGET_ALL, &$layout, $entry_type);
+$hook_forms = Module::h('content_edit_type_form', Module::TARGET_ALL, $layout, $entry_type);
 foreach ($hook_forms as $module => $h_forms)
 {
     $tform->add_group($h_forms);
