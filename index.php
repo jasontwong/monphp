@@ -2,22 +2,22 @@
 
 ob_start('ob_gzhandler');
 //{{{ defining constants
-define('MODUP_SESSION', 'modup');
+define('MONPHP_SESSION', 'monphp');
 define('CMS_DEVELOPER', TRUE);
 define('WEB_DIR_INSTALL', '/install');
 define('DIR_WEB', dirname(__FILE__));
 define('DIR_FILE', DIR_WEB.'/file');
 
-define('DIR_MODUP', dirname(__FILE__).'/modup');
-define('DIR_SYS', DIR_MODUP.'/system');
-define('DIR_EXT', DIR_MODUP.'/extension');
-define('DIR_CTRL', DIR_MODUP.'/controller');
-define('DIR_LIB', DIR_MODUP.'/library');
-define('DIR_MODEL', DIR_MODUP.'/model');
-define('DIR_MODULE', DIR_MODUP.'/module');
-define('DIR_TMPL', DIR_MODUP.'/template');
-define('DIR_VIEW', DIR_MODUP.'/view');
-define('MODUP_VERSION', '0.5.0');
+define('DIR_MONPHP', dirname(__FILE__).'/monphp');
+define('DIR_SYS', DIR_MONPHP.'/system');
+define('DIR_EXT', DIR_MONPHP.'/extension');
+define('DIR_CTRL', DIR_MONPHP.'/controller');
+define('DIR_LIB', DIR_MONPHP.'/library');
+define('DIR_MODEL', DIR_MONPHP.'/model');
+define('DIR_MODULE', DIR_MONPHP.'/module');
+define('DIR_TMPL', DIR_MONPHP.'/template');
+define('DIR_VIEW', DIR_MONPHP.'/view');
+define('MONPHP_VERSION', '0.5.0');
 
 error_reporting(CMS_DEVELOPER ? E_ALL : 0);
 //}}}
@@ -51,7 +51,7 @@ if (is_file(DIR_SYS.'/config.misc.php'))
 {
     include DIR_SYS.'/config.misc.php';
 }
-spl_autoload_register('modup_autoload');
+spl_autoload_register('monphp_autoload');
 $tz = Data::query('_Site', 'time_zone');
 date_default_timezone_set(is_null($tz) ? 'America/New_York' : $tz);
 // }}}
@@ -77,7 +77,7 @@ if (CMS_DEVELOPER || !$installed)
 }
 if ($installed)
 {
-    session_name(MODUP_SESSION);
+    session_name(MONPHP_SESSION);
     session_start();
     Module::h('active');
     $routes = Module::h('routes');

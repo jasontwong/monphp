@@ -1,5 +1,5 @@
 <?php
 
-Data::update('_System', 'version', MODUP_VERSION, TRUE);
+Data::update('_System', 'version', MONPHP_VERSION, TRUE);
 
 ?>

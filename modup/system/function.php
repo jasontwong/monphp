@@ -1,16 +1,12 @@
 <?php
 
-//{{{ function modup_autoload($class)
-function modup_autoload($class)
+//{{{ function monphp_autoload($class)
+function monphp_autoload($class)
 {
-    $file = DIR_SYS.'/classes/'.strtolower($class).'.php';
-    if (substr($class, 0, 11) === 'FormBuilder')
-    {
-        include_once DIR_SYS.'/classes/form.php';
-    }
+    $file = DIR_SYS.'/classes/' . $class . '.php';
     elseif (!class_exists($class) && is_file($file))
     {
-        include_once DIR_SYS.'/classes/'.strtolower($class).'.php';
+        include_once $file;
     }
 }
 //}}}
@@ -727,5 +723,3 @@ function word_split($str, $words = 15, $random = FALSE)
 }
 
 // }}}
-
-?>
