@@ -28,7 +28,7 @@
     <meta name="viewport" content="width=device-width">
     <meta http-equiv="imagetoolbar" content="false" />
 
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/screen.css">
     <link rel="canonical" href="<?php echo ake('HTTPS', $_SERVER) ? 'https://' : 'http://'; ?><?php echo  $_SERVER['HTTP_HOST'] . URI_PATH; ?>" />
 
     <?php if (ake('rss', $head)): foreach ($head['rss'] as &$_rss): ?>
