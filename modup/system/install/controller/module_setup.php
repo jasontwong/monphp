@@ -1,11 +1,11 @@
 <?php
 
-Module::h('active');
-$mod_fields = Module::h('install_form_build');
-$layout = new Field();
+MPModule::h('active');
+$mod_fields = MPModule::h('install_form_build');
+$layout = new MPField();
 $layout->add_layout(
     array(
-        'field' => Field::layout(
+        'field' => MPField::layout(
             'submit_reset',
             array(
                 'submit' => array(
@@ -19,13 +19,13 @@ $layout->add_layout(
     )
 );
 //{{{ build form
-$form = new FormBuilderRows;
+$form = new MPFormBuilderRows;
 $form->attr = array(
     'action' => '/install/module_setup/',
     'method' => 'post'
 );
 $form->label = array(
-    'text' => 'Module Setup'
+    'text' => 'MPModule Setup'
 );
 foreach ($mod_fields as $mod => $group)
 {
@@ -38,7 +38,7 @@ foreach ($mod_fields as $mod => $group)
             $row['fields'] = $layout->get_layout($row['fields']['name']);
         }
         $group_data = $layout->acts('post', $_POST[$mod]);
-        Module::h('install_form_process', $mod, $group_data, array());
+        MPModule::h('install_form_process', $mod, $group_data, array());
     }
     $form->add_group($group, $mod);
 }

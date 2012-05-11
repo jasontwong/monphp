@@ -1,34 +1,34 @@
 <?php
 
-MonDB::drop();
+MPDB::drop();
 rm_resource_dir(DIR_FILE.'/module', FALSE);
 
 // {{{ layout
-$layout = new Field();
+$layout = new MPField();
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'title',
         'type' => 'text'
     )
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'description',
         'type' => 'text'
     )
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('dropdown_timezones'),
+        'field' => MPField::layout('dropdown_timezones'),
         'name' => 'time_zone',
         'type' => 'dropdown_timezones'
     )
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('submit_reset'),
+        'field' => MPField::layout('submit_reset'),
         'name' => 'submit',
         'type' => 'submit_reset'
     )
@@ -46,8 +46,8 @@ if (isset($_POST['settings']))
     $layout->merge($_POST['settings']);
     foreach ($result as $key => $data)
     {
-        Data::update('_Site', $key, $data, TRUE);
-        Data::save();
+        MPData::update('_Site', $key, $data, TRUE);
+        MPData::save();
     }
     header('Location: /install/modules/');
     exit;
@@ -55,7 +55,7 @@ if (isset($_POST['settings']))
 
 //}}}
 // {{{ form
-$form = new FormBuilderRows;
+$form = new MPFormBuilderRows;
 $form->attr = array(
     'action' => '/install/settings/',
     'method' => 'POST'

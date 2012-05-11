@@ -59,6 +59,7 @@ abstract class Swift_Transport_AbstractSmtpTransport
    * brackets (i.e. [127.0.0.1]).
    * 
    * @param string $domain
+   * @return Swift_Transport_AbstractSmtpTransport
    */
   public function setLocalDomain($domain)
   {
@@ -144,7 +145,7 @@ abstract class Swift_Transport_AbstractSmtpTransport
   /**
    * Send the given Message.
    * 
-   * Recipient/sender data will be retreived from the Message API.
+   * Recipient/sender data will be retrieved from the Message API.
    * The return value is the number of recipients who were accepted for delivery.
    * 
    * @param Swift_Mime_Message $message
@@ -406,7 +407,7 @@ abstract class Swift_Transport_AbstractSmtpTransport
   /** Throws an Exception if a response code is incorrect */
   protected function _assertResponseCode($response, $wanted)
   {
-    list($code, $separator, $text) = sscanf($response, '%3d%[ -]%s');
+    list($code) = sscanf($response, '%3d');
     $valid = (empty($wanted) || in_array($code, $wanted));
     
     if ($evt = $this->_eventDispatcher->createResponseEvent($this, $response,

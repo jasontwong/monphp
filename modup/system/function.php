@@ -1,15 +1,5 @@
 <?php
 
-//{{{ function monphp_autoload($class)
-function monphp_autoload($class)
-{
-    $file = DIR_SYS.'/classes/' . $class . '.php';
-    elseif (!class_exists($class) && is_file($file))
-    {
-        include_once $file;
-    }
-}
-//}}}
 //{{{ function ake($key, $array)
 /**
  * Shortcut for array_key_exists()
@@ -363,11 +353,11 @@ function file_mime_type($filename)
 //}}}
 //{{{ function filter_extensions($c)
 /**
- * Callback for array_filter to get all Extension classes
+ * Callback for array_filter to get all MPExtension classes
  */
 function filter_extensions($c)
 {
-    return substr($c, 0, 9) === 'Extension' && strlen($c) > 9;
+    return substr($c, 0, 9) === 'MPExtension' && strlen($c) > 9;
 }
 //}}}
 // {{{ function hex_to_rgb($color)
@@ -467,6 +457,16 @@ function is_slug($slug)
     return preg_match('/^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$/', $slug);
 }
 
+//}}}
+//{{{ function monphp_autoload($class)
+function monphp_autoload($class)
+{
+    $file = DIR_SYS.'/classes/' . $class . '.php';
+    elseif (!class_exists($class) && is_file($file))
+    {
+        include_once $file;
+    }
+}
 //}}}
 //{{{ function prepend_name($key, $name)
 /**

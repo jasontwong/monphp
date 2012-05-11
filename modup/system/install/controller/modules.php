@@ -1,14 +1,14 @@
 <?php
 
-$modules = Module::available();
+$modules = MPModule::available();
 $names = array_keys($modules);
 $mods = array();
 
 // {{{ layout
-$layout = new Field();
+$layout = new MPField();
 $layout->add_layout(
     array(
-        'field' => Field::layout(
+        'field' => MPField::layout(
             'checkbox',
             array(
                 'data' => array(
@@ -22,7 +22,7 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout(
+        'field' => MPField::layout(
             'submit_reset',
             array(
                 'submit' => array(
@@ -41,12 +41,12 @@ if (isset($_POST['mods']))
 {
     $mods = $layout->acts('post', $_POST['mods']);
     $layout->merge($_POST['mods']);
-    Data::update('_System', 'modules', $mods['modules'], TRUE);
-    if (Module::check_dependency($mods['modules']))
+    MPData::update('_System', 'modules', $mods['modules'], TRUE);
+    if (MPModule::check_dependency($mods['modules']))
     {
-        Module::load_active();
-        Module::install();
-        Data::save();
+        MPModule::load_active();
+        MPModule::install();
+        MPData::save();
         header('Location: /install/module_setup/');
         exit;
     }
@@ -57,7 +57,7 @@ if (isset($_POST['mods']))
 }
 // }}}
 // {{{ form
-$form = new FormBuilderRows;
+$form = new MPFormBuilderRows;
 $form->attr = array(
     'action' => '/install/modules/',
     'method' => 'POST'
@@ -67,7 +67,7 @@ $form->add_group(
         'rows' => array(
             array(
                 'label' => array(
-                    'text' => 'Modules'
+                    'text' => 'MPModules'
                 ),
                 'fields' => $layout->get_layout('modules')
             ),

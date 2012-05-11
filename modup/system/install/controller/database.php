@@ -29,10 +29,10 @@ else
 }
 //}}}
 // {{{ form
-$layout = new Field();
+$layout = new MPField();
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'host',
         'type' => 'text',
         'value' => array('data' => $dbf['host'])
@@ -40,7 +40,7 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'port',
         'type' => 'text',
         'value' => array('data' => $dbf['port'])
@@ -48,7 +48,7 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'username',
         'type' => 'text',
         'value' => array('data' => $dbf['options']['username'])
@@ -56,7 +56,7 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'password',
         'type' => 'text',
         'value' => array('data' => $dbf['options']['password'])
@@ -64,7 +64,7 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'db',
         'type' => 'text',
         'value' => array('data' => $dbf['options']['db'])
@@ -72,7 +72,7 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout('text'),
+        'field' => MPField::layout('text'),
         'name' => 'replicaSet',
         'type' => 'text',
         'value' => array('data' => $dbf['options']['replicaSet'])
@@ -80,7 +80,7 @@ $layout->add_layout(
 );
 $layout->add_layout(
     array(
-        'field' => Field::layout(
+        'field' => MPField::layout(
             'submit_reset', 
             array(
                 'submit' => array(
@@ -207,7 +207,7 @@ else
 }
 //}}}
 //{{{ build form
-$form = new FormBuilderRows;
+$form = new MPFormBuilderRows;
 $form->attr = array(
     'action' => '/install/database/',
     'method' => 'POST'
@@ -236,7 +236,7 @@ $form->add_group(
         'rows' => array(
             array(
                 'label' => array(
-                    'text' => 'Username'
+                    'text' => 'MPUsername'
                 ),
                 'fields' => $layout->get_layout('username')
             ),
@@ -248,7 +248,7 @@ $form->add_group(
             ),
             array(
                 'label' => array(
-                    'text' => 'Database'
+                    'text' => 'MPDatabase'
                 ),
                 'fields' => $layout->get_layout('db')
             ),

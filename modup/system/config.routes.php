@@ -1,6 +1,6 @@
 <?php
 
-Router::add('/', DIR_CTRL.'/index.php');
+MPRouter::add('/', DIR_CTRL.'/index.php');
 
 /**
  * Routes are added with the static method router::add($pattern, $replacement)

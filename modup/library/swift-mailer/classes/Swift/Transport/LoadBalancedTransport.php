@@ -53,7 +53,7 @@ class Swift_Transport_LoadBalancedTransport implements Swift_Transport
    * 
    * @return array Swift_Transport
    */
-  public function getTransports(array $transports)
+  public function getTransports()
   {
     return array_merge($this->_transports, $this->_deadTransports);
   }
@@ -90,7 +90,7 @@ class Swift_Transport_LoadBalancedTransport implements Swift_Transport
   /**
    * Send the given Message.
    * 
-   * Recipient/sender data will be retreived from the Message API.
+   * Recipient/sender data will be retrieved from the Message API.
    * The return value is the number of recipients who were accepted for delivery.
    * 
    * @param Swift_Mime_Message $message
