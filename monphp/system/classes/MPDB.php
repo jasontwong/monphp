@@ -9,7 +9,7 @@ class MPDB
     // {{{ function __construct ($set = 'default')
     function __construct ($set = 'default', $db_file = '')
     {
-        include_once $db_file === ''
+        include $db_file === ''
             ? DIR_SYS.'/config.database.php'
             : $db_file;
         $this->conn = new Mongo($_db_conn[$set]['server'], $_db_conn[$set]['options']);
