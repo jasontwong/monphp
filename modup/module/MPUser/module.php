@@ -1327,5 +1327,3 @@ class MPUserInfo
     //}}}
 }
 //}}}
-
-?>

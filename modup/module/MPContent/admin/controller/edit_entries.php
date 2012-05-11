@@ -143,7 +143,7 @@ $entries = $entries_query->fetchArray();
 
 // }}}
 // {{{ form build
-$form = new MPFormBuilderRows;
+$form = new MPFormRows;
 $form->attr = array(
     'action' => URI_PATH,
     'method' => 'get',

@@ -49,5 +49,3 @@ class MPDB
 class MPDBException extends Exception
 {
 }
-
-?>

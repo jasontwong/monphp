@@ -64,7 +64,7 @@ $type = MPContent::get_entry_type_by_id(
     array('select' => 'ety.name')
 );
 //{{{ type form build
-$cform = new MPFormBuilderRows;
+$cform = new MPFormRows;
 $cform->attr = array(
     'action' => URI_PATH,
     'method' => 'post'

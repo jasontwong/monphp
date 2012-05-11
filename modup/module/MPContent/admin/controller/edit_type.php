@@ -85,7 +85,7 @@ if (isset($_POST['form']))
 
 //}}}
 //{{{ type form build
-$tform = new MPFormBuilderRows;
+$tform = new MPFormRows;
 $tform->attr = array(
     'action' => URI_PATH,
     'method' => 'post'

@@ -55,7 +55,7 @@ if (isset($_POST['settings']))
 
 //}}}
 // {{{ form
-$form = new MPFormBuilderRows;
+$form = new MPFormRows;
 $form->attr = array(
     'action' => '/install/settings/',
     'method' => 'POST'

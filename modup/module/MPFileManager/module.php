@@ -744,5 +744,3 @@ class MPFileManager
 
 class MPFileManagerNotExistException extends Exception {}
 class MPFileManagerIsFileException extends Exception {}
-
-?>

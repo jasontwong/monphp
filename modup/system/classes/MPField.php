@@ -426,5 +426,3 @@ class MPFieldErrorException extends Exception
         return $this->errors;
     }
 }
-
-?>

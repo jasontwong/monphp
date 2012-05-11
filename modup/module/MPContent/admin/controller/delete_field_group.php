@@ -53,7 +53,7 @@ if (isset($_POST['confirm']))
 
 //}}}
 //{{{ type form build
-$gform = new MPFormBuilderRows;
+$gform = new MPFormRows;
 $gform->attr = array(
     'action' => URI_PATH,
     'method' => 'post'

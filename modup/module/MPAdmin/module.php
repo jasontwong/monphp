@@ -546,7 +546,7 @@ class MPAdmin
     public function cb_admin_login_build($mods)
     {
         $layout = new MPField();
-        $form = new MPFormBuilderRows;
+        $form = new MPFormRows;
         $form->attr = array(
             'method' => 'post',
             'action' => '/admin/login/'
@@ -967,5 +967,3 @@ class MPAdmin
 
     //}}}
 }
-
-?>

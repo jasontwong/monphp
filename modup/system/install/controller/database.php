@@ -207,7 +207,7 @@ else
 }
 //}}}
 //{{{ build form
-$form = new MPFormBuilderRows;
+$form = new MPFormRows;
 $form->attr = array(
     'action' => '/install/database/',
     'method' => 'POST'

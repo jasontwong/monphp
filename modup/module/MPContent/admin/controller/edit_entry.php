@@ -442,7 +442,7 @@ elseif (isset($_POST['do']))
 
 //}}}
 //{{{ form build
-$eform = new MPFormBuilderRows;
+$eform = new MPFormRows;
 $eform->attr = array(
     'action' => URI_PATH,
     'enctype' => 'multipart/form-data',

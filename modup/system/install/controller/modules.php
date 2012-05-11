@@ -57,7 +57,7 @@ if (isset($_POST['mods']))
 }
 // }}}
 // {{{ form
-$form = new MPFormBuilderRows;
+$form = new MPFormRows;
 $form->attr = array(
     'action' => '/install/modules/',
     'method' => 'POST'

@@ -1,6 +1,6 @@
 <?php
 
-class MPAdminMPField
+class MPAdminField
 {
     //{{{ public static function field_layout_tinyMCE()
     public static function field_layout_tinyMCE()
@@ -51,5 +51,3 @@ class MPAdminMPField
 
     //}}}
 }
-
-?>

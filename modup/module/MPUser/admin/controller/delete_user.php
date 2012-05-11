@@ -54,7 +54,7 @@ if (isset($_POST['do']))
 
 //}}}
 //{{{ form build
-$form = new MPFormBuilderRows;
+$form = new MPFormRows;
 $form->attr = array(
     'method' => 'post',
     'action' => URI_PATH

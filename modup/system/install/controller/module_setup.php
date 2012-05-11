@@ -19,7 +19,7 @@ $layout->add_layout(
     )
 );
 //{{{ build form
-$form = new MPFormBuilderRows;
+$form = new MPFormRows;
 $form->attr = array(
     'action' => '/install/module_setup/',
     'method' => 'post'

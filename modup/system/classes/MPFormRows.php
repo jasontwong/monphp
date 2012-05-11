@@ -1,7 +1,7 @@
 <?php
 
-//{{{ abstract class MPFormBuilder
-abstract class MPFormBuilder
+//{{{ abstract class MPForm
+abstract class MPForm
 {
     //{{{ properties
     public $attr;
@@ -426,11 +426,11 @@ abstract class MPFormBuilder
 }
 
 //}}}
-//{{{ class MPFormBuilderRows
+//{{{ class MPFormRows
 /**
  * Default form builder class used primarily in the back end
  */
-class MPFormBuilderRows extends MPFormBuilder
+class MPFormRows extends MPForm
 {
     //{{{ protected function label($details, $attr = array())
     /**
@@ -562,5 +562,3 @@ class MPFormBuilderRows extends MPFormBuilder
 }
 
 //}}}
-
-?>

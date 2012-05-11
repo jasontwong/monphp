@@ -1,6 +1,6 @@
 <?php
 
-class MPContentMPField
+class MPContentField
 {
     //{{{ public static function field_conclude_fieldtype($data, $args)
     public static function field_conclude_fieldtype($data, $args)
@@ -593,33 +593,6 @@ class MPContentMPField
     */
 
     //}}}
-    //{{{ public static function field_read_relationship_ordered($key, $data)
-    public static function field_read_relationship_ordered($key, $data)
-    {
-        $result = $pad = array();
-        if (empty($data))
-        {
-            return $data;
-        }
-        foreach ($data['data'] as $akey => $rows)
-        {
-            foreach ($rows as $row)
-            {
-                if (eka($row, 'meta', 'weight'))
-                {
-                    $result[$row['meta']['weight']] = $row['cdata'];
-                }
-                else
-                {
-                    $pad[] = $row['cdata'];
-                }
-            }
-            $results['data'][$akey] = array_merge(array_merge($result), $pad);
-        }
-        return $results;
-    }
-
-    //}}}
     //{{{ public static function field_save_date($key, $data)
     /**
      * @param array $key
@@ -725,27 +698,4 @@ class MPContentMPField
     }
 
     //}}}
-    //{{{ public static function field_save_relationship_ordered($key, $data)
-    public static function field_save_relationship_ordered($key, $data)
-    {
-        if (ake('data', $data))
-        {
-            foreach ($data['data'] as $k => &$v)
-            {
-                $v = array(
-                    'cdata' => $v,
-                    'meta' => array('weight' => $k)
-                );
-            }
-            return $data;
-        }
-        else
-        {
-            return array();
-        }
-    }
-
-    //}}}
 }
-
-?>

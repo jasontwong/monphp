@@ -108,7 +108,7 @@ $layout->add_layout(
 );
 //}}}
 //{{{ make form
-$form_file = new MPFormBuilderRows;
+$form_file = new MPFormRows;
 $form_file->attr = array(
     'method' => 'post',
     'action' => URI_PATH
@@ -139,7 +139,7 @@ $ffh = $form_file->build();
 
 if ($dirs)
 {
-    $form_dir = new MPFormBuilderRows;
+    $form_dir = new MPFormRows;
     $form_dir->attr = array(
         'method' => 'post',
         'action' => URI_PATH

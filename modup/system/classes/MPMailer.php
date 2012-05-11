@@ -9,12 +9,14 @@
 
 class MPMailer
 {
+    // {{{ properties
     public $transport;
     public $mailer;
     public $m;
     public $message;
     public $foo;
-
+    // }}}
+    // {{{ function __construct($config = array())
     /**
      * set the $config parameter to override any EMAIL_* constants
      *
@@ -55,16 +57,17 @@ class MPMailer
         $this->m =& $this->message;
         $this->foo = 'asd';
     }
-
+    // }}}
+    // {{{ function send()
     function send()
     {
         $this->mailer->send($this->message);
     }
-
+    // }}}
+    // {{{ function __call($name, $params)
     function __call($name, $params)
     {
         return call_user_func_array(array($this->message, $name), $params);
     }
-
+    // }}}
 }
-?>

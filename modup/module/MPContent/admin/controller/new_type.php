@@ -83,7 +83,7 @@ if (isset($_POST['content_type']))
 
 //}}}
 //{{{ form build
-$form = new MPFormBuilderRows;
+$form = new MPFormRows;
 $form->attr = array(
     'action' => URI_PATH,
     'method' => 'post'

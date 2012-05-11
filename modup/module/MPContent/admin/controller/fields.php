@@ -143,7 +143,7 @@ if (isset($_POST['form']))
 
 //}}}
 //{{{ custom field form build
-$fform = new MPFormBuilderRows;
+$fform = new MPFormRows;
 $fform->attr = array(
     'action' => URI_PATH,
     'method' => 'post',

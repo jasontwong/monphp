@@ -75,7 +75,7 @@ if (isset($_POST['form']))
 //}}}
 //{{{ field group form build
 $field_groups = $entry_type['field_groups'];
-$gform = new MPFormBuilderRows;
+$gform = new MPFormRows;
 $gform->attr = array(
     'action' => URI_PATH,
     'method' => 'post'
