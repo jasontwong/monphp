@@ -42,6 +42,10 @@ define('URI_PATH', $path);
 define('URI_REQUEST', $_SERVER['REQUEST_URI']);
 //}}}
 // {{{ init
+if (CMS_DEVELOPER)
+{
+    ini_set('display_errors', 1);
+}
 require_once DIR_SYS . '/function.php';
 require_once DIR_SYS . '/config.database.php';
 if (is_file(DIR_SYS . '/config.misc.php'))
