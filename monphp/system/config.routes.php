@@ -3,7 +3,7 @@
 MPRouter::add('/', DIR_CTRL.'/index.php');
 
 /**
- * Routes are added with the static method router::add($pattern, $replacement)
+ * Routes are added with the static method MPRouter:add($pattern, $replacement)
  * It is processed as preg_replace($pattern, $replace) in the router class, so
  * use any style for $pattern. Though it would be best to use # for pattern 
  * delimiters and ${n} for the replacement string variables. To carry a string
@@ -14,16 +14,14 @@ MPRouter::add('/', DIR_CTRL.'/index.php');
  *
  * examples:
  *
- * router::add('#/#', DIR_CTRL.'index.php', router::ROUTE_PCRE);
+ * MPRouter:add('#/#', DIR_CTRL.'index.php', MPRouter:ROUTE_PCRE);
  *      sends index page to the index.php contoller
  *
- * router::add('#/news/(archive|latest)/#', DIR_CTRL.'news.${1}.php', router::ROUTE_PCRE);
+ * MPRouter:add('#/news/(archive|latest)/#', DIR_CTRL.'news.${1}.php', MPRouter:ROUTE_PCRE);
  *      /news/archive/ goes to news.archive.php
  *
  * you can also do this
  *
- * router::add('#/news/(archive|latest)/#', DIR_CTRL.'news/${1}.php', router::ROUTE_PCRE);
+ * MPRouter:add('#/news/(archive|latest)/#', DIR_CTRL.'news/${1}.php', MPRouter:ROUTE_PCRE);
  *      /news/archive/ goes to news/archive.php
  */
-
-?>

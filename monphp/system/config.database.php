@@ -8,5 +8,3 @@ $_db_conn['default'] = array(
         'db' => 'monphp',
     )
 );
-
-?>
