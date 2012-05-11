@@ -462,7 +462,7 @@ function is_slug($slug)
 function monphp_autoload($class)
 {
     $file = DIR_SYS.'/classes/' . $class . '.php';
-    elseif (!class_exists($class) && is_file($file))
+    if (!class_exists($class) && is_file($file))
     {
         include_once $file;
     }
