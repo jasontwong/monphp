@@ -1,1 +1,5 @@
-hi this is the controller
+<?php
+
+$content = 'hi this is the controller';
+
+include DIR_VIEW.'/index.php';

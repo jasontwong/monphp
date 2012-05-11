@@ -103,17 +103,15 @@ if ($ctrl = Router::controller())
 {
     include $ctrl;
 }
-elseif (is_file(DIR_CTRL.'/404.php'))
-{
-    include DIR_CTRL.'/404.php';
-}
 else
 {
     header('HTTP/1.1 404 Not Found');
+    if (is_file(DIR_CTRL.'/404.php'))
+    {
+        include DIR_CTRL.'/404.php';
+    }
 }
 Module::h('end');
 
 Data::save();
 //}}}
-
-?>
