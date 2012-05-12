@@ -56,8 +56,8 @@ class MPUser
     //{{{ public function hook_active()
     public function hook_active()
     {
-        $uac = MPDB::selectCollection('user_account');
-        $uag = MPDB::selectCollection('user_group');
+        $uac = MPDB::selectCollection('mpuser_account');
+        $uag = MPDB::selectCollection('mpuser_group');
         $uac->ensureIndex(array('name' => 1), array(
             'unique' => 1, 
             'dropDups' => 1,
@@ -67,12 +67,12 @@ class MPUser
             'dropDups' => 1,
         ));
         self::find_info();
-        MPModule::h('user_perm');
+        MPModule::h('mpuser_perm');
     }
 
     //}}}
-    //{{{ public function hook_admin_dashboard()
-    public function hook_admin_dashboard()
+    //{{{ public function hook_mpadmin_dashboard()
+    public function hook_mpadmin_dashboard()
     {
         if (!MPUser::perm('admin'))
         {
@@ -90,8 +90,8 @@ class MPUser
     //{{{ private function _admin_dashboard_overview()
     private function _admin_dashboard_overview()
     {
-        $users = MPDB::selectCollection('user_account')->count();
-        $groups = MPDB::selectCollection('user_group')->count();
+        $users = MPDB::selectCollection('mpuser_account')->count();
+        $groups = MPDB::selectCollection('mpuser_group')->count();
         $o = '
             <ul>
                 <li>Total MPUser Accounts: ' . $users . '</li>
@@ -109,7 +109,7 @@ class MPUser
     {
         if (self::$changed)
         {
-            $uac = MPDB::selectCollection('user_account');
+            $uac = MPDB::selectCollection('mpuser_account');
             $user = $uac->findOne(array('_id' => $info['_id']));
             $info = self::$info;
             $info['group'] = array();
@@ -162,8 +162,8 @@ class MPUser
      */
     public function hook_install_form_process($data, $extra)
     {
-        $uac = MPDB::selectCollection('user_account');
-        $ugc = MPDB::selectCollection('user_group');
+        $uac = MPDB::selectCollection('mpuser_account');
+        $ugc = MPDB::selectCollection('mpuser_group');
 
         $group = array();
         $group['name'] = MPUser::ID_ADMIN;
@@ -180,6 +180,7 @@ class MPUser
         $user['permission'] = array('admin');
         $user['group'] = array($group);
         $user['group_ids'] = array($group['_id']);
+        $user['setting'] = array();
         $uac->insert($user);
 
         $group = array();
@@ -203,11 +204,12 @@ class MPUser
         $user['permission'] = array();
         $user['group'] = array($group);
         $user['group_ids'] = array($group['_id']);
+        $user['setting'] = array();
         $uac->insert($user);
     }
     //}}}
-    //{{{ public function hook_user_perm()
-    public function hook_user_perm()
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
     {
         return array(
             'MPUser' => array(
@@ -227,8 +229,8 @@ class MPUser
     }
 
     //}}}
-    //{{{ public function hook_admin_css()
-    public function hook_admin_css()
+    //{{{ public function hook_mpadmin_css()
+    public function hook_mpadmin_css()
     {
         $css = array();
         if (URI_PATH === '/admin/module/MPUser/users/')
@@ -239,8 +241,8 @@ class MPUser
     }
 
     //}}}
-    //{{{ public function hook_admin_js()
-    public function hook_admin_js()
+    //{{{ public function hook_mpadmin_js()
+    public function hook_mpadmin_js()
     {
         $js = array();
         if (strpos(URI_PATH, '/admin/module/MPUser/edit_user/') === 0)
@@ -255,20 +257,20 @@ class MPUser
     }
 
     //}}}
-    //{{{ public function hook_admin_js_header()
-    public function hook_admin_js_header()
+    //{{{ public function hook_mpadmin_js_header()
+    public function hook_mpadmin_js_header()
     {
         $js = array();
         return $js;
     }
 
     //}}}
-    //{{{ public function hook_admin_login_build()
+    //{{{ public function hook_mpadmin_login_build()
     /**
      * Custom hook by this module
      * Return value should be a form group array for all other modules
      */
-    public function hook_admin_login_build()
+    public function hook_mpadmin_login_build()
     {
         $layouts = array(
             'name' => array(
@@ -302,13 +304,13 @@ class MPUser
     }
 
     //}}}
-    //{{{ public function hook_admin_login_submit($data, $extra)
-    public function hook_admin_login_submit($data, $extra)
+    //{{{ public function hook_mpadmin_login_submit($data, $extra)
+    public function hook_mpadmin_login_submit($data, $extra)
     {
         $account = $this->is_account($data['name'], $data['pass']);
         if ($account)
         {
-            $uac = MPDB::selectCollection('user_account');
+            $uac = MPDB::selectCollection('mpuser_account');
             $user = $uac->findOne(array('name' => $data['name']));
             $user['logged_in'] = new MongoDate();
             $uac->save($user);
@@ -334,8 +336,8 @@ class MPUser
         return $results;
     }
     //}}}
-    //{{{ public function hook_admin_module_page($page)
-    public function hook_admin_module_page($page)
+    //{{{ public function hook_mpadmin_module_page($page)
+    public function hook_mpadmin_module_page($page)
     {
         switch ($page)
         {
@@ -345,8 +347,8 @@ class MPUser
     }
     
     //}}}
-    //{{{ public function hook_admin_nav()
-    public function hook_admin_nav()
+    //{{{ public function hook_mpadmin_nav()
+    public function hook_mpadmin_nav()
     {
         $links = array();
         if (MPUser::perm('edit self'))
@@ -493,7 +495,7 @@ class MPUser
     //{{{ public function hook_workflow_responses()
     public function hook_workflow_responses()
     {
-        $uac = MPDB::selectCollection('user_account');
+        $uac = MPDB::selectCollection('mpuser_account');
         $query = array(
             'name' => array(
                 '$ne' => MPUser::USER_ANONYMOUS,
@@ -536,7 +538,7 @@ class MPUser
                 'options' => array()
             )
         );
-        $ugc = MPDB::selectCollection('user_group');
+        $ugc = MPDB::selectCollection('mpuser_group');
         $query = array(
             'name' => array(
                 '$ne' => MPUser::GROUP_ANONYMOUS,
@@ -571,8 +573,8 @@ class MPUser
         );
     }
     //}}}
-    //{{{ public function cb_user_perm($perms)
-    public function cb_user_perm($perms)
+    //{{{ public function cb_mpuser_perm($perms)
+    public function cb_mpuser_perm($perms)
     {
         self::$perm = $perms;
     }
@@ -606,7 +608,7 @@ class MPUser
      */
     protected function is_account($name, $pass)
     {
-        $user = MPDB::selectCollection('user_account')->findOne(array('name' => $name));
+        $user = MPDB::selectCollection('mpuser_account')->findOne(array('name' => $name));
         if (!is_null($user) && $user['pass'] === sha1($user['salt'].$pass))
         {
             return TRUE;
@@ -624,7 +626,7 @@ class MPUser
      */
     public static function find_groups($group = NULL)
     {
-        $ugc = MPDB::selectCollection('user_group');
+        $ugc = MPDB::selectCollection('mpuser_group');
         if (is_null($group))
         {
             if (empty(self::$groups))
@@ -797,7 +799,7 @@ class MPUser
     //{{{ public static function field_content_group($type, $data)
     public static function field_content_group($type, $data)
     {
-        $ugc = MPDB::selectCollection('user_group');
+        $ugc = MPDB::selectCollection('mpuser_group');
         $group = $ugc->findOne(array('name' => self::GROUP_ANONYMOUS));
         if (is_null($group))
         {
@@ -821,7 +823,7 @@ class MPUser
     //{{{ public static function field_content_user($type, $data)
     public static function field_content_user($type, $data)
     {
-        $uac = MPDB::selectCollection('user_account');
+        $uac = MPDB::selectCollection('mpuser_account');
         $user = $uac->findOne(array('name' => $data));
         if (is_null($user))
         {
@@ -838,7 +840,7 @@ class MPUser
     //{{{ public static function field_content_user_current($type, $data)
     public static function field_content_user_current($type, $data)
     {
-        $uac = MPDB::selectCollection('user_account');
+        $uac = MPDB::selectCollection('mpuser_account');
         $user = $uac->findOne(array('name' => $data));
         if (is_null($user))
         {
@@ -863,7 +865,7 @@ class MPUser
     //{{{ public static function field_form_group($name, $value, $extra)
     public static function field_form_group($name, $value, $extra)
     {
-        $ugc = MPDB::selectCollection('user_group');
+        $ugc = MPDB::selectCollection('mpuser_group');
         $groups = iterator_to_array($ugc->find());
         $extra['options'][''] = 'none';
         foreach ($groups as &$group)
@@ -877,7 +879,7 @@ class MPUser
     //{{{ public static function field_form_group_multiple($name, $value, $extra)
     public static function field_form_group_multiple($name, $value, $extra)
     {
-        $ugc = MPDB::selectCollection('user_group');
+        $ugc = MPDB::selectCollection('mpuser_group');
         $groups = iterator_to_array($ugc->find());
         foreach ($groups as $group)
         {
@@ -893,7 +895,7 @@ class MPUser
     //{{{ public static function field_form_user($name, $value, $extra)
     public static function field_form_user($name, $value, $extra)
     {
-        $uac = MPDB::selectCollection('user_account');
+        $uac = MPDB::selectCollection('mpuser_account');
         $groups = iterator_to_array($uac->find());
         $extra['options'][''] = 'none';
         foreach ($users as &$user)
@@ -931,7 +933,7 @@ class MPUser
                     $field_value = self::ID_ANONYMOUS;
                 break;
                 default:
-                    $uac = MPDB::selectCollection('user_account');
+                    $uac = MPDB::selectCollection('mpuser_account');
                     $user = $uac->findOne(array('name' => $value));
                     $field_name = $user ? $user['nice_name'] : 'user: '.$value.' (account no longer exists)';
                     $field_value = $value;
@@ -951,7 +953,7 @@ class MPUser
     //{{{ public static function field_form_user_multiple($name, $value, $extra)
     public static function field_form_user_multiple($name, $value, $extra)
     {
-        $uac = MPDB::selectCollection('user_account');
+        $uac = MPDB::selectCollection('mpuser_account');
         $groups = iterator_to_array($uac->find());
         foreach ($users as &$user)
         {
@@ -1259,12 +1261,12 @@ class MPUserInfo
     //{{{ private function find_user($name)
     private function find_user($name)
     {
-        $uac = MPDB::selectCollection('user_account');
+        $uac = MPDB::selectCollection('mpuser_account');
         $user = $uac->findOne(array('name' => $name));
         if (!is_null($user))
         {
             $user['total_permission'] = $user['permission'];
-            $ugc = MPDB::selectCollection('user_group');
+            $ugc = MPDB::selectCollection('mpuser_group');
             $query = array(
                 '_id' => array(
                     '$in' => $user['group_ids'],
@@ -1317,7 +1319,7 @@ class MPUserInfo
         if ($this->changed)
         {
             $info = $this->user;
-            $ugc = MPDB::selectCollection('user_account');
+            $ugc = MPDB::selectCollection('mpuser_account');
             $user = $ugc->findOne(array('_id' => $info['_id']));
             $user = array_merge($user, $info);
             $ugc->save($user);

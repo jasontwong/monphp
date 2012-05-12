@@ -1,7 +1,7 @@
 <div id='nav'>
 <?php 
 
-$nav = MPModule::h('admin_nav'); 
+$nav = MPModule::h('mpadmin_nav'); 
 $open_nav = MPUser::setting('admin', 'nav');
 
 foreach ($nav as $title => $links)

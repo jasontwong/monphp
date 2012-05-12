@@ -21,7 +21,7 @@ content_multiple_move_down
             row.trigger('add_remove');
             if (rte.length)
             {
-                rte.tinymce(<?php echo MPModule::h('admin_tinymce'); ?>);
+                rte.tinymce(<?php echo MPModule::h('mpadmin_tinymce'); ?>);
             }
         }
     });
@@ -42,7 +42,7 @@ content_multiple_move_up
             row.trigger('add_remove');
             if (rte.length)
             {
-                rte.tinymce(<?php echo MPModule::h('admin_tinymce'); ?>);
+                rte.tinymce(<?php echo MPModule::h('mpadmin_tinymce'); ?>);
             }
         }
     });
@@ -70,7 +70,7 @@ content_multiple_add
     if (old_rte.length)
     {
         old_rte
-            .tinymce(<?php echo MPModule::h('admin_tinymce'); ?>);
+            .tinymce(<?php echo MPModule::h('mpadmin_tinymce'); ?>);
     }
     row.append(clone)
         .trigger('add_remove');
@@ -81,7 +81,7 @@ content_multiple_add
             .each(function(){
                 var el = $(this);
                 el.attr('id', '')
-                    .tinymce(<?php echo MPModule::h('admin_tinymce'); ?>);
+                    .tinymce(<?php echo MPModule::h('mpadmin_tinymce'); ?>);
                 tinymce.get(el.tinymce().editorId).setMPContent('');
             });
     }

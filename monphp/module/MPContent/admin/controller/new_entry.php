@@ -22,7 +22,7 @@ else
     $user_access_level = MPContent::ACCESS_DENY;
 }
 
-$module_access_level = MPModule::h('content_entry_add_access', MPModule::TARGET_ALL, $entry_type->id);
+$module_access_level = MPModule::h('mpcontent_entry_add_access', MPModule::TARGET_ALL, $entry_type->id);
 $access_level = max($module_access_level, $user_access_level);
 
 if ($access_level < MPContent::ACCESS_ALLOW)
@@ -35,7 +35,7 @@ if ($access_level < MPContent::ACCESS_ALLOW)
 
 //{{{ layout
 $layout = new MPField();
-$layout_sidebar = MPModule::h('content_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
+$layout_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
 $esides = array();
 foreach ($layout_sidebar as $mod => $groups)
 {
@@ -187,7 +187,7 @@ if (isset($_POST['entry']))
         if ($eid !== FALSE)
         {
             $content['meta']['content_entry_meta_id'] = $eid;
-            MPModule::h('content_entry_sidebar_new_process', MPModule::TARGET_ALL, &$layout, $content['meta'], $_POST['module']);
+            MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, &$layout, $content['meta'], $_POST['module']);
 
             //{{{ MPCache: updating block
             $content_type = MPContent::get_entry_type_details_by_id($content['meta']['content_entry_type_id']);
@@ -206,7 +206,7 @@ if (isset($_POST['entry']))
             MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
             //}}}
 
-            MPModule::h('content_entry_new_finish', MPModule::TARGET_ALL, $content['meta']);
+            MPModule::h('mpcontent_entry_new_finish', MPModule::TARGET_ALL, $content['meta']);
             header('Location: /admin/module/MPContent/edit_entry/'.$eid.'/');
             exit;
         }
@@ -231,7 +231,7 @@ $eform->attr = array(
     'method' => 'post'
 );
 
-//$form_sidebar = MPModule::h('content_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
+//$form_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
 
 foreach ($esides as $eside)
 {

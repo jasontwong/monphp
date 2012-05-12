@@ -36,7 +36,7 @@ else
     $user_access_level = MPContent::ACCESS_DENY;
 }
 
-$module_access_level = MPModule::h('content_entry_edit_access', MPModule::TARGET_ALL, $entry_type['id'], URI_PART_4);
+$module_access_level = MPModule::h('mpcontent_entry_edit_access', MPModule::TARGET_ALL, $entry_type['id'], URI_PART_4);
 $access_level = max($module_access_level, $user_access_level);
 
 if ($access_level === MPContent::ACCESS_DENY)
@@ -49,7 +49,7 @@ if ($access_level === MPContent::ACCESS_DENY)
 
 //{{{ layout
 $layout = new MPField();
-$entry_sidebar = MPModule::h('content_entry_sidebar_edit', MPModule::TARGET_ALL, &$entry);
+$entry_sidebar = MPModule::h('mpcontent_entry_sidebar_edit', MPModule::TARGET_ALL, &$entry);
 $esides = array();
 foreach ($entry_sidebar as $mod => $groups)
 {
@@ -292,7 +292,7 @@ if (isset($_POST['form']))
 
                 if (isset($_POST['module']))
                 {
-                    MPModule::h('content_entry_sidebar_edit_process', MPModule::TARGET_ALL, &$layout, $meta, $_POST['module']);
+                    MPModule::h('mpcontent_entry_sidebar_edit_process', MPModule::TARGET_ALL, &$layout, $meta, $_POST['module']);
                 }
 
                 //{{{ MPCache: updating block
@@ -330,7 +330,7 @@ if (isset($_POST['form']))
                 MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
                 //}}}
 
-                MPModule::h('content_entry_edit_finish', MPModule::TARGET_ALL, $meta);
+                MPModule::h('mpcontent_entry_edit_finish', MPModule::TARGET_ALL, $meta);
 
                 header('Location: /admin/module/MPContent/edit_entry/'.URI_PART_4.'/');
                 exit;
@@ -358,7 +358,7 @@ if (isset($_POST['form']))
                     $fields = Doctrine::getTable('MPContentMPFieldMPData');
                     $fields->saveEntryMPData($eid, $content['data'], 0);
         
-                    MPModule::h('content_entry_sidebar_new_process', MPModule::TARGET_ALL, $layout, $content['meta'], $_POST['module']);
+                    MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, $layout, $content['meta'], $_POST['module']);
         
                     //{{{ MPCache: updating block
                     $entry_meta_id = $eid;
@@ -379,7 +379,7 @@ if (isset($_POST['form']))
                     MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
                     //}}}
 
-                    MPModule::h('content_entry_new_finish', MPModule::TARGET_ALL, $content['meta']);
+                    MPModule::h('mpcontent_entry_new_finish', MPModule::TARGET_ALL, $content['meta']);
                     header('Location: /admin/module/MPContent/edit_entry/'.$eid.'/');
                     exit;
                 }

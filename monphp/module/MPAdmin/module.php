@@ -28,6 +28,40 @@ class MPAdmin
     }
 
     //}}}
+    //{{{ private function _rpc_dashboard($data)
+    private function _rpc_dashboard($data)
+    {
+        $data = (array)json_decode($data['json']);
+        foreach ($data as $side => &$elements)
+        {
+            $elements = (array)$elements;
+            foreach ($elements as &$element)
+            {
+                $element = (array)$element;
+            }
+        }
+        MPUser::update('setting', 'admin', 'dashboard', $data);
+    }
+
+    //}}}
+    //{{{ private function _rpc_quicklinks($data)
+    private function _rpc_quicklinks($data)
+    {
+        $data = (array)json_decode($data['json']);
+        MPUser::update('setting', 'admin', 'quicklinks', $data);
+        MPUser::update('setting', 'admin', 'quicklinks', $data);
+    }
+
+    //}}}
+    //{{{ private function _rpc_nav($data)
+    private function _rpc_nav($data)
+    {
+        $data = json_decode($data['json'], TRUE);
+        MPUser::update('setting', 'admin', 'nav', $data);
+        MPUser::update('setting', 'admin', 'nav', $data);
+    }
+
+    //}}}
     //{{{ public function hook_active()
     public function hook_active()
     {
@@ -37,7 +71,7 @@ class MPAdmin
             MPData::update('MPAdmin', 'logging', TRUE);
             MPData::save();
         }
-        $alc = MPDB::selectCollection('admin_log');
+        $alc = MPDB::selectCollection('mpadmin_log');
         $alc->ensureIndex(array('username' => 1, 'type' => 1));
 
         $static_routes = array(
@@ -69,26 +103,8 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function hook_user_perm()
-    public function hook_user_perm()
-    {
-        $perms = array(
-            'admin access' => 'Can access admin back end',
-            'admin settings' => 'Can change system and module settings',
-        );
-        $settings = array_keys(MPModule::h('data_info'));
-        foreach ($settings as $mod)
-        {
-            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
-        }
-        return array(
-            'MPAdmin' => $perms
-        );
-    }
-
-    //}}}
-    //{{{ public function hook_admin_css()
-    public function hook_admin_css()
+    //{{{ public function hook_mpadmin_css()
+    public function hook_mpadmin_css()
     {
         return array(
             'screen' => array(
@@ -101,8 +117,8 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function hook_admin_js()
-    public function hook_admin_js()
+    //{{{ public function hook_mpadmin_js()
+    public function hook_mpadmin_js()
     {
         $js = array();
         if (URI_PATH === '/admin/')
@@ -117,8 +133,8 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function hook_admin_js_header()
-    public function hook_admin_js_header()
+    //{{{ public function hook_mpadmin_js_header()
+    public function hook_mpadmin_js_header()
     {
         return array(
             '/file/module/MPAdmin/js/jquery/jquery.js',
@@ -135,6 +151,89 @@ class MPAdmin
             '/admin/static/MPAdmin/admin.js/',
             '/admin/static/MPAdmin/field.js/'
         );
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_tinymce()
+    public function hook_mpadmin_tinymce()
+    {
+        $options = array(
+            'plugins' => 'inlinepopups,spellchecker',
+            'theme' => 'advanced',
+            'skin' => 'krate',
+            'theme_advanced_blockformats' => 'p,div,h1,h2,h3,h4,h5,h6',
+            'theme_advanced_buttons1' => "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,separator,styleselect,formatselect,separator,sup,sub",
+            'theme_advanced_buttons2' => "bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,link,unlink,separator,anchor,image,separator,forecolor,charmap,removeformat,spellchecker,separator,hr,code",
+            'theme_advanced_buttons3' => "",
+            'theme_advanced_more_colors' => TRUE,
+            'theme_advanced_toolbar_location' => 'top',
+            'theme_advanced_statusbar_location' => 'bottom',
+            'theme_advanced_resizing' => TRUE,
+            'theme_advanced_resize_horizontal' => FALSE,
+            'relative_urls' => FALSE,
+            'width' => '508'
+        );
+        if (is_array(MPData::query('MPAdmin', 'tinyMCE')))
+        {
+            $options = array_merge($options, MPData::query('MPAdmin', 'tinyMCE'));
+        }
+        return $options;
+    }
+
+    //}}}
+    //{{{ public function hook_mproutes()
+    public function hook_mproutes()
+    {
+        $ctrl = dirname(__FILE__).'/controller';
+        $routes = array(
+            array('/admin/', $ctrl.'/index.php'),
+            array('/admin/login/', $ctrl.'/login.php'),
+            array('/admin/logout/', $ctrl.'/logout.php'),
+            array('#^/admin/settings/[^/]+/$#', $ctrl.'/settings.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/module/.+/$#', $ctrl.'/module.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/mod/.+/$#', $ctrl.'/mod.php', MPRouter::ROUTE_PCRE),
+        );
+        return $routes;
+    }
+
+    //}}}
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
+    {
+        $perms = array(
+            'admin access' => 'Can access admin back end',
+            'admin settings' => 'Can change system and module settings',
+        );
+        $settings = array_keys(MPModule::h('data_info'));
+        foreach ($settings as $mod)
+        {
+            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
+        }
+        return array(
+            'MPAdmin' => $perms
+        );
+    }
+
+    //}}}
+    //{{{ public function hook_rpc($action, $params = NULL)
+    /**
+     * Implementation of hook_rpc
+     *
+     * This looks at the action and checks for the method _rpc_<action> and
+     * passes the parameters to that. There is no limit on parameters.
+     *
+     * @param string $action action name
+     * @return string
+     */
+    public function hook_rpc($action)
+    {
+        $method = '_rpc_'.$action;
+        $caller = array($this, $method);
+        $args = array_slice(func_get_args(), 1);
+        return method_exists($this, $method) 
+            ? call_user_func_array($caller, $args)
+            : '';
     }
 
     //}}}
@@ -259,115 +358,6 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function hook_model_post_validate($errors)
-    public function hook_model_post_validate($errors)
-    {
-        foreach ($errors as $e)
-        {
-            MPAdmin::append('errors', $e);
-        }
-    }
-
-    //}}}
-    //{{{ public function hook_routes()
-    public function hook_routes()
-    {
-        $ctrl = dirname(__FILE__).'/controller';
-        $routes = array(
-            array('/admin/', $ctrl.'/index.php'),
-            array('/admin/login/', $ctrl.'/login.php'),
-            array('/admin/logout/', $ctrl.'/logout.php'),
-            array('#^/admin/settings/[^/]+/$#', $ctrl.'/settings.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/module/.+/$#', $ctrl.'/module.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/mod/.+/$#', $ctrl.'/mod.php', MPRouter::ROUTE_PCRE),
-        );
-        return $routes;
-    }
-
-    //}}}
-    //{{{ public function hook_rpc($action, $params = NULL)
-    /**
-     * Implementation of hook_rpc
-     *
-     * This looks at the action and checks for the method _rpc_<action> and
-     * passes the parameters to that. There is no limit on parameters.
-     *
-     * @param string $action action name
-     * @return string
-     */
-    public function hook_rpc($action)
-    {
-        $method = '_rpc_'.$action;
-        $caller = array($this, $method);
-        $args = array_slice(func_get_args(), 1);
-        return method_exists($this, $method) 
-            ? call_user_func_array($caller, $args)
-            : '';
-    }
-
-    //}}}
-    //{{{ public function hook_admin_tinymce()
-    public function hook_admin_tinymce()
-    {
-        $options = array(
-            'plugins' => 'inlinepopups,spellchecker',
-            'theme' => 'advanced',
-            'skin' => 'krate',
-            'theme_advanced_blockformats' => 'p,div,h1,h2,h3,h4,h5,h6',
-            'theme_advanced_buttons1' => "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,separator,styleselect,formatselect,separator,sup,sub",
-            'theme_advanced_buttons2' => "bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,link,unlink,separator,anchor,image,separator,forecolor,charmap,removeformat,spellchecker,separator,hr,code",
-            'theme_advanced_buttons3' => "",
-            'theme_advanced_more_colors' => TRUE,
-            'theme_advanced_toolbar_location' => 'top',
-            'theme_advanced_statusbar_location' => 'bottom',
-            'theme_advanced_resizing' => TRUE,
-            'theme_advanced_resize_horizontal' => FALSE,
-            'relative_urls' => FALSE,
-            'width' => '508'
-        );
-        if (is_array(MPData::query('MPAdmin', 'tinyMCE')))
-        {
-            $options = array_merge($options, MPData::query('MPAdmin', 'tinyMCE'));
-        }
-        return $options;
-    }
-
-    //}}}
-    //{{{ private function _rpc_dashboard($data)
-    private function _rpc_dashboard($data)
-    {
-        $data = (array)json_decode($data['json']);
-        foreach ($data as $side => &$elements)
-        {
-            $elements = (array)$elements;
-            foreach ($elements as &$element)
-            {
-                $element = (array)$element;
-            }
-        }
-        MPUser::update('setting', 'admin', 'dashboard', $data);
-    }
-
-    //}}}
-    //{{{ private function _rpc_quicklinks($data)
-    private function _rpc_quicklinks($data)
-    {
-        $data = (array)json_decode($data['json']);
-        MPUser::update('setting', 'admin', 'quicklinks', $data);
-        MPUser::update('setting', 'admin', 'quicklinks', $data);
-    }
-
-    //}}}
-    //{{{ private function _rpc_nav($data)
-    private function _rpc_nav($data)
-    {
-        $data = json_decode($data['json'], TRUE);
-        MPUser::update('setting', 'admin', 'nav', $data);
-        MPUser::update('setting', 'admin', 'nav', $data);
-    }
-
-    //}}}
     //{{{ public function hook_start()
     public function hook_start()
     {
@@ -388,8 +378,8 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function prep_admin_login_submit($mod, $data)
-    public function prep_admin_login_submit($mod, $data)
+    //{{{ public function prep_mpadmin_login_submit($mod, $data)
+    public function prep_mpadmin_login_submit($mod, $data)
     {
         if (eka($data, $mod))
         {
@@ -404,14 +394,14 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function prep_admin_module_page($mod)
+    //{{{ public function prep_mpadmin_module_page($mod)
     /**
      * Prepare data for the module's admin page
      * Looks into the module's /admin/ directory for the matching php template
      * file. If it is available, the hook uses the output of this file instead
      * of going into the module's hook method.
      */
-    public function prep_admin_module_page($mod)
+    public function prep_mpadmin_module_page($mod)
     {
         $data['callback'] = URI_PARTS === 3 ? 'index' : URI_PART_3;
         $dir = dirname(dirname(__FILE__)).'/'.$mod.'/admin/';
@@ -443,7 +433,7 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function cb_admin_dashboard($modules)
+    //{{{ public function cb_mpadmin_dashboard($modules)
     /**
      * Build out dashboard widgets based on what the modules specify
      * Each module that wants widgets or dashboard elements must return an
@@ -466,7 +456,7 @@ class MPAdmin
      * @param array $modules module hook data
      * @return string
      */
-    public function cb_admin_dashboard($modules)
+    public function cb_mpadmin_dashboard($modules)
     {
         $elements = $titles = array();
         $left = $right = $trash = 0;
@@ -542,8 +532,8 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function cb_admin_login_build($mods)
-    public function cb_admin_login_build($mods)
+    //{{{ public function cb_mpadmin_login_build($mods)
+    public function cb_mpadmin_login_build($mods)
     {
         $layout = new MPField();
         $form = new MPFormRows;
@@ -591,13 +581,13 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function cb_admin_login_submit($results)
+    //{{{ public function cb_mpadmin_login_submit($results)
     /**
      * Processes all module contribution to the admin_login_submit custom hook
      * Each module is to return an array with the 'success' key a boolean
      * allowing the user to log in or not with the form submission.
      */
-    public function cb_admin_login_submit($results)
+    public function cb_mpadmin_login_submit($results)
     {
         $success = TRUE;
         $messages = array();
@@ -632,13 +622,13 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function cb_admin_logout()
-    public function cb_admin_logout()
+    //{{{ public function cb_mpadmin_logout()
+    public function cb_mpadmin_logout()
     {
     }
 
     //}}}
-    //{{{ public function cb_admin_module_page($page)
+    //{{{ public function cb_mpadmin_module_page($page)
     /**
      * Build module page
      * This should just quickly return the $page, which is a complete chunk of
@@ -647,13 +637,13 @@ class MPAdmin
      * @param string $page HTML of module page
      * @return string
      */
-    public function cb_admin_module_page($page)
+    public function cb_mpadmin_module_page($page)
     {
         return array_pop($page);
     }
 
     //}}}
-    //{{{ public function cb_admin_nav($menu)
+    //{{{ public function cb_mpadmin_nav($menu)
     /**
      *  Expects array with keys as "zones"
      *
@@ -663,7 +653,7 @@ class MPAdmin
      *  @param array $menu
      *  @return array $nav
      */
-    public function cb_admin_nav($menu)
+    public function cb_mpadmin_nav($menu)
     {
         // Creates nav ordering
         $nav = array();
@@ -706,8 +696,8 @@ class MPAdmin
     }
 
     //}}} 
-    //{{{ public function cb_admin_js($js)
-    public function cb_admin_js($js)
+    //{{{ public function cb_mpadmin_js($js)
+    public function cb_mpadmin_js($js)
     {
         $done = array();
         $o = '';
@@ -726,15 +716,15 @@ class MPAdmin
     }
 
     //}}} 
-    //{{{ public function cb_admin_js_header($js)
-    public function cb_admin_js_header($js)
+    //{{{ public function cb_mpadmin_js_header($js)
+    public function cb_mpadmin_js_header($js)
     {
-        return $this->cb_admin_js($js);
+        return $this->cb_mpadmin_js($js);
     }
 
     //}}} 
-    //{{{ public function cb_admin_css($css)
-    public function cb_admin_css($css)
+    //{{{ public function cb_mpadmin_css($css)
+    public function cb_mpadmin_css($css)
     {
         $o = '';
         foreach ($css as $module => $styles)
@@ -751,8 +741,8 @@ class MPAdmin
     }
 
     //}}} 
-    //{{{ public function cb_admin_tinymce($modules)
-    public function cb_admin_tinymce($modules)
+    //{{{ public function cb_mpadmin_tinymce($modules)
+    public function cb_mpadmin_tinymce($modules)
     {
         $options = $modules['MPAdmin'];
         foreach ($modules as $module => $module_options)
@@ -853,7 +843,7 @@ class MPAdmin
                 'type' => $type,
                 'messages' => $messages,
             );
-            $alc = MPDB::selectCollection('admin_log');
+            $alc = MPDB::selectCollection('mpadmin_log');
             $alc->insert($log);
         }
     }

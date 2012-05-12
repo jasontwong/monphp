@@ -68,23 +68,6 @@ function array_drill($array)
         }
     }
     return $array;
-    /*
-    $ka = is_array($keys[0]);
-    $kc = count($ka ? $keys[0] : $keys);
-    for ($i = 0; $i < $kc; ++$i)
-    {
-        $param = $ka ? $keys[0][$i] : func_get_arg($i);
-        if (ake($param, $array))
-        {
-            $array = $array[$param];
-        }
-        else
-        {
-            return NULL;
-        }
-    }
-    return $array;
-    */
 }
 
 //}}}
@@ -458,8 +441,8 @@ function is_slug($slug)
 }
 
 //}}}
-//{{{ function monphp_autoload($class)
-function monphp_autoload($class)
+//{{{ function mp_autoload($class)
+function mp_autoload($class)
 {
     $file = DIR_SYS.'/classes/' . $class . '.php';
     if (!class_exists($class) && is_file($file))
@@ -468,6 +451,49 @@ function monphp_autoload($class)
     }
 }
 //}}}
+// {{{ function mp_register_script($handle, $src, $deps, $ver, $in_footer)
+function mp_register_script($handle, $src, $deps, $ver, $in_footer)
+{
+    if (!MPData::exists('_Site', 'scripts', 'handle', $handle))
+    {
+        $data = array(
+            'handle' => $handle,
+            'src' => $src,
+            'deps' => (array)$deps,
+            'version' => $ver,
+            'in_footer' => (bool)$in_footer,
+        );
+        $scripts = MPData::query('_Site', 'scripts');
+        if (is_array($scripts))
+        {
+            $scripts[] = $data;
+            MPData::update('_Site', 'scripts', $scripts);
+        }
+        else
+        {
+            MPData::update('_Site', 'scripts', array($data));
+        }
+    }
+}
+// }}}
+// {{{ function mp_deregister_script($handle)
+function mp_deregister_script($handle)
+{
+    if (MPData::exists('_Site', 'scripts', 'handle', $handle))
+    {
+        $scripts = MPData::query('_Site', 'scripts');
+        foreach ($scripts as $k => $script)
+        {
+            if ($script['handle'] === $handle)
+            {
+                unset($scripts[$k]);
+                break;
+            }
+        }
+        MPData::update('_Site', 'scripts', $scripts);
+    }
+}
+// }}}
 //{{{ function prepend_name($key, $name)
 /**
  * Prepends $name with $key while keeping it in array notation

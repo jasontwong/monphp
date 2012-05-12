@@ -44,8 +44,8 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_admin_css()
-    public function hook_admin_css()
+    //{{{ public function hook_mpadmin_css()
+    public function hook_mpadmin_css()
     {
         $screen = array();
         if (strpos(URI_PATH, '/admin/mod/MPFileManager/') === 0)
@@ -64,8 +64,8 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_admin_js()
-    public function hook_admin_js()
+    //{{{ public function hook_mpadmin_js()
+    public function hook_mpadmin_js()
     {
         $js[] = '/admin/static/MPFileManager/jquery.windowmsg-1.0.js/';
         if (strpos(URI_PATH, '/mod/MPFileManager/browse/') !== FALSE)
@@ -82,8 +82,8 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_admin_js_header()
-    public function hook_admin_js_header()
+    //{{{ public function hook_mpadmin_js_header()
+    public function hook_mpadmin_js_header()
     {
         $js = array();
         if (strpos(URI_PATH, '/mod/MPFileManager/') !== FALSE)
@@ -102,14 +102,14 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_admin_module_page($page)
-    public function hook_admin_module_page($page)
+    //{{{ public function hook_mpadmin_module_page($page)
+    public function hook_mpadmin_module_page($page)
     {
     }
     
     //}}}
-    //{{{ public function hook_admin_tinymce()
-    public function hook_admin_tinymce()
+    //{{{ public function hook_mpadmin_tinymce()
+    public function hook_mpadmin_tinymce()
     {
         return array(
             'file_browser_callback' => 'MPFileManager_browser'
@@ -117,8 +117,8 @@ class MPFileManager
     }
     
     //}}}
-    //{{{ public function hook_data_info()
-    public function hook_data_info()
+    //{{{ public function hook_mpdata_info()
+    public function hook_mpdata_info()
     {
         $fields = array();
         $fields[] = array(
@@ -203,8 +203,8 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_data_validate($name, $data)
-    public function hook_data_validate($name, $data)
+    //{{{ public function hook_mpdata_validate($name, $data)
+    public function hook_mpdata_validate($name, $data)
     {
         $success = TRUE;
         switch ($name)
@@ -225,8 +225,8 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_routes()
-    public function hook_routes()
+    //{{{ public function hook_mproutes()
+    public function hook_mproutes()
     {
         $ctrl = dirname(__FILE__).'/admin/controller';
         $routes = array(
@@ -257,8 +257,8 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_user_perm()
-    public function hook_user_perm()
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
     {
         return array(
             'view files' => 'View Files',

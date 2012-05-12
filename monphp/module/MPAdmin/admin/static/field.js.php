@@ -185,7 +185,7 @@ $('select.list_double_ordered')
 
 //}}}
 //{{{ RTE
-$('textarea.rte').tinymce(<?php echo MPModule::h('admin_tinymce'); ?>);
+$('textarea.rte').tinymce(<?php echo MPModule::h('mpadmin_tinymce'); ?>);
 
 //}}}
 //{{{ turn reset button into link

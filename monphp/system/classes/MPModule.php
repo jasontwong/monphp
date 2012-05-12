@@ -7,8 +7,6 @@
  * hooks which are sent to the hook manager class for activation. The hooks
  * are registered with the module manager but are called by the hook manager.
  *
- * This also handles extension loading as well.
- *
  * @package MPModule
  */
 
@@ -57,23 +55,15 @@ class MPModule
      */
     const STATE_ACTIVE = 2;
     /**
-     * No filter for modules and extensions
+     * No filter for modules
      */
     const TARGET_ALL = 0;
-    /**
-     * Filter for modules
-     */
-    const TARGET_MODULES = 1;
-    /**
-     * Filter for extensions
-     */
-    const TARGET_EXTENSIONS = 2;
     //}}}
     //{{{ protected function callbacks($module)
     /**
      * Get cb_hook callback methods for a module
      * A module can register a hook by having a callback method for the class.
-     * So if a module has the method cb_user_perm, the hook 'user_perm' is
+     * So if a module has the method cb_mpuser_perm, the hook 'user_perm' is
      * now registered by that module. If a hook is to be registered but does
      * not need to do anything, the cb_ method is still needed.
      *
@@ -379,17 +369,11 @@ class MPModule
         {
             foreach (self::$active as $name => $mod)
             {
-                $src = DIR_MODULE.'/'.$name.'/static';
-                $dest = DIR_WEB.'/file/module/'.$name;
-                dir_copy($src, $dest, FALSE);
                 self::h('install', $name);
             }
         }
         elseif (isset(self::$active[$target]))
         {
-            $src = DIR_MODULE.'/'.$target.'/static';
-            $dest = DIR_WEB.'/file/module/'.$target;
-            dir_copy($src, $dest, FALSE);
             self::h('install', $target);
         }
     }
@@ -437,7 +421,7 @@ class MPModule
      * 
      * The idea behind name collision management is that the
      * hooks will start with the module name. So the admin module will have
-     * prep_admin_dashboard and cb_admin_dashboard.
+     * prep_mpadmin_dashboard and cb_mpadmin_dashboard.
      *
      * @param string $hook hook name
      * @param int|string target constant of module name to call the hook on

@@ -2,24 +2,23 @@
 
 ob_start('ob_gzhandler');
 //{{{ defining constants
-define('MONPHP_SESSION', 'monphp');
-define('CMS_DEVELOPER', TRUE);
+define('MP_SESSION', 'monphp');
+define('MP_DEBUG', TRUE);
 define('WEB_DIR_INSTALL', '/install');
 define('DIR_WEB', dirname(__FILE__));
 define('DIR_FILE', DIR_WEB . '/file');
 
-define('DIR_MONPHP', dirname(__FILE__) . '/monphp');
-define('DIR_SYS', DIR_MONPHP . '/system');
-define('DIR_EXT', DIR_MONPHP . '/extension');
-define('DIR_CTRL', DIR_MONPHP . '/controller');
-define('DIR_LIB', DIR_MONPHP . '/library');
-define('DIR_MODEL', DIR_MONPHP . '/model');
-define('DIR_MODULE', DIR_MONPHP . '/module');
-define('DIR_TMPL', DIR_MONPHP . '/template');
-define('DIR_VIEW', DIR_MONPHP . '/view');
-define('MONPHP_VERSION', '0 . 5.0');
+define('DIR_MP', dirname(__FILE__) . '/monphp');
+define('DIR_SYS', DIR_MP . '/system');
+define('DIR_EXT', DIR_MP . '/extension');
+define('DIR_CTRL', DIR_MP . '/controller');
+define('DIR_LIB', DIR_MP . '/library');
+define('DIR_MODEL', DIR_MP . '/model');
+define('DIR_MODULE', DIR_MP . '/module');
+define('DIR_TMPL', DIR_MP . '/template');
+define('DIR_VIEW', DIR_MP . '/view');
+define('MP_VERSION', '0.0.1');
 
-error_reporting(CMS_DEVELOPER ? E_ALL : 0);
 //}}}
 //{{{ disecting the URI
 $ru = &$_SERVER['REQUEST_URI'];
@@ -42,23 +41,21 @@ define('URI_PATH', $path);
 define('URI_REQUEST', $_SERVER['REQUEST_URI']);
 //}}}
 // {{{ init
-if (CMS_DEVELOPER)
-{
-    ini_set('display_errors', 1);
-}
-require_once DIR_SYS . '/function.php';
-require_once DIR_SYS . '/config.database.php';
+ini_set('display_errors', MP_DEBUG ? 1 : 0);
+error_reporting(MP_DEBUG ? E_ALL : 0);
+include DIR_SYS . '/function.php';
+include DIR_SYS . '/config.database.php';
 if (is_file(DIR_SYS . '/config.misc.php'))
 {
     include DIR_SYS . '/config.misc.php';
 }
-spl_autoload_register('monphp_autoload');
+spl_autoload_register('mp_autoload');
 $tz = MPData::query('_Site', 'time_zone');
 date_default_timezone_set(is_null($tz) ? 'America/New_York' : $tz);
 // }}}
 //{{{ routing 
 $installed = !is_null(MPData::query('_System', 'version'));
-if (CMS_DEVELOPER || !$installed)
+if (MP_DEBUG || !$installed)
 {
     MPRouter::add(
         '#^' . WEB_DIR_INSTALL . '/([^/]+/)?$#', 
@@ -70,7 +67,7 @@ if (CMS_DEVELOPER || !$installed)
         DIR_SYS . '/install/controller/static/${1}.php', 
         MPRouter::ROUTE_PCRE
     );
-    if ((URI_PARTS > 1 && '/' . URI_PART_1 !== WEB_DIR_INSTALL) && !CMS_DEVELOPER)
+    if ((URI_PARTS > 1 && '/' . URI_PART_1 !== WEB_DIR_INSTALL) && !MP_DEBUG)
     {
         header('Location: ' . WEB_DIR_INSTALL . '/start/');
         exit;
@@ -97,22 +94,20 @@ if ($installed)
     }
 }
 
-require_once DIR_SYS.'/config.routes.php';
+require DIR_SYS.'/config.routes.php';
 
 MPModule::h('start');
 if ($ctrl = MPRouter::controller()) 
 {
-    include_once $ctrl;
+    include $ctrl;
 }
 else
 {
     header('HTTP/1.1 404 Not Found');
     if (is_file(DIR_CTRL . '/404.php'))
     {
-        include_once DIR_CTRL . '/404.php';
+        include DIR_CTRL . '/404.php';
     }
 }
 MPModule::h('end');
-
-MPData::save();
 //}}}

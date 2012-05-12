@@ -1,6 +1,6 @@
 <?php
 
-list($layout, $form) = MPModule::h('admin_login_build');
+list($layout, $form) = MPModule::h('mpadmin_login_build');
 
 if (isset($_POST['login']))
 {
@@ -9,7 +9,7 @@ if (isset($_POST['login']))
     {
         $post[$mod] = $layout->acts('post', $data);
     }
-    $result = MPModule::h('admin_login_submit', MPModule::TARGET_ALL, $post);
+    $result = MPModule::h('mpadmin_login_submit', MPModule::TARGET_ALL, $post);
     if ($result['login'])
     {
         header('Location: /admin/');

@@ -31,7 +31,7 @@ $layout->add_layout(
     )
 );
 
-$hook_layouts = MPModule::h('content_new_type_layout');
+$hook_layouts = MPModule::h('mpcontent_new_type_layout');
 if ($hook_layouts)
 {
     foreach ($hook_layouts as $module => $h_layouts)
@@ -70,7 +70,7 @@ if (isset($_POST['content_type']))
         $ptype = $layout->acts('post', $_POST['content_type']);
         $layout->merge($_POST['content_type']);
         $type = MPContent::save_entry_type($ptype);
-        MPModule::h('content_new_type_process', MPModule::TARGET_ALL, $layout, $type, $_POST);
+        MPModule::h('mpcontent_new_type_process', MPModule::TARGET_ALL, $layout, $type, $_POST);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Successfully created');
         header('Location: /admin/module/MPContent/edit_type/'.$type['name'].'/');
         exit;
@@ -110,7 +110,7 @@ $type_group = array(
 );
 $form->add_group($type_group, 'content_type');
 
-$hook_forms = MPModule::h('content_new_type_form', MPModule::TARGET_ALL, $layout);
+$hook_forms = MPModule::h('mpcontent_new_type_form', MPModule::TARGET_ALL, $layout);
 foreach ($hook_forms as $module => $h_forms)
 {
     $form->add_group($h_forms);

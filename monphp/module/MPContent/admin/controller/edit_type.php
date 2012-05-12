@@ -17,7 +17,7 @@ if (!$entry_type)
 MPAdmin::set('title', 'Edit MPContent Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
 MPAdmin::set('header', 'Edit MPContent Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
 
-$other_links = MPModule::h('content_edit_type_other_links', MPModule::TARGET_ALL, URI_PART_4);
+$other_links = MPModule::h('mpcontent_edit_type_other_links', MPModule::TARGET_ALL, URI_PART_4);
 
 //{{{ layout
 $layout = new MPField();
@@ -52,7 +52,7 @@ $layout->add_layout(
     )
 );
 
-$hook_layouts = MPModule::h('content_edit_type_layout', MPModule::TARGET_ALL, $layout, $entry_type);
+$hook_layouts = MPModule::h('mpcontent_edit_type_layout', MPModule::TARGET_ALL, $layout, $entry_type);
 foreach ($hook_layouts as $module => $h_layouts)
 {
     if (is_array($h_layouts))
@@ -80,7 +80,7 @@ if (isset($_POST['form']))
     $layout->merge($_POST['content_type']);
     $entry_type = array_merge($entry_type, $data);
     MPContent::save_entry_type($entry_type);
-    MPModule::h('content_edit_type_process', MPModule::TARGET_ALL, $layout, $entry_type, $_POST);
+    MPModule::h('mpcontent_edit_type_process', MPModule::TARGET_ALL, $layout, $entry_type, $_POST);
 }
 
 //}}}
@@ -119,7 +119,7 @@ $tform->add_group(
     'content_type'
 );
 
-$hook_forms = MPModule::h('content_edit_type_form', MPModule::TARGET_ALL, $layout, $entry_type);
+$hook_forms = MPModule::h('mpcontent_edit_type_form', MPModule::TARGET_ALL, $layout, $entry_type);
 foreach ($hook_forms as $module => $h_forms)
 {
     $tform->add_group($h_forms);

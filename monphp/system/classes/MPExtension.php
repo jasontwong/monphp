@@ -33,8 +33,7 @@ class MPExtension
             foreach (self::$files as $file)
             {
                 include $file;
-                $filename = basename($file);
-                $class = 'MPExtension'.substr($filename,0,strpos($filename,'.'));
+                list($class, $fext) = file_extension($file);
                 // This function is not case sensitive
                 if (class_exists($class))
                 {

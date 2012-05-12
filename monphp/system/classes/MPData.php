@@ -28,41 +28,43 @@ class MPData
      */
     private static $changed = FALSE;
     //}}}
-    //{{{ public static function init()
+    //{{{ private static function lookup($type, $name = NULL)
     /**
-     * Gets all data entries from database
-     *
-     * @return void
      */
-    public static function init()
+    public static function lookup($type, $name = NULL)
     {
-        if (is_null(self::$data))
+        try
         {
-            self::$data = array();
-            self::$id = array();
-            self::$autoload = array();
-            self::$updates = array();
-            self::$adds = array();
-            try
+            $query = array('type' => $type);
+            if (!is_null($name))
             {
-                $rows = MPDB::selectCollection('system_data')->find(array('autoload' => true));
-                foreach ($rows as $row)
-                {
-                    $row['autoload'] = TRUE;
-                    self::register($row);
-                }
+                $query['name'] = $name;
             }
-            catch (Exception $e)
-            {
-            }
+            $find = MPDB::selectCollection('system_data')->find($query);
+            $result = iterator_to_array($find);
+            return $result ? $result : NULL;
+        }
+        catch (Exception $e)
+        {
+            return NULL;
         }
     }
     //}}}
-    //{{{ public static function save()
+    //{{{ private static function register($row)
+    private static function register($row)
+    {
+        $type = &$row['type'];
+        $name = &$row['name'];
+        self::$data[$type][$name] = $row['data'];
+        self::$id[$type][$name] = $row['_id']->{'$id'};
+        self::$autoload[$type][$name] = $row['autoload'];
+    }
+    //}}}
+    //{{{ private static function save()
     /**
      * Records updates and additions
      */
-    public static function save()
+    private static function save()
     {
         self::init();
         if (self::$changed)
@@ -90,6 +92,36 @@ class MPData
             self::$updates = array();
             self::$adds = array();
             self::$changed = FALSE;
+        }
+    }
+    //}}}
+    //{{{ public static function init()
+    /**
+     * Gets all data entries from database
+     *
+     * @return void
+     */
+    public static function init()
+    {
+        if (is_null(self::$data))
+        {
+            self::$data = array();
+            self::$id = array();
+            self::$autoload = array();
+            self::$updates = array();
+            self::$adds = array();
+            try
+            {
+                $rows = MPDB::selectCollection('system_data')->find(array('autoload' => true));
+                foreach ($rows as $row)
+                {
+                    $row['autoload'] = TRUE;
+                    self::register($row);
+                }
+            }
+            catch (Exception $e)
+            {
+            }
         }
     }
     //}}}
@@ -125,6 +157,51 @@ class MPData
         }
     }
     //}}}
+    //{{{ public static function exists()
+    /**
+     * Not type strict
+     */
+    public static function exists()
+    {
+        self::init();
+        $args = func_get_args();
+        if (count($args) < 3)
+        {
+            return FALSE;
+        }
+        $value = array_slice($args, -1);
+        $result = array_drill(self::$data, $args);
+        if (is_null($result))
+        {
+            try
+            {
+                $query = array(
+                    'type' => $args[0],
+                    'name' => $args[1]
+                );
+                $key = 'data.' . implode('.', array_slice($args, 2, 1));
+                $query[$key] = $value;
+                $find = MPDB::selectCollection('system_data')->find($query);
+                return !is_null($find);
+            }
+            catch (Exception $e)
+            {
+                return FALSE;
+            }
+        }
+        else
+        {
+            if (is_array($result))
+            {
+                return in_array($value, $result);
+            }
+            else
+            {
+                return $result == $value;
+            }
+        }
+    }
+    //}}}
     //{{{ public static function names($type)
     /**
      * Looks into self::$data for name columns
@@ -139,38 +216,39 @@ class MPData
             : NULL;
     }
     //}}}
-    //{{{ public static function update($type, $name, $data, $autoload = NULL)
-    /**
-     * @param string $type module name or system type name
-     * @param string $name name of setting or variable
-     * @param mixed $data PHP native data payload
-     * @param boolean $autoload auto loading flag, null to use existing value
-     * @return bool true if all checks passed 
-     */
-    public static function update($type, $name, $data, $autoload = NULL)
+//{{{ public static function update($type, $name, $data, $autoload = NULL)
+/**
+* @param string $type module name or system type name
+* @param string $name name of setting or variable
+* @param mixed $data PHP native data payload
+* @param boolean $autoload auto loading flag, null to use existing value
+* @return bool true if all checks passed 
+*/
+public static function update($type, $name, $data, $autoload = NULL)
+{
+    self::init();
+    self::$changed = TRUE;
+    $signature = array('type' => $type, 'name' => $name);
+    if (eka(self::$data, $type, $name))
     {
-        self::init();
-        self::$changed = TRUE;
-        $signature = array('type' => $type, 'name' => $name);
-        if (eka(self::$data, $type, $name))
+        if (!in_array($signature, self::$adds))
         {
-            if (!in_array($signature, self::$adds))
+            self::$updates[self::$id[$type][$name]] = $signature;
+            if (!is_null($autoload))
             {
-                self::$updates[self::$id[$type][$name]] = $signature;
-                if (!is_null($autoload))
-                {
-                    self::$autoload[$type][$name] = $autoload;
-                }
+                self::$autoload[$type][$name] = $autoload;
             }
         }
-        elseif (!in_array($signature, self::$adds))
-        {
-            self::$adds[] = $signature;
-            self::$autoload[$type][$name] = is_null($autoload) ? FALSE : $autoload;
-        }
-        self::$data[$type][$name] = $data;
     }
-    //}}}
+    elseif (!in_array($signature, self::$adds))
+    {
+        self::$adds[] = $signature;
+        self::$autoload[$type][$name] = is_null($autoload) ? FALSE : $autoload;
+    }
+    self::$data[$type][$name] = $data;
+    self::save();
+}
+//}}}
     //{{{ public static function settings_form()
     /**
      */
@@ -226,38 +304,6 @@ class MPData
         );
 
         return $rows;
-    }
-    //}}}
-    //{{{ private static function lookup($type, $name = NULL)
-    /**
-     */
-    public static function lookup($type, $name = NULL)
-    {
-        try
-        {
-            $query = array('type' => $type);
-            if (!is_null($name))
-            {
-                $query['name'] = $name;
-            }
-            $find = MPDB::selectCollection('system_data')->find($query);
-            $result = iterator_to_array($find, FALSE);
-            return $result ? $result : NULL;
-        }
-        catch (Exception $e)
-        {
-            return NULL;
-        }
-    }
-    //}}}
-    //{{{ private static function register($row)
-    private static function register($row)
-    {
-        $type = &$row['type'];
-        $name = &$row['name'];
-        self::$data[$type][$name] = $row['data'];
-        self::$id[$type][$name] = $row['_id']->{'$id'};
-        self::$autoload[$type][$name] = $row['autoload'];
     }
     //}}}
 }

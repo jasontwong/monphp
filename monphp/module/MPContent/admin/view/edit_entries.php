@@ -84,7 +84,7 @@ if (MPModule::is_active('Taxonomy'))
                     );
                     if (MPModule::is_active('Taxonomy'))
                     {
-                        $taxonomy = MPModule::h('content_get_entry_taxonomy', 'Taxonomy', $entry['MPContentEntryType']['id'], $entry['id'], 'status');
+                        $taxonomy = MPModule::h('mpcontent_get_entry_taxonomy', 'Taxonomy', $entry['MPContentEntryType']['id'], $entry['id'], 'status');
                         $data[] = deka('-',$taxonomy,'Taxonomy','taxonomy_terms','status',0);
                     }
                 ?>

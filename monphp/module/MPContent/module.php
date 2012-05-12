@@ -30,23 +30,61 @@ class MPContent
     public function hook_active()
     {
         $db = new MPDB;
-        $db->content_entry->ensureIndex(array('entry_type_id' => 1, 'weight' => 1, 'updated' => -1));
-        $db->content_entry->ensureIndex(array('slug' => 1, 'entry_type_id' => 1));
-        $db->content_entry_revision->ensureIndex(array('entry_id' => 1, 'revision' => -1));
-        $db->content_entry_type->ensureIndex(array('name' => 1), array('unique' => 1, 'dropDups' => 1));
-        $db->content_entry_type->ensureIndex(array('field_groups.name' => 1), array('unique' => 1, 'dropDups' => 1));
-        $db->content_entry_type->ensureIndex(array('_id' => 1, 'field_groups.weight' => 1, 'field_groups.fields.weight' => 1));
+        $db->mpcontent_entry->ensureIndex(
+            array(
+                'entry_type_id' => 1, 
+                'weight' => 1, 
+                'updated' => -1,
+            )
+        );
+        $db->mpcontent_entry->ensureIndex(
+            array(
+                'slug' => 1, 
+                'entry_type_id' => 1,
+            )
+        );
+        $db->mpcontent_entry_revision->ensureIndex(
+            array(
+                'entry_id' => 1, 
+                'revision' => -1,
+            )
+        );
+        $db->mpcontent_entry_type->ensureIndex(
+            array(
+                'name' => 1,
+            ), 
+            array(
+                'unique' => 1, 
+                'dropDups' => 1,
+            )
+        );
+        $db->mpcontent_entry_type->ensureIndex(
+            array(
+                'field_groups.name' => 1,
+            ), 
+            array(
+                'unique' => 1, 
+                'dropDups' => 1,
+            )
+        );
+        $db->mpcontent_entry_type->ensureIndex(
+            array(
+                '_id' => 1, 
+                'field_groups.weight' => 1, 
+                'field_groups.fields.weight' => 1,
+            )
+        );
     }
 
     //}}}
-    //{{{ public function hook_admin_module_page($page)
-    public function hook_admin_module_page($page)
+    //{{{ public function hook_mpadmin_module_page($page)
+    public function hook_mpadmin_module_page($page)
     {
     }
     
     //}}}
-    //{{{ public function hook_admin_nav()
-    public function hook_admin_nav()
+    //{{{ public function hook_mpadmin_nav()
+    public function hook_mpadmin_nav()
     {
         $types = self::get_entry_types();
         $uri = '/admin/module/MPContent';
@@ -85,8 +123,8 @@ class MPContent
     }
 
     //}}}
-    //{{{ public function hook_admin_js()
-    public function hook_admin_js()
+    //{{{ public function hook_mpadmin_js()
+    public function hook_mpadmin_js()
     {
         $js = array();
         if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
@@ -118,8 +156,8 @@ class MPContent
     }
 
     //}}}
-    //{{{ public function hook_admin_css()
-    public function hook_admin_css()
+    //{{{ public function hook_mpadmin_css()
+    public function hook_mpadmin_css()
     {
         $css = array();
         if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
@@ -130,8 +168,8 @@ class MPContent
     }
 
     //}}}
-    //{{{ public function hook_admin_dashboard()
-    public function hook_admin_dashboard()
+    //{{{ public function hook_mpadmin_dashboard()
+    public function hook_mpadmin_dashboard()
     {
         $dashboard_items = array();
 
@@ -284,8 +322,8 @@ class MPContent
     }
 
     //}}}
-    //{{{ public function hook_user_perm()
-    public function hook_user_perm()
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
     {
         $types = self::get_entry_types();
         $perms_array = array_fill_keys(
@@ -316,7 +354,7 @@ class MPContent
         $perms['General']['view content entries type'] = 'View content entries for all content types in the admin back end';
         $perms['General'] = array_merge($perms['General'], $perms_array['entry_view']);
 
-        $module_perms = MPModule::h('content_perms', MPModule::TARGET_ALL, $types);
+        $module_perms = MPModule::h('mpcontent_perms', MPModule::TARGET_ALL, $types);
         foreach ($module_perms as $module => $mod_perms)
         {
             $perms = array_merge($perms, $mod_perms);
@@ -334,8 +372,8 @@ class MPContent
     }
 
     //}}}
-    //{{{ public function prep_content_entry_sidebar_edit_process($mod, &$layout, &$entry, &$post)
-    public function prep_content_entry_sidebar_edit_process($mod, &$layout, &$entry, &$post)
+    //{{{ public function prep_mpcontent_entry_sidebar_edit_process($mod, &$layout, &$entry, &$post)
+    public function prep_mpcontent_entry_sidebar_edit_process($mod, &$layout, &$entry, &$post)
     {
         $mpost = array();
         foreach ($post as $k => $row)
@@ -357,8 +395,8 @@ class MPContent
         );
     }
     //}}}
-    //{{{ public function prep_content_entry_sidebar_new_process($mod, &$layout, &$entry, &$post)
-    public function prep_content_entry_sidebar_new_process($mod, &$layout, &$entry, &$post)
+    //{{{ public function prep_mpcontent_entry_sidebar_new_process($mod, &$layout, &$entry, &$post)
+    public function prep_mpcontent_entry_sidebar_new_process($mod, &$layout, &$entry, &$post)
     {
         $mpost = array();
         foreach ($post as $k => $row)
@@ -381,8 +419,8 @@ class MPContent
         );
     }
     //}}}
-    //{{{ public function prep_content_edit_type_process($mod, &$layout, &$type, $post)
-    public function prep_content_edit_type_process($mod, &$layout, &$type, $post)
+    //{{{ public function prep_mpcontent_edit_type_process($mod, &$layout, &$type, $post)
+    public function prep_mpcontent_edit_type_process($mod, &$layout, &$type, $post)
     {
         $mpost = array();
         foreach ($post as $k => $row)
@@ -404,8 +442,8 @@ class MPContent
         );
     }
     //}}}
-    //{{{ public function prep_content_new_type_process($mod, &$layout, $type, $post)
-    public function prep_content_new_type_process($mod, &$layout, &$type, $post)
+    //{{{ public function prep_mpcontent_new_type_process($mod, &$layout, $type, $post)
+    public function prep_mpcontent_new_type_process($mod, &$layout, &$type, $post)
     {
         $mpost = array();
         foreach ($post as $k => $row)
@@ -427,8 +465,8 @@ class MPContent
         );
     }
     //}}}
-    //{{{ public function cb_content_edit_type_other_links($links)
-    public function cb_content_edit_type_other_links($links)
+    //{{{ public function cb_mpcontent_edit_type_other_links($links)
+    public function cb_mpcontent_edit_type_other_links($links)
     {
         $result = array();
         foreach ($links as $link)
@@ -441,52 +479,52 @@ class MPContent
         return $result;
     }
     //}}}
-    //{{{ public function cb_content_edit_type_process()
-    public function cb_content_edit_type_process()
+    //{{{ public function cb_mpcontent_edit_type_process()
+    public function cb_mpcontent_edit_type_process()
     {
     }
     //}}}
-    //{{{ public function cb_content_new_type_process()
-    public function cb_content_new_type_process()
+    //{{{ public function cb_mpcontent_new_type_process()
+    public function cb_mpcontent_new_type_process()
     {
     }
     //}}}
-    //{{{ public function cb_content_entry_sidebar_new_process()
-    public function cb_content_entry_sidebar_new_process()
+    //{{{ public function cb_mpcontent_entry_sidebar_new_process()
+    public function cb_mpcontent_entry_sidebar_new_process()
     {
     }
     //}}}
-    //{{{ public function cb_content_entry_sidebar_edit_process()
-    public function cb_content_entry_sidebar_edit_process()
+    //{{{ public function cb_mpcontent_entry_sidebar_edit_process()
+    public function cb_mpcontent_entry_sidebar_edit_process()
     {
     }
     //}}}
-    //{{{ public function cb_content_entry_add_access($access)
-    public function cb_content_entry_add_access($access)
-    {
-        return $access ? max($access) : MPContent::ACCESS_DENY;
-    }
-    //}}}
-    //{{{ public function cb_content_entry_edit_access($access)
-    public function cb_content_entry_edit_access($access)
+    //{{{ public function cb_mpcontent_entry_add_access($access)
+    public function cb_mpcontent_entry_add_access($access)
     {
         return $access ? max($access) : MPContent::ACCESS_DENY;
     }
     //}}}
-    // {{{ public function cb_content_entry_add_finish($meta)
-    public function cb_content_entry_add_finish($meta)
+    //{{{ public function cb_mpcontent_entry_edit_access($access)
+    public function cb_mpcontent_entry_edit_access($access)
+    {
+        return $access ? max($access) : MPContent::ACCESS_DENY;
+    }
+    //}}}
+    // {{{ public function cb_mpcontent_entry_add_finish($meta)
+    public function cb_mpcontent_entry_add_finish($meta)
     {
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Successfully created');
     }
     //}}}
-    //{{{ public function cb_content_entry_edit_finish($meta)
-    public function cb_content_entry_edit_finish($meta)
+    //{{{ public function cb_mpcontent_entry_edit_finish($meta)
+    public function cb_mpcontent_entry_edit_finish($meta)
     {
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Successfully saved');
     }
     //}}}
-    //{{{ public function cb_content_entry_delete_finish($meta)
-    public function cb_content_entry_delete_finish($meta)
+    //{{{ public function cb_mpcontent_entry_delete_finish($meta)
+    public function cb_mpcontent_entry_delete_finish($meta)
     {
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Successfully deleted');
     }
@@ -505,7 +543,7 @@ class MPContent
                     '$in' => $ids,
                 ),
             );
-            $cec = MPDB::selectCollection('content_entry');
+            $cec = MPDB::selectCollection('mpcontent_entry');
             $entries = iterator_to_array($cec->find($query));
             foreach ($entries as &$entry)
             {
@@ -518,7 +556,7 @@ class MPContent
             }
             $result['success'] = TRUE;
             $meta['content_entry_type_id'] = $type;
-            MPModule::h('content_order_entries_success', MPModule::TARGET_ALL, $meta);
+            MPModule::h('mpcontent_order_entries_success', MPModule::TARGET_ALL, $meta);
         }
         catch (Exception $e)
         {
@@ -983,7 +1021,7 @@ class MPContent
     //{{{ public function get_entry_type($query = array(), $fields = array())
     public function get_entry_type($query = array(), $fields = array())
     {
-        return MPDB::selectCollection('content_entry_type')->findOne($query, $fields);
+        return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
     }
     //}}}
     //{{{ public function get_entry_type_by_entry_id($id, $fields = array())
@@ -1087,7 +1125,7 @@ class MPContent
      */
     public function get_entry_types($query = array(), $fields = array())
     {
-        return MPDB::selectCollection('content_entry_type')->find($query, $fields);
+        return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
     }
     //}}}
     //{{{ public function get_field_data_by_entry_id_and_revision($id, $revision)
@@ -1553,7 +1591,7 @@ class MPContent
     //{{{ public function save_entry_type($entry_type)
     public function save_entry_type($entry_type)
     {
-        $etc = MPDB::selectCollection('content_entry_type');
+        $etc = MPDB::selectCollection('mpcontent_entry_type');
         if (!ake('_id', $entry_type))
         {
             $entry_type['name'] = slugify($entry_type['nice_name']);

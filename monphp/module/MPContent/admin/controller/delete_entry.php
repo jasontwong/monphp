@@ -29,7 +29,7 @@ else
     $user_access_level = MPContent::ACCESS_DENY;
 }
 
-$module_access_level = MPModule::h('content_entry_edit_access', MPModule::TARGET_ALL, $entry_type_id, URI_PART_4);
+$module_access_level = MPModule::h('mpcontent_entry_edit_access', MPModule::TARGET_ALL, $entry_type_id, URI_PART_4);
 $access_level = max($module_access_level, $user_access_level);
 
 if ($access_level !== MPContent::ACCESS_EDIT)
@@ -73,7 +73,7 @@ if (isset($_POST['confirm']))
         $ety = MPContent::get_entry_type_by_entry_id($confirm['id'], $lookup_specs);
         $meta['content_entry_meta_id'] = $confirm['id'];
         $meta['content_entry_type_id'] = $ety['id'];
-        MPModule::h('content_entry_delete_start', MPModule::TARGET_ALL, $meta);
+        MPModule::h('mpcontent_entry_delete_start', MPModule::TARGET_ALL, $meta);
         MPContent::delete_entry_by_id($confirm['id']);
         
         //{{{ MPCache: updating block
@@ -93,7 +93,7 @@ if (isset($_POST['confirm']))
         $ids_slugs = MPContent::get_entries_slugs($content_type_name, FALSE);
         MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
         //}}}
-        MPModule::h('content_entry_delete_finish', MPModule::TARGET_ALL, $meta);
+        MPModule::h('mpcontent_entry_delete_finish', MPModule::TARGET_ALL, $meta);
 
         header('Location: /admin/module/MPContent/edit_entries/');
         exit;

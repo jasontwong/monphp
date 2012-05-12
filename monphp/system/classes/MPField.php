@@ -236,7 +236,7 @@ class MPField
                 if (is_file($cffile))
                 {
                     include $cffile;
-                    $cfclass = $mod.'MPField';
+                    $cfclass = $mod.'Field';
                     if (class_exists($cfclass))
                     {
                         $modules[] = new $cfclass;

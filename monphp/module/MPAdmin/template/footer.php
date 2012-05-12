@@ -10,7 +10,7 @@
 
 </div>
 
-<?php echo MPModule::h('admin_js') ?>
+<?php echo MPModule::h('mpadmin_js') ?>
 
 <?php MPModule::h('body_end') ?>
 
