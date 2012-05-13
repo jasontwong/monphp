@@ -12,7 +12,7 @@ MPAdmin::set('header', 'Settings');
 
 $default_key = '_Site';
 $settings_key = URI_PART_2;
-$layouts = MPModule::h('settings_fields', $settings_key);
+$layouts = MPModule::h('mpadmin_settings_fields', $settings_key);
 
 // {{{ default site settings
 if (empty($layouts))
@@ -114,7 +114,7 @@ if (isset($_POST['form']))
     {
         foreach ($settings as $name => $data)
         {
-            $result = MPModule::h('data_validate', $settings_key, $name, $data);
+            $result = MPModule::h('mpadmin_settings_validate', $settings_key, $name, $data);
             if (empty($result) || deka(FALSE, $result, $settings_key, 'success'))
             {
                 MPData::update($settings_key, $name, $data);
@@ -179,6 +179,4 @@ $fh = $form->build();
 
 //}}}
 
-include DIR_MODULE.'/MPAdmin/view/settings.php';
-
-?>
+include dirname(dirname(__FILE__)) . '/view/settings.php';

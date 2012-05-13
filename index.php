@@ -41,8 +41,20 @@ define('URI_PATH', $path);
 define('URI_REQUEST', $_SERVER['REQUEST_URI']);
 //}}}
 // {{{ init
-ini_set('display_errors', MP_DEBUG ? 1 : 0);
-error_reporting(MP_DEBUG ? E_ALL : 0);
+if (MP_DEBUG)
+{
+    ini_set('display_errors', 1);
+    // ini_set('xdebug.profiler_output_dir', '/tmp');
+    ini_set('xdebug.profiler_output_name', 'trace.$H.' . URI_PATH . '%R');
+    ini_set('xdebug.profiler_enable_trigger', 1);
+    error_reporting(E_ALL);
+}
+else
+{
+    ini_set('display_errors', 0);
+    error_reporting(0);
+}
+include DIR_SYS . '/helper.php';
 include DIR_SYS . '/function.php';
 include DIR_SYS . '/config.database.php';
 if (is_file(DIR_SYS . '/config.misc.php'))
@@ -52,6 +64,9 @@ if (is_file(DIR_SYS . '/config.misc.php'))
 spl_autoload_register('mp_autoload');
 $tz = MPData::query('_Site', 'time_zone');
 date_default_timezone_set(is_null($tz) ? 'America/New_York' : $tz);
+mp_register_script('jquery', '/js/libs/jquery-1.7.1.min.js', array(), '1.7.1', TRUE);
+mp_enqueue_script('modernizer', '/js/libs/modernizr-2.5.3.min.js', array(), '2.5.3');
+mp_enqueue_style('screen', '/css/screen.css');
 // }}}
 //{{{ routing 
 $installed = !is_null(MPData::query('_System', 'version'));
@@ -75,10 +90,10 @@ if (MP_DEBUG || !$installed)
 }
 if ($installed)
 {
-    session_name(MONPHP_SESSION);
+    session_name(MP_SESSION);
     session_start();
-    MPModule::h('active');
-    $routes = MPModule::h('routes');
+    MPModule::h('mpsystem_active');
+    $routes = MPModule::h('mpsystem_routes');
     foreach ($routes as $mod => $rs)
     {
         foreach ($rs as $r)
@@ -94,9 +109,9 @@ if ($installed)
     }
 }
 
-require DIR_SYS.'/config.routes.php';
+include DIR_SYS.'/config.routes.php';
 
-MPModule::h('start');
+MPModule::h('mpsystem_start');
 if ($ctrl = MPRouter::controller()) 
 {
     include $ctrl;
@@ -109,5 +124,5 @@ else
         include DIR_CTRL . '/404.php';
     }
 }
-MPModule::h('end');
+MPModule::h('mpsystem_end');
 //}}}

@@ -5,11 +5,10 @@ if (MPUser::perm('admin access'))
     MPAdmin::set('title', 'MPAdmin Dashboard');
     $dashboard = MPModule::h('mpadmin_dashboard');
 
-    include DIR_MODULE.'/MPAdmin/view/index.php';
+    include dirname(dirname(__FILE__)) . '/view/index.php';
 }
 else
 {
     header('Location: /admin/login/');
+    exit;
 }
-
-?>

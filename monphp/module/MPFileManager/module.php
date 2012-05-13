@@ -23,332 +23,6 @@ class MPFileManager
     }
 
     //}}}
-    //{{{ public function hook_active()
-    public function hook_active()
-    {
-        self::$sizes = self::get_image_sizes();
-        self::$sizes['browse'] = array(
-            'width' => '90',
-            'height' => '90',
-        );
-        self::$file_path = !is_null(MPData::query('MPFileManager', 'file_path'))
-            ? MPData::query('MPFileManager', 'file_path')
-            : DIR_FILE.'/upload';
-        self::$web_path = !is_null(MPData::query('MPFileManager', 'web_path'))
-            ? MPData::query('MPFileManager', 'web_path')
-            : '/file/upload';
-        if (!is_dir(self::$file_path))
-        {
-            mkdir(self::$file_path, 0777, TRUE);
-        }
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_css()
-    public function hook_mpadmin_css()
-    {
-        $screen = array();
-        if (strpos(URI_PATH, '/admin/mod/MPFileManager/') === 0)
-        {
-            $screen[] = '/admin/static/MPAdmin/screen.css/';
-            $screen[] = '/admin/static/MPFileManager/browse.css/';
-        }
-        else
-        {
-            $screen[] = '/admin/static/MPFileManager/field.css/';
-        }
-
-        $css['screen'] = $screen;
-
-        return $css;
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_js()
-    public function hook_mpadmin_js()
-    {
-        $js[] = '/admin/static/MPFileManager/jquery.windowmsg-1.0.js/';
-        if (strpos(URI_PATH, '/mod/MPFileManager/browse/') !== FALSE)
-        {
-            $js[] = '/admin/static/MPFileManager/filemanager.js/';
-        }
-        else
-        {
-            $js[] = '/admin/static/MPFileManager/admin_nav.js/';
-            $js[] = '/admin/static/MPFileManager/field.js/';
-            $js[] = '/admin/static/MPFileManager/tinymce.js/';
-        }
-        return $js;
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_js_header()
-    public function hook_mpadmin_js_header()
-    {
-        $js = array();
-        if (strpos(URI_PATH, '/mod/MPFileManager/') !== FALSE)
-        {
-            $js[] = '/admin/static/MPFileManager/jquery.js/';
-            $js[] = '/admin/static/MPAdmin/admin.js/';
-        }
-        if (strpos(URI_PATH, '/admin/mod/MPFileManager/browse/tinymce/') !== FALSE)
-        {
-            $js[] = '/file/module/MPAdmin/js/tiny_mce/tiny_mce.js';
-            $js[] = '/file/module/MPAdmin/js/tiny_mce/jquery.tinymce.js';
-            $js[] = '/file/module/MPAdmin/js/tiny_mce/tiny_mce_popup.js';
-            $js[] = '/admin/static/MPFileManager/tinymce_browse.js/';
-        }
-        return $js;
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_module_page($page)
-    public function hook_mpadmin_module_page($page)
-    {
-    }
-    
-    //}}}
-    //{{{ public function hook_mpadmin_tinymce()
-    public function hook_mpadmin_tinymce()
-    {
-        return array(
-            'file_browser_callback' => 'MPFileManager_browser'
-        );
-    }
-    
-    //}}}
-    //{{{ public function hook_mpdata_info()
-    public function hook_mpdata_info()
-    {
-        $fields = array();
-        $fields[] = array(
-            'field' => MPField::layout(
-                'text',
-                array(
-                    'data' => array(
-                        'label' => 'File path'
-                    )
-                )
-            ),
-            'name' => 'file_path',
-            'type' => 'text',
-            'value' => array(
-                'data' => self::$file_path
-            )
-        );
-        $fields[] = array(
-            'field' => MPField::layout(
-                'text',
-                array(
-                    'data' => array(
-                        'label' => 'Web path'
-                    )
-                )
-            ),
-            'name' => 'web_path',
-            'type' => 'text',
-            'value' => array(
-                'data' => self::$web_path
-            )
-        );
-        $fields[] = array(
-            'field' => MPField::layout(
-                'filemanager_image_size',
-                array(
-                    'width' => array(
-                        'label' => 'Large Image Size'
-                    )
-                )
-            ),
-            'name' => 'size_large',
-            'type' => 'filemanager_image_size',
-            'value' => array(
-                'height' => self::$sizes['large']['height'],
-                'width' => self::$sizes['large']['width']
-            )
-        );
-        $fields[] = array(
-            'field' => MPField::layout(
-                'filemanager_image_size',
-                array(
-                    'width' => array(
-                        'label' => 'Medium Image Size'
-                    )
-                )
-            ),
-            'name' => 'size_medium',
-            'type' => 'filemanager_image_size',
-            'value' => array(
-                'height' => self::$sizes['medium']['height'],
-                'width' => self::$sizes['medium']['width']
-            )
-        );
-        $fields[] = array(
-            'field' => MPField::layout(
-                'filemanager_image_size',
-                array(
-                    'width' => array(
-                        'label' => 'Thumbnail Image Size'
-                    )
-                )
-            ),
-            'name' => 'size_thumb',
-            'type' => 'filemanager_image_size',
-            'value' => array(
-                'height' => self::$sizes['thumb']['height'],
-                'width' => self::$sizes['thumb']['width']
-            )
-        );
-        return $fields;
-    }
-
-    //}}}
-    //{{{ public function hook_mpdata_validate($name, $data)
-    public function hook_mpdata_validate($name, $data)
-    {
-        $success = TRUE;
-        switch ($name)
-        {
-            case 'size_large':
-            case 'size_medium':
-            case 'size_thumb':
-                if (!is_numeric($data['width']) || !is_numeric($data['height']))
-                {
-                    $data['width'] = '';
-                    $data['height'] = '';
-                }
-        }
-        return array(
-            'success' => $success,
-            'data' => $data
-        );
-    }
-
-    //}}}
-    //{{{ public function hook_mproutes()
-    public function hook_mproutes()
-    {
-        $ctrl = dirname(__FILE__).'/admin/controller';
-        $routes = array(
-            array('#^/admin/mod/MPFileManager/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
-        );
-        return $routes;
-    }
-
-    //}}}
-    //{{{ public function hook_rpc($action, $params = NULL)
-    /**
-     * Implementation of hook_rpc
-     *
-     * This looks at the action and checks for the method _rpc_<action> and
-     * passes the parameters to that. There is no limit on parameters.
-     *
-     * @param string $action action name
-     * @return string
-     */
-    public function hook_rpc($action)
-    {
-        $method = '_rpc_'.$action;
-        $caller = array($this, $method);
-        $args = array_slice(func_get_args(), 1);
-        return method_exists($this, $method) 
-            ? call_user_func_array($caller, $args)
-            : '';
-    }
-
-    //}}}
-    //{{{ public function hook_mpuser_perm()
-    public function hook_mpuser_perm()
-    {
-        return array(
-            'view files' => 'View Files',
-            'create folder' => 'Create Folder',
-            'edit folder' => 'Edit Folder',
-            'upload file' => 'Upload File',
-            'edit file' => 'Edit File'
-        );
-    }
-    //}}}
-    // {{{ public function save_file($path, $name, $tmp_file)
-    public function save_file($path, $name, $tmp_file)
-    {
-        $original_file = $path.'/'.$name;
-        $success = move_uploaded_file($tmp_file, $original_file);
-
-        if ($success)
-        {
-            $resized_path = $path.'/_resized';
-            mkdir($resized_path);
-            if (is_dir($resized_path) && list($width, $height, $mime_type) = getimagesize($original_file))
-            {
-                $quality = 90;
-                $basename = file_extension($name);
-                foreach (self::$sizes as $label => $size)
-                {
-                    if ($size['width'] > 0 && $size['height'] > 0 && ($width > $size['width'] || $height > $size['height']))
-                    {
-                        $ratio_orig = $width/$height;
-
-                        if ($size['width']/$size['height'] > $ratio_orig) 
-                        {
-                           $size['width'] = $size['height']*$ratio_orig;
-                        } 
-                        else 
-                        {
-                           $size['height'] = $size['width']/$ratio_orig;
-                        }
-                        
-                        $image = imagecreatetruecolor($size['width'], $size['height']);
-                        $resized_file = $resized_path.'/'.$basename[0].'-'.$label.$basename[1];
-                        switch ($mime_type)
-                        {
-                            case IMAGETYPE_GIF:
-                                $orig_image = imagecreatefromgif($original_file);
-                                imagealphablending($image, false);
-                                imagesavealpha($image, true);
-                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
-                                imagegif($image, $resized_file);
-                            break;
-                            case IMAGETYPE_JPEG:
-                                $orig_image = imagecreatefromjpeg($original_file);
-                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
-                                imagejpeg($image, $resized_file, $quality);
-                            break;
-                            case IMAGETYPE_PNG:
-                                $orig_image = imagecreatefrompng($original_file);
-                                imagealphablending($image, false);
-                                imagesavealpha($image, true);
-                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
-                                if ( function_exists('imageistruecolor') && imageistruecolor( $orig_image ) )
-                                {
-                                    imagetruecolortopalette( $image, false, imagecolorstotal( $orig_image ) );
-                                }
-                                imagepng($image, $resized_file);
-                            break;
-                            case IMAGETYPE_WBMP:
-                                $orig_image = imagecreatefromwbmp($original_file);
-                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
-                                imagewbmp($image, $resized_file);
-                            break;
-                            case image_type_to_mime_type(IMAGETYPE_XBM):
-                                $orig_image = imagecreatefromxbm($original_file);
-                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
-                                imagexbm($image, $resized_file);
-                            break;
-                        }
-                        if (isset($orig_image))
-                        {
-                            imagedestroy($orig_image);
-                        }
-                        imagedestroy($image);
-                    }
-                }
-            }
-        }
-
-        return $success;
-    }
-    //}}}
     //{{{ protected function _rpc_browser($data)
     protected function _rpc_browser($data)
     {
@@ -573,6 +247,332 @@ class MPFileManager
         );
     }
 
+    //}}}
+    //{{{ public function hook_mpsystem_active()
+    public function hook_mpsystem_active()
+    {
+        self::$sizes = self::get_image_sizes();
+        self::$sizes['browse'] = array(
+            'width' => '90',
+            'height' => '90',
+        );
+        self::$file_path = !is_null(MPData::query('MPFileManager', 'file_path'))
+            ? MPData::query('MPFileManager', 'file_path')
+            : DIR_FILE.'/upload';
+        self::$web_path = !is_null(MPData::query('MPFileManager', 'web_path'))
+            ? MPData::query('MPFileManager', 'web_path')
+            : '/file/upload';
+        if (!is_dir(self::$file_path))
+        {
+            mkdir(self::$file_path, 0777, TRUE);
+        }
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_css()
+    public function hook_mpadmin_css()
+    {
+        $screen = array();
+        if (strpos(URI_PATH, '/admin/mod/MPFileManager/') === 0)
+        {
+            $screen[] = '/admin/static/MPAdmin/screen.css/';
+            $screen[] = '/admin/static/MPFileManager/browse.css/';
+        }
+        else
+        {
+            $screen[] = '/admin/static/MPFileManager/field.css/';
+        }
+
+        $css['screen'] = $screen;
+
+        return $css;
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_js()
+    public function hook_mpadmin_js()
+    {
+        $js[] = '/admin/static/MPFileManager/jquery.windowmsg-1.0.js/';
+        if (strpos(URI_PATH, '/mod/MPFileManager/browse/') !== FALSE)
+        {
+            $js[] = '/admin/static/MPFileManager/filemanager.js/';
+        }
+        else
+        {
+            $js[] = '/admin/static/MPFileManager/admin_nav.js/';
+            $js[] = '/admin/static/MPFileManager/field.js/';
+            $js[] = '/admin/static/MPFileManager/tinymce.js/';
+        }
+        return $js;
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_js_header()
+    public function hook_mpadmin_js_header()
+    {
+        $js = array();
+        if (strpos(URI_PATH, '/mod/MPFileManager/') !== FALSE)
+        {
+            $js[] = '/admin/static/MPFileManager/jquery.js/';
+            $js[] = '/admin/static/MPAdmin/admin.js/';
+        }
+        if (strpos(URI_PATH, '/admin/mod/MPFileManager/browse/tinymce/') !== FALSE)
+        {
+            $js[] = '/file/module/MPAdmin/js/tiny_mce/tiny_mce.js';
+            $js[] = '/file/module/MPAdmin/js/tiny_mce/jquery.tinymce.js';
+            $js[] = '/file/module/MPAdmin/js/tiny_mce/tiny_mce_popup.js';
+            $js[] = '/admin/static/MPFileManager/tinymce_browse.js/';
+        }
+        return $js;
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_module_page($page)
+    public function hook_mpadmin_module_page($page)
+    {
+    }
+    
+    //}}}
+    //{{{ public function hook_mpadmin_tinymce()
+    public function hook_mpadmin_tinymce()
+    {
+        return array(
+            'file_browser_callback' => 'MPFileManager_browser'
+        );
+    }
+    
+    //}}}
+    //{{{ public function hook_mpadmin_settings_fields()
+    public function hook_mpadmin_settings_fields()
+    {
+        $fields = array();
+        $fields[] = array(
+            'field' => MPField::layout(
+                'text',
+                array(
+                    'data' => array(
+                        'label' => 'File path'
+                    )
+                )
+            ),
+            'name' => 'file_path',
+            'type' => 'text',
+            'value' => array(
+                'data' => self::$file_path
+            )
+        );
+        $fields[] = array(
+            'field' => MPField::layout(
+                'text',
+                array(
+                    'data' => array(
+                        'label' => 'Web path'
+                    )
+                )
+            ),
+            'name' => 'web_path',
+            'type' => 'text',
+            'value' => array(
+                'data' => self::$web_path
+            )
+        );
+        $fields[] = array(
+            'field' => MPField::layout(
+                'filemanager_image_size',
+                array(
+                    'width' => array(
+                        'label' => 'Large Image Size'
+                    )
+                )
+            ),
+            'name' => 'size_large',
+            'type' => 'filemanager_image_size',
+            'value' => array(
+                'height' => self::$sizes['large']['height'],
+                'width' => self::$sizes['large']['width']
+            )
+        );
+        $fields[] = array(
+            'field' => MPField::layout(
+                'filemanager_image_size',
+                array(
+                    'width' => array(
+                        'label' => 'Medium Image Size'
+                    )
+                )
+            ),
+            'name' => 'size_medium',
+            'type' => 'filemanager_image_size',
+            'value' => array(
+                'height' => self::$sizes['medium']['height'],
+                'width' => self::$sizes['medium']['width']
+            )
+        );
+        $fields[] = array(
+            'field' => MPField::layout(
+                'filemanager_image_size',
+                array(
+                    'width' => array(
+                        'label' => 'Thumbnail Image Size'
+                    )
+                )
+            ),
+            'name' => 'size_thumb',
+            'type' => 'filemanager_image_size',
+            'value' => array(
+                'height' => self::$sizes['thumb']['height'],
+                'width' => self::$sizes['thumb']['width']
+            )
+        );
+        return $fields;
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_settings_validate($name, $data)
+    public function hook_mpadmin_settings_validate($name, $data)
+    {
+        $success = TRUE;
+        switch ($name)
+        {
+            case 'size_large':
+            case 'size_medium':
+            case 'size_thumb':
+                if (!is_numeric($data['width']) || !is_numeric($data['height']))
+                {
+                    $data['width'] = '';
+                    $data['height'] = '';
+                }
+        }
+        return array(
+            'success' => $success,
+            'data' => $data
+        );
+    }
+
+    //}}}
+    //{{{ public function hook_mpsystem_routes()
+    public function hook_mpsystem_routes()
+    {
+        $ctrl = dirname(__FILE__).'/admin/controller';
+        $routes = array(
+            array('#^/admin/mod/MPFileManager/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
+        );
+        return $routes;
+    }
+
+    //}}}
+    //{{{ public function hook_rpc($action, $params = NULL)
+    /**
+     * Implementation of hook_rpc
+     *
+     * This looks at the action and checks for the method _rpc_<action> and
+     * passes the parameters to that. There is no limit on parameters.
+     *
+     * @param string $action action name
+     * @return string
+     */
+    public function hook_rpc($action)
+    {
+        $method = '_rpc_'.$action;
+        $caller = array($this, $method);
+        $args = array_slice(func_get_args(), 1);
+        return method_exists($this, $method) 
+            ? call_user_func_array($caller, $args)
+            : '';
+    }
+
+    //}}}
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
+    {
+        return array(
+            'view files' => 'View Files',
+            'create folder' => 'Create Folder',
+            'edit folder' => 'Edit Folder',
+            'upload file' => 'Upload File',
+            'edit file' => 'Edit File'
+        );
+    }
+    //}}}
+    // {{{ public function save_file($path, $name, $tmp_file)
+    public function save_file($path, $name, $tmp_file)
+    {
+        $original_file = $path.'/'.$name;
+        $success = move_uploaded_file($tmp_file, $original_file);
+
+        if ($success)
+        {
+            $resized_path = $path.'/_resized';
+            mkdir($resized_path);
+            if (is_dir($resized_path) && list($width, $height, $mime_type) = getimagesize($original_file))
+            {
+                $quality = 90;
+                $basename = file_extension($name);
+                foreach (self::$sizes as $label => $size)
+                {
+                    if ($size['width'] > 0 && $size['height'] > 0 && ($width > $size['width'] || $height > $size['height']))
+                    {
+                        $ratio_orig = $width/$height;
+
+                        if ($size['width']/$size['height'] > $ratio_orig) 
+                        {
+                           $size['width'] = $size['height']*$ratio_orig;
+                        } 
+                        else 
+                        {
+                           $size['height'] = $size['width']/$ratio_orig;
+                        }
+                        
+                        $image = imagecreatetruecolor($size['width'], $size['height']);
+                        $resized_file = $resized_path.'/'.$basename[0].'-'.$label.$basename[1];
+                        switch ($mime_type)
+                        {
+                            case IMAGETYPE_GIF:
+                                $orig_image = imagecreatefromgif($original_file);
+                                imagealphablending($image, false);
+                                imagesavealpha($image, true);
+                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
+                                imagegif($image, $resized_file);
+                            break;
+                            case IMAGETYPE_JPEG:
+                                $orig_image = imagecreatefromjpeg($original_file);
+                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
+                                imagejpeg($image, $resized_file, $quality);
+                            break;
+                            case IMAGETYPE_PNG:
+                                $orig_image = imagecreatefrompng($original_file);
+                                imagealphablending($image, false);
+                                imagesavealpha($image, true);
+                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
+                                if ( function_exists('imageistruecolor') && imageistruecolor( $orig_image ) )
+                                {
+                                    imagetruecolortopalette( $image, false, imagecolorstotal( $orig_image ) );
+                                }
+                                imagepng($image, $resized_file);
+                            break;
+                            case IMAGETYPE_WBMP:
+                                $orig_image = imagecreatefromwbmp($original_file);
+                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
+                                imagewbmp($image, $resized_file);
+                            break;
+                            case image_type_to_mime_type(IMAGETYPE_XBM):
+                                $orig_image = imagecreatefromxbm($original_file);
+                                imagecopyresampled($image, $orig_image, 0, 0, 0, 0, $size['width'], $size['height'], $width, $height);
+                                imagexbm($image, $resized_file);
+                            break;
+                        }
+                        if (isset($orig_image))
+                        {
+                            imagedestroy($orig_image);
+                        }
+                        imagedestroy($image);
+                    }
+                }
+            }
+        }
+
+        return $success;
+    }
     //}}}
     //{{{ public static function web_path()
     public static function web_path()

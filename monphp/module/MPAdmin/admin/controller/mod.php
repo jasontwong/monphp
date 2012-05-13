@@ -2,6 +2,4 @@
 
 $page = MPModule::h('mpadmin_module_page', URI_PART_2);
 
-include DIR_MODULE.'/MPAdmin/view/module.php';
-
-?>
+include dirname(dirname(__FILE__)) . '/view/mod.php';

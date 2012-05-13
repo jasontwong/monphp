@@ -26,7 +26,7 @@ class MPRouter
     private static $method;
     /**
      * Source that provided the route scanned. This is recorded along with
-     * router::add() when the route is passed in hook_mproutes().
+     * router::add() when the route is passed in hook_mpsystem_routes().
      */
     private static $source;
     /**

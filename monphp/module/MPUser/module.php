@@ -53,8 +53,8 @@ class MPUser
     }
 
     //}}}
-    //{{{ public function hook_active()
-    public function hook_active()
+    //{{{ public function hook_mpsystem_active()
+    public function hook_mpsystem_active()
     {
         $uac = MPDB::selectCollection('mpuser_account');
         $uag = MPDB::selectCollection('mpuser_group');
@@ -101,11 +101,11 @@ class MPUser
     }
 
     //}}}
-    //{{{ public function hook_end()
+    //{{{ public function hook_mpsystem_end()
     /**
      * Checks for user account updates and saves to DB if it is
      */
-    public function hook_end()
+    public function hook_mpsystem_end()
     {
         if (self::$changed)
         {
@@ -323,7 +323,7 @@ class MPUser
         }
         else
         {
-            MPAdmin::log(MPAdmin::TYPE_ERROR, 'MPUser ' . $user['name'] . ' failed to log in');
+            MPAdmin::log(MPAdmin::TYPE_ERROR, 'MPUser ' . $data['name'] . ' failed to log in');
             $results = array(
                 'success' => FALSE,
                 'messages' => array(

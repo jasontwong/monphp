@@ -19,8 +19,4 @@ if (isset($_POST['login']))
 
 $head['title'] = 'Log in';
 
-include DIR_TMPL.'/header.php';
-include DIR_MODULE.'/MPAdmin/view/login.php';
-include DIR_TMPL.'/footer.php';
-
-?>
+include dirname(dirname(__FILE__)) . '/view/login.php';

@@ -28,6 +28,7 @@ class MPAdmin
     }
 
     //}}}
+
     //{{{ private function _rpc_dashboard($data)
     private function _rpc_dashboard($data)
     {
@@ -62,377 +63,25 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function hook_active()
-    public function hook_active()
-    {
-        $logging = MPData::query('MPAdmin', 'logging');
-        if (is_null($logging))
-        {
-            MPData::update('MPAdmin', 'logging', TRUE);
-            MPData::save();
-        }
-        $alc = MPDB::selectCollection('mpadmin_log');
-        $alc->ensureIndex(array('username' => 1, 'type' => 1));
 
-        $static_routes = array(
-            '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}',
-            '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}.php'
-        );
-        $static_types = array(
-            'css' => 'text/css',
-            'js' => 'text/javascript',
-        );
-        foreach ($static_routes as $pattern => $controller)
+    //{{{ public function cb_mpadmin_css($css)
+    public function cb_mpadmin_css($css)
+    {
+        $o = '';
+        foreach ($css as $module => $styles)
         {
-            MPRouter::add($pattern, $controller, MPRouter::ROUTE_PCRE, MPRouter::PRIORITY_NORMAL, 'admin');
-            if (MPRouter::pattern(TRUE) === $pattern)
+            foreach ($styles as $media => $hrefs)
             {
-                // we need correct headers
-                $c = MPRouter::controller(TRUE);
-                $s = strrpos($c, '.');
-                if ($s !== FALSE)
+                foreach ($hrefs as $href)
                 {
-                    $ext = substr($c, $s + 1);
-                    if (array_key_exists($ext, $static_types))
-                    {
-                        header('MPContent-type: '.$static_types[$ext]);
-                    }
+                    $o .= "<link rel='stylesheet' media='{$media}' href='{$href}'>\n";
                 }
             }
         }
+        return $o;
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_css()
-    public function hook_mpadmin_css()
-    {
-        return array(
-            'screen' => array(
-                '/file/module/MPAdmin/js/jquery/themes/base/jquery.ui.core.css',
-                '/file/module/MPAdmin/js/jquery/themes/base/jquery.ui.slider.css',
-                '/admin/static/MPAdmin/screen.css/',
-                '/admin/static/MPAdmin/field.css/'
-            )
-        );
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_js()
-    public function hook_mpadmin_js()
-    {
-        $js = array();
-        if (URI_PATH === '/admin/')
-        {
-            $js[] = '/file/module/MPAdmin/js/jquery/ui/jquery.ui.sortable.js';
-            $js[] = '/admin/static/MPAdmin/dashboard.js/';
-        }
-        if (URI_PATH === '/admin/settings/')
-        {
-        }
-        return $js;
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_js_header()
-    public function hook_mpadmin_js_header()
-    {
-        return array(
-            '/file/module/MPAdmin/js/jquery/jquery.js',
-            '/file/module/MPAdmin/js/tiny_mce/tiny_mce.js',
-            '/file/module/MPAdmin/js/tiny_mce/jquery.tinymce.js',
-            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.core.js',
-            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.widget.js',
-            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.mouse.js',
-            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.slider.js',
-            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.tabs.js',
-            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.sortable.js',
-            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.datepicker.js',
-            //'/file/module/MPAdmin/js/timepicker.js',
-            '/admin/static/MPAdmin/admin.js/',
-            '/admin/static/MPAdmin/field.js/'
-        );
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_tinymce()
-    public function hook_mpadmin_tinymce()
-    {
-        $options = array(
-            'plugins' => 'inlinepopups,spellchecker',
-            'theme' => 'advanced',
-            'skin' => 'krate',
-            'theme_advanced_blockformats' => 'p,div,h1,h2,h3,h4,h5,h6',
-            'theme_advanced_buttons1' => "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,separator,styleselect,formatselect,separator,sup,sub",
-            'theme_advanced_buttons2' => "bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,link,unlink,separator,anchor,image,separator,forecolor,charmap,removeformat,spellchecker,separator,hr,code",
-            'theme_advanced_buttons3' => "",
-            'theme_advanced_more_colors' => TRUE,
-            'theme_advanced_toolbar_location' => 'top',
-            'theme_advanced_statusbar_location' => 'bottom',
-            'theme_advanced_resizing' => TRUE,
-            'theme_advanced_resize_horizontal' => FALSE,
-            'relative_urls' => FALSE,
-            'width' => '508'
-        );
-        if (is_array(MPData::query('MPAdmin', 'tinyMCE')))
-        {
-            $options = array_merge($options, MPData::query('MPAdmin', 'tinyMCE'));
-        }
-        return $options;
-    }
-
-    //}}}
-    //{{{ public function hook_mproutes()
-    public function hook_mproutes()
-    {
-        $ctrl = dirname(__FILE__).'/controller';
-        $routes = array(
-            array('/admin/', $ctrl.'/index.php'),
-            array('/admin/login/', $ctrl.'/login.php'),
-            array('/admin/logout/', $ctrl.'/logout.php'),
-            array('#^/admin/settings/[^/]+/$#', $ctrl.'/settings.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/module/.+/$#', $ctrl.'/module.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/mod/.+/$#', $ctrl.'/mod.php', MPRouter::ROUTE_PCRE),
-        );
-        return $routes;
-    }
-
-    //}}}
-    //{{{ public function hook_mpuser_perm()
-    public function hook_mpuser_perm()
-    {
-        $perms = array(
-            'admin access' => 'Can access admin back end',
-            'admin settings' => 'Can change system and module settings',
-        );
-        $settings = array_keys(MPModule::h('data_info'));
-        foreach ($settings as $mod)
-        {
-            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
-        }
-        return array(
-            'MPAdmin' => $perms
-        );
-    }
-
-    //}}}
-    //{{{ public function hook_rpc($action, $params = NULL)
-    /**
-     * Implementation of hook_rpc
-     *
-     * This looks at the action and checks for the method _rpc_<action> and
-     * passes the parameters to that. There is no limit on parameters.
-     *
-     * @param string $action action name
-     * @return string
-     */
-    public function hook_rpc($action)
-    {
-        $method = '_rpc_'.$action;
-        $caller = array($this, $method);
-        $args = array_slice(func_get_args(), 1);
-        return method_exists($this, $method) 
-            ? call_user_func_array($caller, $args)
-            : '';
-    }
-
-    //}}}
-    //{{{ public function hook_settings_fields()
-    public function hook_settings_fields()
-    {
-        $hidden = is_file(MPData::query('MPAdmin', 'logo', 'name'))
-            ? array('delete')
-            : array();
-        $logo = array(
-            'field' => MPField::layout(
-                'file',
-                array(
-                    'data' => array(
-                        'label' => 'MPAdmin Logo'
-                    )
-                )
-            ),
-            'name' => 'logo',
-            'type' => 'file',
-            'hidden' => $hidden,
-            'value' => array(
-                'group_key' => 'MPAdmin',
-            ),
-            'html_before' => array(
-                'data' => '<img src="/file/upload/'.MPData::query('MPAdmin', 'logo', 'name').'" /><br />'
-            )
-        );
-        $bgcolor = array(
-            'field' => MPField::layout(
-                'text',
-                array(
-                    'data' => array(
-                        'label' => 'Background Color'
-                    )
-                )
-            ),
-            'name' => 'bgcolor',
-            'type' => 'text',
-            'value' => array(
-                'data' => MPData::query('MPAdmin', 'bgcolor')
-            )
-        );
-        $tiny_data = MPData::query('MPAdmin', 'tinyMCE');
-        if ($tiny_data['theme_advanced_more_colors'] === 'false')
-        {
-            unset($tiny_data['theme_advanced_more_colors']);
-        }
-        $tinyMCE = array(
-            'field' => MPField::layout('tinyMCE'),
-            'name' => 'tinyMCE',
-            'type' => 'tinyMCE',
-            'value' => $tiny_data
-        );
-
-        return array($logo, $bgcolor, $tinyMCE);
-    }
-
-    //}}}
-    //{{{ public function hook_settings_validate($name, $data)
-    public function hook_settings_validate($name, $data)
-    {
-        $success = FALSE;
-        switch ($name)
-        {
-            case 'logo':
-                if (!ake('tmp_name', $data))
-                {
-                    $data = array();
-                    break;
-                }
-                if (!is_dir(DIR_FILE.'/upload'))
-                {
-                    $can_move = mkdir(DIR_FILE.'/upload', 0777, TRUE);
-                }
-                if (is_file(DIR_FILE.'/upload/admin_logo.jpg'))
-                {
-                    unlink(DIR_FILE.'/upload/admin_logo.jpg');
-                }
-                if (move_uploaded_file($data['tmp_name'], DIR_FILE.'/upload/admin_logo.jpg'))
-                {
-                    $data['name'] = 'admin_logo.jpg';
-                    $data['tmp_name'] = DIR_FILE.'/upload/'.$data['name'];
-                    $success = TRUE;
-                }
-            break;
-            case 'bgcolor':
-                if (substr($data, 0, 1) === '#' && (strlen($data) === 4 || strlen($data) === 7))
-                {
-                    $success = TRUE;
-                }
-                else
-                {
-                    $data = '';
-                }
-            break;
-            case 'tinyMCE':
-                foreach ($data as $k => &$setting)
-                {
-                    $success = TRUE;
-                    switch ($k)
-                    {
-                        case 'theme_advanced_more_colors':
-                            $setting = $setting
-                                ? 'true'
-                                : 'false';
-                        break;
-                        default:
-                            if (strlen($setting))
-                            {
-                                continue;
-                            }
-                            unset($data[$k]);
-                    }
-                }
-            break;
-        }
-        return array(
-            'success' => $success,
-            'data' => $data
-        );
-    }
-
-    //}}}
-    //{{{ public function hook_start()
-    public function hook_start()
-    {
-        if (MPRouter::source() === 'MPAdmin')
-        {
-            $redirect = (URI_PARTS > 0 && URI_PART_0 === 'admin')
-                        ? (URI_PARTS === 1 || URI_PART_1 !== 'login')
-                        : FALSE;
-
-            $logged_in = MPUser::perm('admin access') && deka(FALSE, $_SESSION, 'admin', 'logged_in');
-
-            if (!$logged_in && $redirect)
-            {
-                header('Location: /admin/login/');
-                exit;
-            }
-        }
-    }
-
-    //}}}
-    //{{{ public function prep_mpadmin_login_submit($mod, $data)
-    public function prep_mpadmin_login_submit($mod, $data)
-    {
-        if (eka($data, $mod))
-        {
-            return array(
-                'use_method' => TRUE,
-                'data' => array(
-                    'data' => $data[$mod],
-                    'extra' => array()
-                )
-            );
-        }
-    }
-
-    //}}}
-    //{{{ public function prep_mpadmin_module_page($mod)
-    /**
-     * Prepare data for the module's admin page
-     * Looks into the module's /admin/ directory for the matching php template
-     * file. If it is available, the hook uses the output of this file instead
-     * of going into the module's hook method.
-     */
-    public function prep_mpadmin_module_page($mod)
-    {
-        $data['callback'] = URI_PARTS === 3 ? 'index' : URI_PART_3;
-        $dir = dirname(dirname(__FILE__)).'/'.$mod.'/admin/';
-        $ctrl = $dir.'/controller/'.$data['callback'].'.php';
-        $view = $dir.'/view/'.$data['callback'].'.php';
-        if (is_readable($ctrl))
-        {
-            ob_start();
-            include $ctrl;
-            if (is_readable($view))
-            {
-                include $view;
-            }
-            $data = ob_get_clean();
-            $use_method = FALSE;
-        }
-        else
-        {
-            for ($i = 4; $i < URI_PARTS; ++$i)
-            {
-                $data['parameters'][] = constant('URI_PART_'.$i);
-            }
-            $use_method = TRUE;
-        }
-        return array(
-            'use_method' => $use_method,
-            'data' => $data
-        );
-    }
-
-    //}}}
+    //}}} 
     //{{{ public function cb_mpadmin_dashboard($modules)
     /**
      * Build out dashboard widgets based on what the modules specify
@@ -532,6 +181,33 @@ class MPAdmin
     }
 
     //}}}
+    //{{{ public function cb_mpadmin_js($js)
+    public function cb_mpadmin_js($js)
+    {
+        $done = array();
+        $o = '';
+        foreach ($js as $mod => $scripts)
+        {
+            foreach ($scripts as $script)
+            {
+                if (array_search($script, $done) === FALSE)
+                {
+                    $o .= "<script type='text/javascript' src='{$script}'></script>\n";
+                    $done[] = $script;
+                }
+            }
+        }
+        return $o;
+    }
+
+    //}}} 
+    //{{{ public function cb_mpadmin_js_header($js)
+    public function cb_mpadmin_js_header($js)
+    {
+        return $this->cb_mpadmin_js($js);
+    }
+
+    //}}} 
     //{{{ public function cb_mpadmin_login_build($mods)
     public function cb_mpadmin_login_build($mods)
     {
@@ -696,51 +372,6 @@ class MPAdmin
     }
 
     //}}} 
-    //{{{ public function cb_mpadmin_js($js)
-    public function cb_mpadmin_js($js)
-    {
-        $done = array();
-        $o = '';
-        foreach ($js as $mod => $scripts)
-        {
-            foreach ($scripts as $script)
-            {
-                if (array_search($script, $done) === FALSE)
-                {
-                    $o .= "<script type='text/javascript' src='{$script}'></script>\n";
-                    $done[] = $script;
-                }
-            }
-        }
-        return $o;
-    }
-
-    //}}} 
-    //{{{ public function cb_mpadmin_js_header($js)
-    public function cb_mpadmin_js_header($js)
-    {
-        return $this->cb_mpadmin_js($js);
-    }
-
-    //}}} 
-    //{{{ public function cb_mpadmin_css($css)
-    public function cb_mpadmin_css($css)
-    {
-        $o = '';
-        foreach ($css as $module => $styles)
-        {
-            foreach ($styles as $media => $hrefs)
-            {
-                foreach ($hrefs as $href)
-                {
-                    $o .= "<link rel='stylesheet' media='{$media}' href='{$href}'>\n";
-                }
-            }
-        }
-        return $o;
-    }
-
-    //}}} 
     //{{{ public function cb_mpadmin_tinymce($modules)
     public function cb_mpadmin_tinymce($modules)
     {
@@ -753,6 +384,385 @@ class MPAdmin
     }
 
     //}}}
+
+    //{{{ public function hook_mpadmin_css()
+    public function hook_mpadmin_css()
+    {
+        return array(
+            'screen' => array(
+                '/file/module/MPAdmin/js/jquery/themes/base/jquery.ui.core.css',
+                '/file/module/MPAdmin/js/jquery/themes/base/jquery.ui.slider.css',
+                '/admin/static/MPAdmin/screen.css/',
+                '/admin/static/MPAdmin/field.css/'
+            )
+        );
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_js()
+    public function hook_mpadmin_js()
+    {
+        $js = array();
+        if (URI_PATH === '/admin/')
+        {
+            $js[] = '/file/module/MPAdmin/js/jquery/ui/jquery.ui.sortable.js';
+            $js[] = '/admin/static/MPAdmin/dashboard.js/';
+        }
+        if (URI_PATH === '/admin/settings/')
+        {
+        }
+        return $js;
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_js_header()
+    public function hook_mpadmin_js_header()
+    {
+        return array(
+            '/file/module/MPAdmin/js/jquery/jquery.js',
+            '/file/module/MPAdmin/js/tiny_mce/tiny_mce.js',
+            '/file/module/MPAdmin/js/tiny_mce/jquery.tinymce.js',
+            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.core.js',
+            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.widget.js',
+            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.mouse.js',
+            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.slider.js',
+            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.tabs.js',
+            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.sortable.js',
+            '/file/module/MPAdmin/js/jquery/ui/jquery.ui.datepicker.js',
+            //'/file/module/MPAdmin/js/timepicker.js',
+            '/admin/static/MPAdmin/admin.js/',
+            '/admin/static/MPAdmin/field.js/'
+        );
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_module_page($page)
+    public function hook_mpadmin_module_page($page)
+    {
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_tinymce()
+    public function hook_mpadmin_tinymce()
+    {
+        $options = array(
+            'plugins' => 'inlinepopups,spellchecker',
+            'theme' => 'advanced',
+            'skin' => 'krate',
+            'theme_advanced_blockformats' => 'p,div,h1,h2,h3,h4,h5,h6',
+            'theme_advanced_buttons1' => "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,separator,styleselect,formatselect,separator,sup,sub",
+            'theme_advanced_buttons2' => "bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,link,unlink,separator,anchor,image,separator,forecolor,charmap,removeformat,spellchecker,separator,hr,code",
+            'theme_advanced_buttons3' => "",
+            'theme_advanced_more_colors' => TRUE,
+            'theme_advanced_toolbar_location' => 'top',
+            'theme_advanced_statusbar_location' => 'bottom',
+            'theme_advanced_resizing' => TRUE,
+            'theme_advanced_resize_horizontal' => FALSE,
+            'relative_urls' => FALSE,
+            'width' => '508'
+        );
+        if (is_array(MPData::query('MPAdmin', 'tinyMCE')))
+        {
+            $options = array_merge($options, MPData::query('MPAdmin', 'tinyMCE'));
+        }
+        return $options;
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_settings_fields()
+    public function hook_mpadmin_settings_fields()
+    {
+        $hidden = is_file(MPData::query('MPAdmin', 'logo', 'name'))
+            ? array('delete')
+            : array();
+        $logo = array(
+            'field' => MPField::layout(
+                'file',
+                array(
+                    'data' => array(
+                        'label' => 'MPAdmin Logo'
+                    )
+                )
+            ),
+            'name' => 'logo',
+            'type' => 'file',
+            'hidden' => $hidden,
+            'value' => array(
+                'group_key' => 'MPAdmin',
+            ),
+            'html_before' => array(
+                'data' => '<img src="/file/upload/'.MPData::query('MPAdmin', 'logo', 'name').'" /><br />'
+            )
+        );
+        $bgcolor = array(
+            'field' => MPField::layout(
+                'text',
+                array(
+                    'data' => array(
+                        'label' => 'Background Color'
+                    )
+                )
+            ),
+            'name' => 'bgcolor',
+            'type' => 'text',
+            'value' => array(
+                'data' => MPData::query('MPAdmin', 'bgcolor')
+            )
+        );
+        $tiny_data = MPData::query('MPAdmin', 'tinyMCE');
+        if ($tiny_data['theme_advanced_more_colors'] === 'false')
+        {
+            unset($tiny_data['theme_advanced_more_colors']);
+        }
+        $tinyMCE = array(
+            'field' => MPField::layout('tinyMCE'),
+            'name' => 'tinyMCE',
+            'type' => 'tinyMCE',
+            'value' => $tiny_data
+        );
+
+        return array($logo, $bgcolor, $tinyMCE);
+    }
+
+    //}}}
+    //{{{ public function hook_mpadmin_settings_validate($name, $data)
+    public function hook_mpadmin_settings_validate($name, $data)
+    {
+        $success = FALSE;
+        switch ($name)
+        {
+            case 'logo':
+                if (!ake('tmp_name', $data))
+                {
+                    $data = array();
+                    break;
+                }
+                if (!is_dir(DIR_FILE.'/upload'))
+                {
+                    $can_move = mkdir(DIR_FILE.'/upload', 0777, TRUE);
+                }
+                if (is_file(DIR_FILE.'/upload/admin_logo.jpg'))
+                {
+                    unlink(DIR_FILE.'/upload/admin_logo.jpg');
+                }
+                if (move_uploaded_file($data['tmp_name'], DIR_FILE.'/upload/admin_logo.jpg'))
+                {
+                    $data['name'] = 'admin_logo.jpg';
+                    $data['tmp_name'] = DIR_FILE.'/upload/'.$data['name'];
+                    $success = TRUE;
+                }
+            break;
+            case 'bgcolor':
+                if (substr($data, 0, 1) === '#' && (strlen($data) === 4 || strlen($data) === 7))
+                {
+                    $success = TRUE;
+                }
+                else
+                {
+                    $data = '';
+                }
+            break;
+            case 'tinyMCE':
+                foreach ($data as $k => &$setting)
+                {
+                    $success = TRUE;
+                    switch ($k)
+                    {
+                        case 'theme_advanced_more_colors':
+                            $setting = $setting
+                                ? 'true'
+                                : 'false';
+                        break;
+                        default:
+                            if (strlen($setting))
+                            {
+                                continue;
+                            }
+                            unset($data[$k]);
+                    }
+                }
+            break;
+        }
+        return array(
+            'success' => $success,
+            'data' => $data
+        );
+    }
+
+    //}}}
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
+    {
+        $perms = array(
+            'admin access' => 'Can access admin back end',
+            'admin settings' => 'Can change system and module settings',
+        );
+        $settings = array_keys(MPModule::h('data_info'));
+        foreach ($settings as $mod)
+        {
+            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
+        }
+        return array(
+            'MPAdmin' => $perms
+        );
+    }
+
+    //}}}
+    //{{{ public function hook_mpsystem_active()
+    public function hook_mpsystem_active()
+    {
+        $logging = MPData::query('MPAdmin', 'logging');
+        if (is_null($logging))
+        {
+            MPData::update('MPAdmin', 'logging', TRUE);
+        }
+        $alc = MPDB::selectCollection('mpadmin_log');
+        $alc->ensureIndex(array('username' => 1, 'type' => 1));
+
+        $static_routes = array(
+            '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}',
+            '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}.php'
+        );
+        $static_types = array(
+            'css' => 'text/css',
+            'js' => 'text/javascript',
+        );
+        foreach ($static_routes as $pattern => $controller)
+        {
+            MPRouter::add($pattern, $controller, MPRouter::ROUTE_PCRE, MPRouter::PRIORITY_NORMAL, 'admin');
+            if (MPRouter::pattern(TRUE) === $pattern)
+            {
+                // we need correct headers
+                $c = MPRouter::controller(TRUE);
+                $s = strrpos($c, '.');
+                if ($s !== FALSE)
+                {
+                    $ext = substr($c, $s + 1);
+                    if (array_key_exists($ext, $static_types))
+                    {
+                        header('MPContent-type: '.$static_types[$ext]);
+                    }
+                }
+            }
+        }
+    }
+
+    //}}}
+    //{{{ public function hook_mpsystem_routes()
+    public function hook_mpsystem_routes()
+    {
+        $ctrl = dirname(__FILE__).'/admin/controller';
+        $routes = array(
+            array('/admin/', $ctrl.'/index.php'),
+            array('/admin/login/', $ctrl.'/login.php'),
+            array('/admin/logout/', $ctrl.'/logout.php'),
+            array('#^/admin/settings/[^/]+/$#', $ctrl.'/settings.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/module/.+/$#', $ctrl.'/module.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/mod/.+/$#', $ctrl.'/mod.php', MPRouter::ROUTE_PCRE),
+        );
+        return $routes;
+    }
+
+    //}}}
+    //{{{ public function hook_mpsystem_start()
+    public function hook_mpsystem_start()
+    {
+        if (MPRouter::source() === 'MPAdmin')
+        {
+            $redirect = (URI_PARTS > 0 && URI_PART_0 === 'admin')
+                        ? (URI_PARTS === 1 || URI_PART_1 !== 'login')
+                        : FALSE;
+
+            $logged_in = MPUser::perm('admin access') && deka(FALSE, $_SESSION, 'admin', 'logged_in');
+
+            if (!$logged_in && $redirect)
+            {
+                header('Location: /admin/login/');
+                exit;
+            }
+        }
+    }
+
+    //}}}
+    //{{{ public function hook_rpc($action, $params = NULL)
+    /**
+     * Implementation of hook_rpc
+     *
+     * This looks at the action and checks for the method _rpc_<action> and
+     * passes the parameters to that. There is no limit on parameters.
+     *
+     * @param string $action action name
+     * @return string
+     */
+    public function hook_rpc($action)
+    {
+        $method = '_rpc_'.$action;
+        $caller = array($this, $method);
+        $args = array_slice(func_get_args(), 1);
+        return method_exists($this, $method) 
+            ? call_user_func_array($caller, $args)
+            : '';
+    }
+
+    //}}}
+
+    //{{{ public function prep_mpadmin_login_submit($mod, $data)
+    public function prep_mpadmin_login_submit($mod, $data)
+    {
+        if (eka($data, $mod))
+        {
+            return array(
+                'use_method' => TRUE,
+                'data' => array(
+                    'data' => $data[$mod],
+                    'extra' => array()
+                )
+            );
+        }
+    }
+
+    //}}}
+    //{{{ public function prep_mpadmin_module_page($mod)
+    /**
+     * Prepare data for the module's admin page
+     * Looks into the module's /admin/ directory for the matching php template
+     * file. If it is available, the hook uses the output of this file instead
+     * of going into the module's hook method.
+     */
+    public function prep_mpadmin_module_page($mod)
+    {
+        $data['callback'] = URI_PARTS === 3 ? 'index' : URI_PART_3;
+        $dir = dirname(dirname(__FILE__)).'/'.$mod.'/admin/';
+        $ctrl = $dir.'/controller/'.$data['callback'].'.php';
+        $view = $dir.'/view/'.$data['callback'].'.php';
+        if (is_readable($ctrl))
+        {
+            ob_start();
+            include $ctrl;
+            if (is_readable($view))
+            {
+                include $view;
+            }
+            $data = ob_get_clean();
+            $use_method = FALSE;
+        }
+        else
+        {
+            for ($i = 4; $i < URI_PARTS; ++$i)
+            {
+                $data['parameters'][] = constant('URI_PART_'.$i);
+            }
+            $use_method = TRUE;
+        }
+        return array(
+            'use_method' => $use_method,
+            'data' => $data
+        );
+    }
+
+    //}}}
+
     //{{{ public function row_module($mod)
     /**
      * Returns the HTML to use in the module form in admin backend
@@ -789,6 +799,7 @@ class MPAdmin
     }
 
     //}}}
+
     //{{{ public static function append($name, $value)
     /**
      * Appends an array for use in the admin templates

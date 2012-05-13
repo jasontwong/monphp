@@ -19,5 +19,3 @@ $result = call_user_func_array($caller, $params);
 echo ake($module, $result) 
     ? $result[$module] 
     : $result;
-
-?>

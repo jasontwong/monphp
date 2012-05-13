@@ -26,8 +26,8 @@ class MPContent
     public static $types = NULL;
 
     //}}}
-    //{{{ public function hook_active()
-    public function hook_active()
+    //{{{ public function hook_mpsystem_active()
+    public function hook_mpsystem_active()
     {
         $db = new MPDB;
         $db->mpcontent_entry->ensureIndex(
@@ -299,8 +299,8 @@ class MPContent
     }
 
     //}}}
-    //{{{ public function hook_settings_fields()
-    public function hook_settings_fields()
+    //{{{ public function hook_mpadmin_settings_fields()
+    public function hook_mpadmin_settings_fields()
     {
         $autoslug = array(
             'field' => MPField::layout(

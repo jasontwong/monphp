@@ -2,5 +2,4 @@
 
 $_SESSION['admin']['logged_in'] = FALSE;
 header('Location: /admin/login/');
-
-?>
+exit;
