@@ -121,7 +121,6 @@ if (isset($_POST['form']))
             }
         }
     }
-    MPData::save();
 }
 
 //}}}
