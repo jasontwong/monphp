@@ -475,6 +475,8 @@ class MPAdmin
         $hidden = is_file(MPData::query('MPAdmin', 'logo', 'name'))
             ? array('delete')
             : array();
+        /* switch to filemanager field and fallback should be inside the MPAdmin module
+         * Maybe even merge the filemanager with the admin system?
         $logo = array(
             'field' => MPField::layout(
                 'file',
@@ -494,6 +496,7 @@ class MPAdmin
                 'data' => '<img src="/file/upload/'.MPData::query('MPAdmin', 'logo', 'name').'" /><br />'
             )
         );
+        */
         $bgcolor = array(
             'field' => MPField::layout(
                 'text',
@@ -532,6 +535,7 @@ class MPAdmin
         switch ($name)
         {
             case 'logo':
+                /*
                 if (!ake('tmp_name', $data))
                 {
                     $data = array();
@@ -551,6 +555,7 @@ class MPAdmin
                     $data['tmp_name'] = DIR_FILE.'/upload/'.$data['name'];
                     $success = TRUE;
                 }
+                */
             break;
             case 'bgcolor':
                 if (substr($data, 0, 1) === '#' && (strlen($data) === 4 || strlen($data) === 7))
