@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Email configuration mainly for Swift Mailer
+ * Default Email configuration mainly MPMailer
  */
 
 // smtp, sendmail, mail
-define('EMAIL_TRANSPORT', '');
+define('EMAIL_TRANSPORT', 'mail');
 
 // only needed for smtp emailing
 define('EMAIL_hostname', 'localhost');

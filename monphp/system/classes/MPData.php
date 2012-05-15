@@ -115,7 +115,6 @@ class MPData
                 $rows = MPDB::selectCollection('system_data')->find(array('autoload' => true));
                 foreach ($rows as $row)
                 {
-                    $row['autoload'] = TRUE;
                     self::register($row);
                 }
             }
@@ -224,29 +223,21 @@ class MPData
 * @param boolean $autoload auto loading flag, null to use existing value
 * @return bool true if all checks passed 
 */
-public static function update($type, $name, $data, $autoload = NULL)
+public static function update($type, $name, $data, $autoload = FALSE)
 {
     self::init();
     self::$changed = TRUE;
     $signature = array('type' => $type, 'name' => $name);
     if (eka(self::$data, $type, $name))
     {
-        if (!in_array($signature, self::$adds))
-        {
-            self::$updates[self::$id[$type][$name]] = $signature;
-            if (!is_null($autoload))
-            {
-                self::$autoload[$type][$name] = $autoload;
-            }
-        }
+        self::$updates[self::$id[$type][$name]] = $signature;
     }
-    elseif (!in_array($signature, self::$adds))
+    else
     {
         self::$adds[] = $signature;
-        self::$autoload[$type][$name] = is_null($autoload) ? FALSE : $autoload;
     }
+    self::$autoload[$type][$name] = $autoload;
     self::$data[$type][$name] = $data;
-    self::save();
 }
 //}}}
     //{{{ public static function settings_form()

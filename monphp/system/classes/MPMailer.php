@@ -3,18 +3,21 @@
 /**
  * Helper class for the Swift MPMailer library.
  *
- * Configuration is set in system/config.misc.php
+ * Configuration is set in system/config.mailer.php
  * If multiple transports need to be used, use the Swift MPMailer library directly
  */
 
 class MPMailer
 {
     // {{{ properties
-    public $transport;
     public $mailer;
-    public $m;
     public $message;
-    public $foo;
+    // }}}
+    // {{{ function __call($name, $params)
+    function __call($name, $params)
+    {
+        return call_user_func_array(array($this->message, $name), $params);
+    }
     // }}}
     // {{{ function __construct($config = array())
     /**
@@ -24,23 +27,24 @@ class MPMailer
      */
     function __construct($config = array())
     {
+        include DIR_SYS . '/config.mailer.php';
         if (!defined('EMAIL_TRANSPORT') && !eka($config, 'transport'))
         {
             throw new Exception('Email configuration not set');
         }
-        if (!class_exists('Swift_MPMailer'))
+        if (!class_exists('Swift_Mailer'))
         {
-            include_once DIR_LIB.'/swift-mailer/swift_required.php';
+            include_once DIR_LIB . '/swift-mailer/swift_required.php';
         }
         $transport = deka(EMAIL_TRANSPORT, $config, 'transport');
         $hostname = deka(EMAIL_HOSTNAME, $config, 'hostname');
-        $port = deka(EMAIL_PORT, $config, 'port');
-        $username = deka(EMAIL_USERNAME, $config, 'username');
-        $password = deka(EMAIL_PASSWORD, $config, 'password');
 
         switch ($transport)
         {
             case 'smtp':
+                $port = deka(EMAIL_PORT, $config, 'port');
+                $username = deka(EMAIL_USERNAME, $config, 'username');
+                $password = deka(EMAIL_PASSWORD, $config, 'password');
                 $this->transport = Swift_SmtpTransport::newInstance($hostname, $port)
                     ->setMPUsername($username)
                     ->setPassword($password);
@@ -54,8 +58,6 @@ class MPMailer
         }
         $this->mailer = Swift_MPMailer::newInstance($this->transport);
         $this->message = Swift_Message::newInstance();
-        $this->m =& $this->message;
-        $this->foo = 'asd';
     }
     // }}}
     // {{{ function send()
@@ -64,10 +66,14 @@ class MPMailer
         $this->mailer->send($this->message);
     }
     // }}}
-    // {{{ function __call($name, $params)
-    function __call($name, $params)
+    // {{{ static function is_email($email)
+    static function is_email($email)
     {
-        return call_user_func_array(array($this->message, $name), $params);
+        if (!class_exists('Swift_Validate'))
+        {
+            include DIR_LIB.'/swift-mailer/swift_required.php';
+        }
+        return Swift_Validate::email($email);
     }
     // }}}
 }
