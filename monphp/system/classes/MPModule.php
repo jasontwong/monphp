@@ -423,7 +423,8 @@ class MPModule
     {
         if ($force || self::$active === array())
         {
-            self::load('MPSystem', DIR_SYS . '/MPSystem.php');
+            // load system module
+            self::load('MPSystem', DIR_SYS . '/classes/MPSystem.php');
             if ($mods = MPData::query('_System', 'modules'))
             {
                 foreach ($mods as $mod)

@@ -56,11 +56,6 @@ else
 }
 include DIR_SYS . '/helper.php';
 include DIR_SYS . '/function.php';
-include DIR_SYS . '/config.database.php';
-if (is_file(DIR_SYS . '/config.misc.php'))
-{
-    include DIR_SYS . '/config.misc.php';
-}
 spl_autoload_register('mp_autoload');
 $tz = MPData::query('_Site', 'time_zone');
 date_default_timezone_set(is_null($tz) ? 'America/New_York' : $tz);
