@@ -602,7 +602,7 @@ class MPAdmin
             'admin access' => 'Can access admin back end',
             'admin settings' => 'Can change system and module settings',
         );
-        $settings = array_keys(MPModule::h('data_info'));
+        $settings = MPModule::hook_user('mpadmin_settings_fields');
         foreach ($settings as $mod)
         {
             $perms[$mod.' settings'] = 'Can change '.$mod.' settings';

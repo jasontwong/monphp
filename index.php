@@ -59,9 +59,6 @@ include DIR_SYS . '/function.php';
 spl_autoload_register('mp_autoload');
 $tz = MPData::query('_Site', 'time_zone');
 date_default_timezone_set(is_null($tz) ? 'America/New_York' : $tz);
-mp_register_script('jquery', '/js/libs/jquery-1.7.1.min.js', array(), '1.7.1', TRUE);
-mp_enqueue_script('modernizer', '/js/libs/modernizr-2.5.3.min.js', array(), '2.5.3');
-mp_enqueue_style('screen', '/css/screen.css');
 // }}}
 //{{{ routing 
 $installed = !is_null(MPData::query('_System', 'version'));

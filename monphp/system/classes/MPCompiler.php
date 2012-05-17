@@ -7,10 +7,10 @@
  * and will recompile based on the hash provided, which should be saved with
  * the MPData class.
  *
- * @package MPComiler
+ * @package MPCompiler
  */
 
-class MPComiler
+class MPCompiler
 {
     //{{{ properties
     /**

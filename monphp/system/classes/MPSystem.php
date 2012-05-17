@@ -157,4 +157,12 @@ class MPSystem
         return array_merge($html, $css, $js);
     }
     // }}}
+    // {{{ public function hook_mpsystem_start()
+    public function hook_mpsystem_start()
+    {
+        mp_register_script('jquery', '/js/libs/jquery-1.7.1.min.js', array(), '1.7.1', TRUE);
+        mp_enqueue_script('modernizer', '/js/libs/modernizr-2.5.3.min.js', array(), '2.5.3');
+        mp_enqueue_style('screen', '/css/screen.css');
+    }
+    // }}}
 }
