@@ -334,15 +334,6 @@ function file_mime_type($filename)
 }
 
 //}}}
-//{{{ function filter_extensions($c)
-/**
- * Callback for array_filter to get all MPExtension classes
- */
-function filter_extensions($c)
-{
-    return substr($c, 0, 9) === 'MPExtension' && strlen($c) > 9;
-}
-//}}}
 // {{{ function hex_to_rgb($color)
 /**
  *
