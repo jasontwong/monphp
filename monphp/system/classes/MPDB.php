@@ -6,7 +6,7 @@ class MPDB
     private $conn;
     private $db;
     // }}}
-    // {{{ function __construct($set = 'default')
+    // {{{ function __construct($set = 'default', $db_file = '')
     function __construct($set = 'default', $db_file = '')
     {
         include $db_file === ''
