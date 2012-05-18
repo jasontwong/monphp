@@ -26,6 +26,12 @@ class MPDB
         throw new MPDBException('That method does not exist');
     }
     // }}}
+    // {{{ public function __get($name)
+    public function __get($name)
+    {
+        return $this->db->$name;
+    }
+    // }}}
     // {{{ public static function __callStatic($name, $arguments)
     public static function __callStatic($name, $arguments)
     {
@@ -36,12 +42,6 @@ class MPDB
             return call_user_func_array(array($db, $name), $arguments);
         }
         throw new MPDBException('That method does not exist');
-    }
-    // }}}
-    // {{{ public function __get($name)
-    public function __get($name)
-    {
-        return $this->db->$name;
     }
     // }}}
 }
