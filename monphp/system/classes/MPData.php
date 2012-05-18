@@ -60,41 +60,6 @@ class MPData
         self::$autoload[$type][$name] = $row['autoload'];
     }
     //}}}
-    //{{{ private static function save()
-    /**
-     * Records updates and additions
-     */
-    private static function save()
-    {
-        self::init();
-        if (self::$changed)
-        {
-            $sdc = MPDB::selectCollection('system_data');
-            if (count(self::$updates))
-            {
-                $ids = array_keys(self::$updates);
-                foreach (self::$updates as $id => $fp)
-                {
-                    $data = array(
-                        'data' => self::query($fp['type'], $fp['name']),
-                        'autoload' => self::$autoload[$fp['type']][$fp['name']],
-                    );
-                    $_id = new MongoId($id); 
-                    $sdc->update(array('_id' => $_id), array('$set' => $data));
-                }
-            }
-            foreach (self::$adds as $add)
-            {
-                $add['data'] = self::query($add['type'], $add['name']);
-                $add['autoload'] = self::$autoload[$add['type']][$add['name']];
-                $sdc->insert($add);
-            }
-            self::$updates = array();
-            self::$adds = array();
-            self::$changed = FALSE;
-        }
-    }
-    //}}}
     //{{{ public static function init()
     /**
      * Gets all data entries from database
@@ -240,6 +205,41 @@ public static function update($type, $name, $data, $autoload = FALSE)
     self::$data[$type][$name] = $data;
 }
 //}}}
+    //{{{ public static function save()
+    /**
+     * Records updates and additions
+     */
+    public static function save()
+    {
+        self::init();
+        if (self::$changed)
+        {
+            $sdc = MPDB::selectCollection('system_data');
+            if (count(self::$updates))
+            {
+                $ids = array_keys(self::$updates);
+                foreach (self::$updates as $id => $fp)
+                {
+                    $data = array(
+                        'data' => self::query($fp['type'], $fp['name']),
+                        'autoload' => self::$autoload[$fp['type']][$fp['name']],
+                    );
+                    $_id = new MongoId($id); 
+                    $sdc->update(array('_id' => $_id), array('$set' => $data));
+                }
+            }
+            foreach (self::$adds as $add)
+            {
+                $add['data'] = self::query($add['type'], $add['name']);
+                $add['autoload'] = self::$autoload[$add['type']][$add['name']];
+                $sdc->insert($add);
+            }
+            self::$updates = array();
+            self::$adds = array();
+            self::$changed = FALSE;
+        }
+    }
+    //}}}
     //{{{ public static function settings_form()
     /**
      */
