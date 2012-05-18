@@ -8,16 +8,23 @@ class MPExtension
     private static $names = NULL;
 
     //}}}
-    //{{{ public static function get_type($type)
-    /**
-     * Get all extension object references based on type
-     * @param string $type type name
-     * @return array of object references
-     */
-    public static function get_type($type)
+    //{{{ private static function find_extensions()
+    private static function find_extensions()
     {
-        self::load();
-        return deka(array(), self::$extensions, strtolower($type));
+        if (is_null(self::$files))
+        {
+            self::$files = array();
+            $files = scandir(DIR_EXT);
+            foreach ($files as $file)
+            {
+                $ext = DIR_EXT.'/'.$file;
+                if (is_file($ext) && strpos($file, '.') !== 0)
+                {
+                    self::$files[] = $ext;
+                }
+            }
+        }
+        return self::$files;
     }
 
     //}}}
@@ -48,23 +55,16 @@ class MPExtension
     }
 
     //}}}
-    //{{{ private static function find_extensions()
-    private static function find_extensions()
+    //{{{ public static function get_type($type)
+    /**
+     * Get all extension object references based on type
+     * @param string $type type name
+     * @return array of object references
+     */
+    public static function get_type($type)
     {
-        if (is_null(self::$files))
-        {
-            self::$files = array();
-            $files = scandir(DIR_EXT);
-            foreach ($files as $file)
-            {
-                $ext = DIR_EXT.'/'.$file;
-                if (is_file($ext) && strpos($file, '.') !== 0)
-                {
-                    self::$files[] = $ext;
-                }
-            }
-        }
-        return self::$files;
+        self::load();
+        return deka(array(), self::$extensions, strtolower($type));
     }
 
     //}}}
