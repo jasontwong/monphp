@@ -60,67 +60,6 @@ class MPData
         self::$autoload[$type][$name] = $row['autoload'];
     }
     //}}}
-    //{{{ public static function init()
-    /**
-     * Gets all data entries from database
-     *
-     * @return void
-     */
-    public static function init()
-    {
-        if (is_null(self::$data))
-        {
-            self::$data = array();
-            self::$id = array();
-            self::$autoload = array();
-            self::$updates = array();
-            self::$adds = array();
-            try
-            {
-                $rows = MPDB::selectCollection('system_data')->find(array('autoload' => true));
-                foreach ($rows as $row)
-                {
-                    self::register($row);
-                }
-            }
-            catch (Exception $e)
-            {
-            }
-        }
-    }
-    //}}}
-    //{{{ public static function query()
-    /**
-     * Looks into self::$data for information
-     * You can drill down into the $data array, with each parameter getting
-     * more specific. If no parameters are specified, entire array is 
-     * returned. Get too specific where key doesn't exist, it returns NULL.
-     *
-     * @return mixed or null if doesn't exist
-     */
-    public static function query()
-    {
-        self::init();
-        $args = func_get_args();
-        $result = array_drill(self::$data, $args);
-        if (is_null($result))
-        {
-            $result = call_user_func_array(array('MPData', 'lookup'), $args);
-            if (is_array($result))
-            {
-                foreach ($result as $row)
-                {
-                    self::register($row);
-                }
-            }
-            return array_drill(self::$data, $args);
-        }
-        else
-        {
-            return $result;
-        }
-    }
-    //}}}
     //{{{ public static function exists()
     /**
      * Not type strict
@@ -166,6 +105,35 @@ class MPData
         }
     }
     //}}}
+    //{{{ public static function init()
+    /**
+     * Gets all data entries from database
+     *
+     * @return void
+     */
+    public static function init()
+    {
+        if (is_null(self::$data))
+        {
+            self::$data = array();
+            self::$id = array();
+            self::$autoload = array();
+            self::$updates = array();
+            self::$adds = array();
+            try
+            {
+                $rows = MPDB::selectCollection('system_data')->find(array('autoload' => true));
+                foreach ($rows as $row)
+                {
+                    self::register($row);
+                }
+            }
+            catch (Exception $e)
+            {
+            }
+        }
+    }
+    //}}}
     //{{{ public static function names($type)
     /**
      * Looks into self::$data for name columns
@@ -180,31 +148,38 @@ class MPData
             : NULL;
     }
     //}}}
-//{{{ public static function update($type, $name, $data, $autoload = NULL)
-/**
-* @param string $type module name or system type name
-* @param string $name name of setting or variable
-* @param mixed $data PHP native data payload
-* @param boolean $autoload auto loading flag, null to use existing value
-* @return bool true if all checks passed 
-*/
-public static function update($type, $name, $data, $autoload = FALSE)
-{
-    self::init();
-    self::$changed = TRUE;
-    $signature = array('type' => $type, 'name' => $name);
-    if (eka(self::$data, $type, $name))
+    //{{{ public static function query()
+    /**
+     * Looks into self::$data for information
+     * You can drill down into the $data array, with each parameter getting
+     * more specific. If no parameters are specified, entire array is 
+     * returned. Get too specific where key doesn't exist, it returns NULL.
+     *
+     * @return mixed or null if doesn't exist
+     */
+    public static function query()
     {
-        self::$updates[self::$id[$type][$name]] = $signature;
+        self::init();
+        $args = func_get_args();
+        $result = array_drill(self::$data, $args);
+        if (is_null($result))
+        {
+            $result = call_user_func_array(array('MPData', 'lookup'), $args);
+            if (is_array($result))
+            {
+                foreach ($result as $row)
+                {
+                    self::register($row);
+                }
+            }
+            return array_drill(self::$data, $args);
+        }
+        else
+        {
+            return $result;
+        }
     }
-    else
-    {
-        self::$adds[] = $signature;
-    }
-    self::$autoload[$type][$name] = $autoload;
-    self::$data[$type][$name] = $data;
-}
-//}}}
+    //}}}
     //{{{ public static function save()
     /**
      * Records updates and additions
@@ -297,4 +272,29 @@ public static function update($type, $name, $data, $autoload = FALSE)
         return $rows;
     }
     //}}}
+//{{{ public static function update($type, $name, $data, $autoload = NULL)
+/**
+* @param string $type module name or system type name
+* @param string $name name of setting or variable
+* @param mixed $data PHP native data payload
+* @param boolean $autoload auto loading flag
+* @return bool true if all checks passed 
+*/
+public static function update($type, $name, $data, $autoload = FALSE)
+{
+    self::init();
+    self::$changed = TRUE;
+    $signature = array('type' => $type, 'name' => $name);
+    if (eka(self::$data, $type, $name))
+    {
+        self::$updates[self::$id[$type][$name]] = $signature;
+    }
+    else
+    {
+        self::$adds[] = $signature;
+    }
+    self::$autoload[$type][$name] = (bool)$autoload;
+    self::$data[$type][$name] = $data;
+}
+//}}}
 }
