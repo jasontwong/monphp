@@ -1,6 +1,7 @@
 <?php
 
-/* example db config
+// example db config
+/*
 $_db_conn['default'] = array(
     'server' => 'mongodb://localhost:27017/',
     'options' => array(
