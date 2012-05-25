@@ -2,8 +2,7 @@
 
 //{{{ prepare database data from file and or POST
 $db = array(
-    'host' => '',
-    'port' => '',
+    'server' => '',
     'options' => array(
         'connect' => TRUE,
         'timeout' => 5000,
@@ -33,17 +32,9 @@ $layout = new MPField();
 $layout->add_layout(
     array(
         'field' => MPField::layout('text'),
-        'name' => 'host',
+        'name' => 'server',
         'type' => 'text',
-        'value' => array('data' => $dbf['host'])
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('text'),
-        'name' => 'port',
-        'type' => 'text',
-        'value' => array('data' => $dbf['port'])
+        'value' => array('data' => $dbf['server'])
     )
 );
 $layout->add_layout(
@@ -217,15 +208,9 @@ $form->add_group(
         'rows' => array(
             array(
                 'label' => array(
-                    'text' => 'Host'
+                    'text' => 'Server(s)'
                 ),
-                'fields' => $layout->get_layout('host')
-            ),
-            array(
-                'label' => array(
-                    'text' => 'Port'
-                ),
-                'fields' => $layout->get_layout('port')
+                'fields' => $layout->get_layout('server')
             ),
         )
     ),
@@ -236,7 +221,7 @@ $form->add_group(
         'rows' => array(
             array(
                 'label' => array(
-                    'text' => 'MPUsername'
+                    'text' => 'Username'
                 ),
                 'fields' => $layout->get_layout('username')
             ),
@@ -248,7 +233,7 @@ $form->add_group(
             ),
             array(
                 'label' => array(
-                    'text' => 'MPDatabase'
+                    'text' => 'Database'
                 ),
                 'fields' => $layout->get_layout('db')
             ),
@@ -274,5 +259,3 @@ $form->add_group(
 $fh = $form->build();
 
 //}}}
-
-?>

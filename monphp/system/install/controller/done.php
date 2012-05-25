@@ -1,5 +1,5 @@
 <?php
 
-MPData::update('_System', 'version', MONPHP_VERSION, TRUE);
+MPData::update('_System', 'version', MP_VERSION, TRUE);
 
 ?>
