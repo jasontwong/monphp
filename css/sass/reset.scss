@@ -34,11 +34,10 @@ caption, th, td {
 	font-weight: normal;
 	text-align: left;
 }
-blockquote:before, blockquote:after,
-q:before, q:after {
-	content: "";
-}
 blockquote, q {
+    &:before, &:after {
+        content: "";
+    }
 	quotes: "" "";
 }
 a img {
