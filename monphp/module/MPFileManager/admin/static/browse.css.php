@@ -1,4 +1,3 @@
-<?php header('MPContent-type: text/css') ?>
 html, body { height: 100%; }
 #container { height: 100%; margin: 0px; width: 800px; }
 #content { margin: 10px; width: 100%; }

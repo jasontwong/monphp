@@ -1,4 +1,3 @@
-<?php header('MPContent-type: text/css') ?>
 #content_entries { margin-top: 20px; }
 #content_entries thead th { font-size: 1.4em; font-weight: bold; }
 #content_entries thead tr.description th { font-size: 1.0em; font-weight: normal; color: #AAA; border-bottom: 1px solid #000; padding-bottom: 5px; }

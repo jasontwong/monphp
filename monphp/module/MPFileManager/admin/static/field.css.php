@@ -1,4 +1,3 @@
-<?php header('MPContent-type: text/css') ?>
 .MPFileManager_image_container div { border: 1px dotted #000; float: left; margin: 0px 5px 5px 0px; padding: 5px; position: relative; text-align: center; width: 115px; }
 .MPFileManager_image_container input { display: block; margin: 0px auto 5px; width: 100px; }
 .MPFileManager_image_container img { max-height: 90px; max-width: 90px; }

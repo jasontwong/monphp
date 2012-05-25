@@ -1,4 +1,3 @@
-<?php header('MPContent-type: text/css') ?>
 .ui-datepicker { display: none; margin: 10px 0 0;border: 1px solid #EEE; width: 190px; padding: 10px 6px 6px; background-color: #FFF; }
 .ui-datepicker .ui-icon { text-indent: 0px; }
 .ui-datepicker-calendar td, .ui-datepicker-calendar th { width: 25px; text-align: right; }

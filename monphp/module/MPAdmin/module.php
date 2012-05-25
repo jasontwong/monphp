@@ -603,7 +603,7 @@ class MPAdmin
             'admin settings' => 'Can change system and module settings',
         );
         $settings = MPModule::hook_user('mpadmin_settings_fields');
-        foreach ($settings as $mod)
+        foreach ($settings as $mod => &$module)
         {
             $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
         }
@@ -629,8 +629,8 @@ class MPAdmin
             '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}.php'
         );
         $static_types = array(
-            'css' => 'text/css',
-            'js' => 'text/javascript',
+            '.css' => 'text/css',
+            '.js' => 'text/javascript',
         );
         foreach ($static_routes as $pattern => $controller)
         {
@@ -639,14 +639,14 @@ class MPAdmin
             {
                 // we need correct headers
                 $c = MPRouter::controller(TRUE);
-                $s = strrpos($c, '.');
-                if ($s !== FALSE)
+                list($base, $ext) = file_extension($c);
+                if ($ext === '.php')
                 {
-                    $ext = substr($c, $s + 1);
-                    if (array_key_exists($ext, $static_types))
-                    {
-                        header('MPContent-type: '.$static_types[$ext]);
-                    }
+                    list($base, $ext) = file_extension($base);
+                }
+                if (array_key_exists($ext, $static_types))
+                {
+                    header('Content-type: '.$static_types[$ext]);
                 }
             }
         }
