@@ -624,6 +624,22 @@ class MPAdmin
         $alc = MPDB::selectCollection('mpadmin_log');
         $alc->ensureIndex(array('username' => 1, 'type' => 1));
 
+        $ctrl = dirname(__FILE__).'/admin/controller';
+        $routes = array(
+            array('/admin/', $ctrl.'/index.php'),
+            array('/admin/login/', $ctrl.'/login.php'),
+            array('/admin/logout/', $ctrl.'/logout.php'),
+            array('#^/admin/settings/[^/]+/$#', $ctrl.'/settings.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/module/.+/$#', $ctrl.'/module.php', MPRouter::ROUTE_PCRE),
+            array('#^/admin/mod/.+/$#', $ctrl.'/mod.php', MPRouter::ROUTE_PCRE),
+        );
+
+        foreach ($routes as $pattern => &$controller)
+        {
+            MPRouter::add($pattern, $controller, MPRouter::ROUTE_PCRE, MPRouter::PRIORITY_NORMAL, 'admin');
+        }
+
         $static_routes = array(
             '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}',
             '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}.php'
@@ -632,7 +648,7 @@ class MPAdmin
             '.css' => 'text/css',
             '.js' => 'text/javascript',
         );
-        foreach ($static_routes as $pattern => $controller)
+        foreach ($static_routes as $pattern => &$controller)
         {
             MPRouter::add($pattern, $controller, MPRouter::ROUTE_PCRE, MPRouter::PRIORITY_NORMAL, 'admin');
             if (MPRouter::pattern(TRUE) === $pattern)
@@ -650,23 +666,6 @@ class MPAdmin
                 }
             }
         }
-    }
-
-    //}}}
-    //{{{ public function hook_mpsystem_routes()
-    public function hook_mpsystem_routes()
-    {
-        $ctrl = dirname(__FILE__).'/admin/controller';
-        $routes = array(
-            array('/admin/', $ctrl.'/index.php'),
-            array('/admin/login/', $ctrl.'/login.php'),
-            array('/admin/logout/', $ctrl.'/logout.php'),
-            array('#^/admin/settings/[^/]+/$#', $ctrl.'/settings.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/module/.+/$#', $ctrl.'/module.php', MPRouter::ROUTE_PCRE),
-            array('#^/admin/mod/.+/$#', $ctrl.'/mod.php', MPRouter::ROUTE_PCRE),
-        );
-        return $routes;
     }
 
     //}}}

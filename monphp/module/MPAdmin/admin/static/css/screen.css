@@ -52,7 +52,7 @@ blockquote, q {
 
 /*}}}*/
 /*{{{elements*/
-body { font-size: 62.5%; font-family: Arial,sans-serif; background-color: <?php echo !is_null(MPData::query('MPAdmin', 'bgcolor')) ? MPData::query('MPAdmin', 'bgcolor') : '#FFFFFF'; ?>; }
+body { font-size: 62.5%; font-family: Arial,sans-serif; }
 h1, h2, h3, h4, h5, h6 { font-weight: bold; }
 h1 { margin-bottom: 10px; font-size: 1.6em; }
 .clear:after, .group:after, .field:after, .label:after { content: '.'; clear: both; display: block; visibility: hidden; height: 0; margin: 0; padding: 0; }
