@@ -1,8 +1,6 @@
 [entry]
     - _id
-    - entry_type
-        - id
-        - name
+    - entry_type_name
     - title
     - slug
     - updated
@@ -13,10 +11,9 @@
     - _id
     - entry_id
     - revision
-    - entry (array)
+    - data (array_diff_assoc)
 
 [entry_type]
-    - _id
     - name
     - nice_name
     - description
@@ -25,15 +22,5 @@
         - display_name
         - weight
         - fields
-            - name
-            - nice_name
-            - type
-            - description
-            - multiple
+            - _id
             - weight
-            - meta
-                - name
-                - label
-                - required
-                - meta (array)
-                - default_data (array)

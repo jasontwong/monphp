@@ -178,6 +178,41 @@ class MPField
             : NULL;
     }
     //}}}
+    //{{{ public static function deregister_field($field)
+    /**
+     * Deregisters a field to the database. Field schemas.
+     *
+     * @param mixed $field should follow the field schema
+     * @return void
+     */
+    public static function deregister_field($field)
+    {
+        $query = is_object($field) && get_class($field) === 'MongoID'
+            ? array('_id' => $field)
+            : $field;
+        $mpfield = MPDB()->selectCollection('MPField');
+        $mpfield->remove($query, array('safe' => TRUE));
+    }
+
+    //}}}
+    //{{{ public static function get_field($ids)
+    /**
+     * Retrieves field schemas.
+     *
+     * @param mixed $ids MongoID or array of MongoID
+     * @return array
+     */
+    public static function get_field($ids)
+    {
+        $query['_id'] = is_array($ids)
+            ? array('$in', $ids)
+            : $ids;
+        $mpfield = MPDB()->selectCollection('MPField');
+        $data = $mpfield->find($query, array('safe' => TRUE));
+        return iterator_to_array($data);
+    }
+
+    //}}}
     //{{{ public static function quick_act($action, $type, $data)
     public static function quick_act($action, $type, $data = array())
     {
@@ -218,6 +253,34 @@ class MPField
             throw new Exception('Layout for type "'.$type.'" does not exist.');
         }
     }
+    //}}}
+    //{{{ public static function register_field($field)
+    /**
+     * Registers a field to the database. Field schemas.
+     * Field schema 
+     *
+     * - name
+     * - nice_name
+     * - type
+     * - description
+     * - multiple
+     * - meta
+     *     - name
+     *     - label
+     *     - required
+     *     - meta (array)
+     *     - default_data (array)
+     *
+     * @param array $field should follow the field schema
+     * @return array
+     */
+    public static function register_field($field)
+    {
+        $mpfield = MPDB()->selectCollection('MPField');
+        $mpfield->save($field, array('safe' => TRUE));
+        return $field;
+    }
+
     //}}}
     //{{{ public static function scan()
     /**
