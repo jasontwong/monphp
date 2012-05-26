@@ -1,7 +1,7 @@
-/*
- * jQuery UI Effects @VERSION
+/*!
+ * jQuery UI Effects 1.8.20
  *
- * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
@@ -231,23 +231,26 @@ $.effects.animateClass = function(value, duration, easing, callback) {
 		easing = null;
 	}
 
-	return this.each(function() {
-		$.queue(this, 'fx', function() {
-			var that = $(this),
-				originalStyleAttr = that.attr('style') || ' ',
-				originalStyle = filterStyles(getElementStyles.call(this)),
-				newStyle,
-				className = that.attr('className');
+	return this.queue(function() {
+		var that = $(this),
+			originalStyleAttr = that.attr('style') || ' ',
+			originalStyle = filterStyles(getElementStyles.call(this)),
+			newStyle,
+			className = that.attr('class') || "";
 
-			$.each(classAnimationActions, function(i, action) {
-				if (value[action]) {
-					that[action + 'Class'](value[action]);
-				}
-			});
-			newStyle = filterStyles(getElementStyles.call(this));
-			that.attr('className', className);
+		$.each(classAnimationActions, function(i, action) {
+			if (value[action]) {
+				that[action + 'Class'](value[action]);
+			}
+		});
+		newStyle = filterStyles(getElementStyles.call(this));
+		that.attr('class', className);
 
-			that.animate(styleDifference(originalStyle, newStyle), duration, easing, function() {
+		that.animate(styleDifference(originalStyle, newStyle), {
+			queue: false,
+			duration: duration,
+			easing: easing,
+			complete: function() {
 				$.each(classAnimationActions, function(i, action) {
 					if (value[action]) { that[action + 'Class'](value[action]); }
 				});
@@ -259,14 +262,8 @@ $.effects.animateClass = function(value, duration, easing, callback) {
 					that.attr('style', originalStyleAttr);
 				}
 				if (callback) { callback.apply(this, arguments); }
-			});
-
-			// $.animate adds a function to the end of the queue
-			// but we want it at the front
-			var queue = $.queue(this),
-				anim = queue.splice(queue.length - 1, 1)[0];
-			queue.splice(1, 0, anim);
-			$.dequeue(this);
+				$.dequeue( this );
+			}
 		});
 	});
 };
@@ -309,7 +306,7 @@ $.fn.extend({
 /******************************************************************************/
 
 $.extend($.effects, {
-	version: "@VERSION",
+	version: "1.8.20",
 
 	// Saves a set of properties in a data storage
 	save: function(element, set) {
@@ -370,9 +367,16 @@ $.extend($.effects, {
 					border: 'none',
 					margin: 0,
 					padding: 0
-				});
+				}),
+			active = document.activeElement;
 
 		element.wrap(wrapper);
+
+		// Fixes #7595 - Elements lose focus when wrapped.
+		if ( element[ 0 ] === active || $.contains( element[ 0 ], active ) ) {
+			$( active ).focus();
+		}
+		
 		wrapper = element.parent(); //Hotfix for jQuery 1.4 since some change in wrap() seems to actually loose the reference to the wrapped element
 
 		// transfer positioning properties to the wrapper
@@ -390,22 +394,32 @@ $.extend($.effects, {
 					props[pos] = 'auto';
 				}
 			});
-			element.css({position: 'relative', top: 0, left: 0 });
+			element.css({position: 'relative', top: 0, left: 0, right: 'auto', bottom: 'auto' });
 		}
 
 		return wrapper.css(props).show();
 	},
 
 	removeWrapper: function(element) {
-		if (element.parent().is('.ui-effects-wrapper'))
-			return element.parent().replaceWith(element);
+		var parent,
+			active = document.activeElement;
+		
+		if (element.parent().is('.ui-effects-wrapper')) {
+			parent = element.parent().replaceWith(element);
+			// Fixes #7595 - Elements lose focus when wrapped.
+			if ( element[ 0 ] === active || $.contains( element[ 0 ], active ) ) {
+				$( active ).focus();
+			}
+			return parent;
+		}
+			
 		return element;
 	},
 
 	setTransition: function(element, list, factor, value) {
 		value = value || {};
 		$.each(list, function(i, x){
-			unit = element.cssUnit(x);
+			var unit = element.cssUnit(x);
 			if (unit[0] > 0) value[x] = unit[0] * factor + unit[1];
 		});
 		return value;
