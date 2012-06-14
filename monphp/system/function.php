@@ -17,7 +17,7 @@ function mp_autoload($class)
 function mp_register_script($handle, $src, $deps = array(), $ver = FALSE, $in_footer = FALSE)
 {
     global $_mp;
-    if (eka($_mp, 'scripts', 'registered'))
+    if (!eka($_mp, 'scripts', 'registered'))
     {
         $_mp['scripts']['registered'] = array();
     }
@@ -89,7 +89,7 @@ function mp_dequeue_script($handle)
 function mp_register_style($handle, $src, $deps = array(), $ver = FALSE, $media = 'all')
 {
     global $_mp;
-    if (eka($_mp, 'styles', 'registered'))
+    if (!eka($_mp, 'styles', 'registered'))
     {
         $_mp['styles']['registered'] = array();
     }

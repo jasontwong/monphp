@@ -2,6 +2,38 @@
 
 class MPSystem
 {
+    // {{{ protected static function get_dependant_scripts($handle, $scripts, &$js_order, &$counter)
+    /*
+     * @returns bool
+     */
+    protected static function get_dependant_scripts($handle, $scripts, &$holder, &$counter)
+    {
+        if (!ake($handle, $scripts))
+        {
+            return FALSE;
+        }
+        global $_mp;
+        $l_js = deka(array(), $_mp, 'scripts', 'loaded');
+        $script = $scripts[$handle];
+        $deps = array_diff($script['deps'], array_keys($holder), $l_js);
+        $tmp = array();
+        foreach ($deps as &$dep)
+        {
+            if (!in_array($dep, $holder))
+            {
+                $load = self::get_dependant_scripts($dep, $scripts, $holder, $counter);
+                if (!$load)
+                {
+                    return FALSE;
+                }
+                $tmp[] = $dep;
+            }
+        }
+        $tmp[] = $handle;
+        $holder = array_merge($holder, $tmp);
+        return TRUE;
+    }
+    // }}}
     // {{{ protected static function get_queued_scripts($for_footer = FALSE)
     /*
      * @returns array
@@ -21,17 +53,17 @@ class MPSystem
             {
                 $deps = array_diff($script['deps'], array_keys($js_order), $l_js);
                 $load = TRUE;
+                $holder = array();
                 foreach ($deps as &$dep)
                 {
-                    if (!ake($dep, $scripts))
-                    {
-                        $load = FALSE;
-                        break;
-                    }
-                    $js_order[$dep] = $counter++;
+                    $load = self::get_dependant_scripts($dep, $scripts, $holder, $counter);
                 }
                 if ($load)
                 {
+                    foreach ($holder as &$hold)
+                    {
+                        $js_order[$hold] = $counter++;
+                    }
                     $js_order[$handle] = $counter++;
                 }
                 unset($_mp['scripts']['enqueued'][$handle]);

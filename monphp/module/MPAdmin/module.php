@@ -381,76 +381,11 @@ class MPAdmin
     //{{{ public function hook_mpadmin_enqueue_js()
     public function hook_mpadmin_enqueue_js()
     {
-        mp_deregister_script('jquery');
-        mp_deregister_script('modernizr');
         mp_enqueue_script(
             'modernizr',
             '/admin/static/MPAdmin/js/modernizr-2.5.3.min.js',
             array(),
             '2.5.3'
-        );
-        mp_enqueue_script(
-            'jquery',
-            '/admin/static/MPAdmin/js/jquery/jquery-1.7.2.min.js',
-            array(),
-            '1.7.2',
-            TRUE
-        );
-        mp_enqueue_script(
-            'jquery-ui-core',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.core.js',
-            array('jquery'),
-            FALSE,
-            TRUE
-        );
-        mp_enqueue_script(
-            'jquery-ui-widget',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.widget.js',
-            array('jquery', 'jquery-ui-core'),
-            FALSE,
-            TRUE
-        );
-        mp_enqueue_script(
-            'jquery-ui-mouse',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.mouse.js',
-            array('jquery', 'jquery-ui-core'),
-            FALSE,
-            TRUE
-        );
-        mp_enqueue_script(
-            'jquery-ui-slider',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.slider.js',
-            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse'),
-            FALSE,
-            TRUE
-        );
-        mp_enqueue_script(
-            'jquery-ui-tabs',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.tabs.js',
-            array('jquery', 'jquery-ui-core', 'jquery-ui-widget'),
-            FALSE,
-            TRUE
-        );
-        mp_enqueue_script(
-            'jquery-ui-sortable',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.sortable.js',
-            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse'),
-            FALSE,
-            TRUE
-        );
-        mp_enqueue_script(
-            'jquery-ui-datepicker',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.datepicker.js',
-            array('jquery', 'jquery-ui-core'),
-            FALSE,
-            TRUE
-        );
-        mp_enqueue_script(
-            'tiny_mce',
-            '/admin/static/MPAdmin/js/tiny_mce/jquery.tinymce.js',
-            array('jquery'),
-            FALSE,
-            TRUE
         );
         mp_enqueue_script(
             'mpadmin_admin',
@@ -462,7 +397,7 @@ class MPAdmin
         mp_enqueue_script(
             'mpadmin_field',
             '/admin/static/MPAdmin/js/field.js',
-            array('jquery'),
+            array('jquery', 'tiny_mce'),
             FALSE,
             TRUE
         );
@@ -471,7 +406,7 @@ class MPAdmin
             mp_enqueue_script(
                 'mpadmin_dashboard',
                 '/admin/static/MPAdmin/js/dashboard.js',
-                array('jquery', 'jquery-sortable'),
+                array('jquery', 'jquery-ui-sortable'),
                 FALSE,
                 TRUE
             );
@@ -482,6 +417,71 @@ class MPAdmin
     //{{{ public function hook_mpadmin_header()
     public function hook_mpadmin_header()
     {
+        mp_deregister_script('jquery');
+        mp_deregister_script('modernizr');
+        mp_register_script(
+            'jquery',
+            '/admin/static/MPAdmin/js/jquery/jquery-1.7.2.min.js',
+            array(),
+            '1.7.2',
+            TRUE
+        );
+        mp_register_script(
+            'jquery-ui-core',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.core.js',
+            array('jquery'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'jquery-ui-widget',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.widget.js',
+            array('jquery', 'jquery-ui-core'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'jquery-ui-mouse',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.mouse.js',
+            array('jquery', 'jquery-ui-core'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'jquery-ui-slider',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.slider.js',
+            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'jquery-ui-tabs',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.tabs.js',
+            array('jquery', 'jquery-ui-core', 'jquery-ui-widget'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'jquery-ui-sortable',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.sortable.js',
+            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'jquery-ui-datepicker',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.datepicker.js',
+            array('jquery', 'jquery-ui-core'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'tiny_mce',
+            '/admin/static/MPAdmin/js/tiny_mce/jquery.tinymce.js',
+            array('jquery'),
+            FALSE,
+            TRUE
+        );
         MPModule::h('mpadmin_enqueue_css');
         MPModule::h('mpadmin_enqueue_js');
     }
