@@ -64,24 +64,6 @@ class MPAdmin
 
     //}}}
 
-    //{{{ public function cb_mpadmin_css($css)
-    public function cb_mpadmin_css($css)
-    {
-        $o = '';
-        foreach ($css as $module => $styles)
-        {
-            foreach ($styles as $media => $hrefs)
-            {
-                foreach ($hrefs as $href)
-                {
-                    $o .= "<link rel='stylesheet' media='{$media}' href='{$href}'>\n";
-                }
-            }
-        }
-        return $o;
-    }
-
-    //}}} 
     //{{{ public function cb_mpadmin_dashboard($modules)
     /**
      * Build out dashboard widgets based on what the modules specify
@@ -181,33 +163,20 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function cb_mpadmin_js($js)
-    public function cb_mpadmin_js($js)
+    //{{{ public function cb_mpadmin_header()
+    public function cb_mpadmin_header()
     {
-        $done = array();
-        $o = '';
-        foreach ($js as $mod => $scripts)
-        {
-            foreach ($scripts as $script)
-            {
-                if (array_search($script, $done) === FALSE)
-                {
-                    $o .= "<script type='text/javascript' src='{$script}'></script>\n";
-                    $done[] = $script;
-                }
-            }
-        }
-        return $o;
+        MPModule::h('mpsystem_print_head', 'MPSystem');
     }
 
-    //}}} 
-    //{{{ public function cb_mpadmin_js_header($js)
-    public function cb_mpadmin_js_header($js)
+    //}}}
+    //{{{ public function cb_mpadmin_footer()
+    public function cb_mpadmin_footer()
     {
-        return $this->cb_mpadmin_js($js);
+        MPModule::h('mpsystem_print_foot', 'MPSystem');
     }
 
-    //}}} 
+    //}}}
     //{{{ public function cb_mpadmin_login_build($mods)
     public function cb_mpadmin_login_build($mods)
     {
@@ -385,94 +354,129 @@ class MPAdmin
 
     //}}}
 
-    //{{{ public function hook_mpadmin_css()
-    public function hook_mpadmin_css()
+    //{{{ public function hook_mpadmin_enqueue_css()
+    public function hook_mpadmin_enqueue_css()
     {
-        return array(
-            'screen' => array(
-                '/file/module/MPAdmin/js/jquery/themes/base/jquery.ui.core.css',
-                '/file/module/MPAdmin/js/jquery/themes/base/jquery.ui.slider.css',
-                '/admin/static/MPAdmin/screen.css/',
-                '/admin/static/MPAdmin/field.css/'
-            )
+        mp_deregister_style('screen');
+        mp_enqueue_style(
+            'jquery-ui-core',
+            '/admin/static/MPAdmin/js/jquery/themes/base/jquery.ui.core.css'
+        );
+        mp_enqueue_style(
+            'jquery-ui-slider',
+            '/admin/static/MPAdmin/js/jquery/themes/base/jquery.ui.slider.css'
+        );
+        mp_enqueue_style(
+            'mpadmin_screen',
+            '/admin/static/MPAdmin/css/screen.css'
+        );
+        mp_enqueue_style(
+            'mpadmin_field',
+            '/admin/static/MPAdmin/css/field.css'
         );
     }
 
     //}}}
-    //{{{ public function hook_mpadmin_js()
-    public function hook_mpadmin_js()
+    //{{{ public function hook_mpadmin_enqueue_js()
+    public function hook_mpadmin_enqueue_js()
     {
-        $js = array();
+        mp_deregister_script('jquery');
+        mp_deregister_script('modernizer');
+        mp_enqueue_script(
+            'jquery',
+            '/admin/static/MPAdmin/js/jquery/jquery-1.7.2.min.js',
+            array(),
+            '1.7.2',
+            TRUE
+        );
+        mp_enqueue_script(
+            'jquery-ui-core',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.core.js',
+            array('jquery'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'jquery-ui-widget',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.widget.js',
+            array('jquery', 'jquery-ui-core'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'jquery-ui-mouse',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.mouse.js',
+            array('jquery', 'jquery-ui-core'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'jquery-ui-slider',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.slider.js',
+            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'jquery-ui-tabs',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.tabs.js',
+            array('jquery', 'jquery-ui-core', 'jquery-ui-widget'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'jquery-ui-sortable',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.sortable.js',
+            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'jquery-ui-datepicker',
+            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.datepicker.js',
+            array('jquery', 'jquery-ui-core'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'tiny_mce',
+            '/admin/static/MPAdmin/js/tiny_mce/jquery.tinymce.js',
+            array('jquery'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'mpadmin_admin',
+            '/admin/static/MPAdmin/js/admin.js',
+            array('jquery'),
+            FALSE,
+            TRUE
+        );
+        mp_enqueue_script(
+            'mpadmin_field',
+            '/admin/static/MPAdmin/js/field.js',
+            array('jquery'),
+            FALSE,
+            TRUE
+        );
         if (URI_PATH === '/admin/')
         {
-            $js[] = '/file/module/MPAdmin/js/jquery/ui/jquery.ui.sortable.js';
-            $js[] = '/admin/static/MPAdmin/dashboard.js/';
+            mp_enqueue_script(
+                'mpadmin_dashboard',
+                '/admin/static/MPAdmin/js/dashboard.js',
+                array('jquery', 'jquery-sortable'),
+                FALSE,
+                TRUE
+            );
         }
-        if (URI_PATH === '/admin/settings/')
-        {
-        }
-        return $js;
     }
 
     //}}}
     //{{{ public function hook_mpadmin_header()
     public function hook_mpadmin_header()
     {
-        mp_deregister_script('jquery');
-        mp_enqueue_script(
-            'jquery',
-            '/admin/static/MPAdmin/js/jquery/jquery-1.7.2.min.js'
-        );
-        mp_enqueue_script(
-            'jquery-ui-core',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.core.js',
-            array('jquery')
-        );
-        mp_enqueue_script(
-            'jquery-ui-widget',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.widget.js',
-            array('jquery', 'jquery-ui-core')
-        );
-        mp_enqueue_script(
-            'jquery-ui-mouse',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.mouse.js',
-            array('jquery', 'jquery-ui-core')
-        );
-        mp_enqueue_script(
-            'jquery-ui-slider',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.slider.js',
-            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse')
-        );
-        mp_enqueue_script(
-            'jquery-ui-tabs',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.tabs.js',
-            array('jquery', 'jquery-ui-core', 'jquery-ui-widget')
-        );
-        mp_enqueue_script(
-            'jquery-ui-sortable',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.sortable.js',
-            array('jquery', 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-mouse')
-        );
-        mp_enqueue_script(
-            'jquery-ui-datepicker',
-            '/admin/static/MPAdmin/js/jquery/ui/jquery.ui.datepicker.js',
-            array('jquery', 'jquery-ui-core')
-        );
-        mp_enqueue_script(
-            'tiny_mce',
-            '/admin/static/MPAdmin/js/tiny_mce/jquery.tinymce.js',
-            array('jquery')
-        );
-        mp_enqueue_script(
-            'mpadmin_admin',
-            '/admin/static/MPAdmin/js/admin.js',
-            array('jquery')
-        );
-        mp_enqueue_script(
-            'mpadmin_field',
-            '/admin/static/MPAdmin/js/field.js',
-            array('jquery')
-        );
+        MPModule::h('mpadmin_enqueue_css');
+        MPModule::h('mpadmin_enqueue_js');
     }
 
     //}}}
@@ -686,30 +690,39 @@ class MPAdmin
             );
         }
 
+        $static_regex = '#^/admin/static/([^/]+)/(.+)$#';
         $static_routes = array(
-            '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}',
-            '#^/admin/static/([^/]+)/(.+)/$#' => DIR_MODULE.'/${1}/admin/static/${2}.php'
+            array($static_regex, DIR_MODULE.'/${1}/admin/static/${2}'),
+            array($static_regex, DIR_MODULE.'/${1}/admin/static/${2}.php'),
         );
         $static_types = array(
             '.css' => 'text/css',
             '.js' => 'text/javascript',
         );
-        foreach ($static_routes as $pattern => &$controller)
+        foreach ($static_routes as &$route)
         {
-            MPRouter::add($pattern, $controller, MPRouter::ROUTE_PCRE, MPRouter::PRIORITY_NORMAL, 'admin');
-            if (MPRouter::pattern(TRUE) === $pattern)
+            MPRouter::add($route[0], $route[1], MPRouter::ROUTE_PCRE, MPRouter::PRIORITY_NORMAL, 'admin');
+        }
+        if (MPRouter::pattern(TRUE) === $static_regex)
+        {
+            // we need correct headers
+            if (!defined('MP_CTRL'))
             {
-                // we need correct headers
-                $c = MPRouter::controller(TRUE);
-                list($base, $ext) = file_extension($c);
-                if ($ext === '.php')
-                {
-                    list($base, $ext) = file_extension($base);
-                }
-                if (array_key_exists($ext, $static_types))
-                {
-                    header('Content-type: '.$static_types[$ext]);
-                }
+                $file = MPRouter::controller(TRUE);
+                define('MP_CTRL', $file);
+            }
+            else
+            {
+                $file = MP_CTRL;
+            }
+            list($base, $ext) = file_extension($file);
+            if ($ext === '.php')
+            {
+                list($base, $ext) = file_extension($base);
+            }
+            if (array_key_exists($ext, $static_types))
+            {
+                header('Content-type: '.$static_types[$ext]);
             }
         }
     }

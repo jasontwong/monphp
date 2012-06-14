@@ -8,8 +8,7 @@ $header = MPAdmin::get('header');
     <meta http-equiv="MPContent-Type" content="text/html; charset=utf-8">
     <link type="image/x-icon" href="/favicon.ico" rel="icon"/>
     <title><?php echo is_null($title) ? '' : $title.' &mdash; ' ?>MPAdmin Interface (<?php echo MPData::query('_Site', 'title') ?>)</title>
-    <?php echo MPModule::h('mpadmin_js_header') ?>
-    <?php echo MPModule::h('mpadmin_css') ?>
+    <?php echo MPModule::h('mpadmin_header') ?>
 </head>
 
 <body>
@@ -56,9 +55,9 @@ $header = MPAdmin::get('header');
 
 <div id='body' class='clear'>
 
-    <?php include DIR_MODULE.'/MPAdmin/template/notifications.php'; ?>
+    <?php include DIR_MODULE.'/MPAdmin/admin/template/notifications.php'; ?>
     <div class='header'><?php echo is_null($title) ? '' : $title; ?></div>
-    <?php include DIR_MODULE.'/MPAdmin/template/nav.php'; ?>
+    <?php include DIR_MODULE.'/MPAdmin/admin/template/nav.php'; ?>
 
     <div id='content'>
 

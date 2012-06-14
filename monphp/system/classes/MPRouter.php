@@ -121,21 +121,24 @@ class MPRouter
                             }
                         break;
                     }
-                    if (isset($ctrl) || isset($redirect))
+                    if (isset($redirect))
                     {
-                        if (isset($ctrl) && is_readable($ctrl))
-                        {
-                            self::$pattern = $pattern;
-                            self::$ctrl = $ctrl;
-                            self::$method = $method;
-                            self::$source = $source;
-                        }
+                        $found = TRUE;
+                    } 
+                    elseif (isset($ctrl) && is_readable($ctrl))
+                    {
+                        self::$pattern = $pattern;
+                        self::$ctrl = $ctrl;
+                        self::$method = $method;
+                        self::$source = $source;
                         $found = TRUE;
                     }
                 }
             }
             if (!self::$ctrl && !isset($redirect) && substr(URI_PATH, -1) !== '/')
             {
+                        var_dump(self::$ctrl, $ctrl, is_file($ctrl), is_readable($ctrl), $pattern);
+                        die;
                 $redirect = URI_PATH.'/';
                 if (strlen(URI_PARAM))
                 {

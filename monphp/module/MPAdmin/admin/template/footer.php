@@ -10,9 +10,7 @@
 
 </div>
 
-<?php echo MPModule::h('mpadmin_js') ?>
-
-<?php MPModule::h('body_end') ?>
+<?php MPModule::h('mpadmin_footer') ?>
 
 </body>
 </html>

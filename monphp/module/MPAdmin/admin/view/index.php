@@ -1,4 +1,4 @@
-<?php include DIR_MODULE.'/MPAdmin/template/header.php' ?>
+<?php include DIR_MODULE.'/MPAdmin/admin/template/header.php' ?>
 
 <div id='admin_dashboard'>
 
@@ -25,4 +25,4 @@
 
 </div>
 
-<?php include DIR_MODULE.'/MPAdmin/template/footer.php' ?>
+<?php include DIR_MODULE.'/MPAdmin/admin/template/footer.php' ?>

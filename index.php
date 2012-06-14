@@ -103,7 +103,11 @@ if ($installed)
 include DIR_SYS.'/config.routes.php';
 
 MPModule::h('mpsystem_start');
-if ($ctrl = MPRouter::controller()) 
+if (defined('MP_CTRL'))
+{
+    include MP_CTRL;
+}
+elseif ($ctrl = MPRouter::controller()) 
 {
     include $ctrl;
 }

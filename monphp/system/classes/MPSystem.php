@@ -48,7 +48,7 @@ class MPSystem
                 $js[] = sprintf(
                     '<script src="%s?ver=%s"></script>', 
                     $script['src'],
-                    $script['ver'] !== FALSE ? $script['ver'] : '1.0'
+                    $script['ver'] !== FALSE ? $script['ver'] : MP_VERSION
                 );
             }
         }
@@ -147,7 +147,7 @@ class MPSystem
                 $css[] = sprintf(
                     '<link rel="stylesheet" href="%s?ver=%s" media="%s">',
                     $style['src'],
-                    $style['ver'] !== FALSE ? $style['ver'] : '1.0',
+                    $style['ver'] !== FALSE ? $style['ver'] : MP_VERSION,
                     $style['media']
                 );
             }

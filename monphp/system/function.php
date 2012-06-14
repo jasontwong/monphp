@@ -41,6 +41,10 @@ function mp_deregister_script($handle)
     {
         unset($_mp['scripts']['registered'][$handle]);
     }
+    if (eka($_mp, 'scripts', 'enqueued', $handle))
+    {
+        unset($_mp['scripts']['enqueued'][$handle]);
+    }
 }
 // }}}
 // {{{ function mp_enqueue_script($handle, $src, $deps = array(), $ver = FALSE, $in_footer = FALSE)
@@ -108,6 +112,10 @@ function mp_deregister_style($handle)
     if (eka($_mp, 'styles', 'registered', $handle))
     {
         unset($_mp['styles']['registered'][$handle]);
+    }
+    if (eka($_mp, 'styles', 'enqueued', $handle))
+    {
+        unset($_mp['styles']['enqueued'][$handle]);
     }
 }
 // }}}
