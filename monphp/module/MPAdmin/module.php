@@ -364,7 +364,8 @@ class MPAdmin
         );
         mp_enqueue_style(
             'jquery-ui-slider',
-            '/admin/static/MPAdmin/js/jquery/themes/base/jquery.ui.slider.css'
+            '/admin/static/MPAdmin/js/jquery/themes/base/jquery.ui.slider.css',
+            array('jquery-ui-core')
         );
         mp_enqueue_style(
             'mpadmin_screen',
@@ -381,7 +382,13 @@ class MPAdmin
     public function hook_mpadmin_enqueue_js()
     {
         mp_deregister_script('jquery');
-        mp_deregister_script('modernizer');
+        mp_deregister_script('modernizr');
+        mp_enqueue_script(
+            'modernizr',
+            '/admin/static/MPAdmin/js/modernizr-2.5.3.min.js',
+            array(),
+            '2.5.3'
+        );
         mp_enqueue_script(
             'jquery',
             '/admin/static/MPAdmin/js/jquery/jquery-1.7.2.min.js',

@@ -123,7 +123,7 @@ function mp_deregister_style($handle)
 function mp_enqueue_style($handle, $src, $deps = array(), $ver = FALSE, $media = 'all')
 {
     global $_mp;
-    if (eka($_mp, 'styles', 'enqueued'))
+    if (!eka($_mp, 'styles', 'enqueued'))
     {
         $_mp['styles']['enqueued'] = array();
     }
