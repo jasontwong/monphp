@@ -32,12 +32,16 @@ class MPFile
             );
             list($width, $height, $mime_type) = getimagesize($filename);
             $meta = array(
-                'metadata' => $meta,
-                'filename' => $name,
-                'width' => $width,
-                'height' => $height,
-                'mime' => $mime_type,
-                'size' => 'original',
+                'metadata' => array_merge(
+                    $meta,
+                    array(
+                        'filename' => $name,
+                        'width' => $width,
+                        'height' => $height,
+                        'mime' => $mime_type,
+                        'size' => 'original',
+                    )
+                ),
             );
             $file_ids['original'] = $grid->storeFile($filename, $meta);
 
@@ -120,11 +124,11 @@ class MPFile
      * @param array|string|MongoID $ids a query for a single id or multiple ids
      * @param array|string $sizes a query for a single size or multiple sizes
      * @param array $meta metadata to query for
-     * @return array a set of MongoGridFSFiles that were queried
+     * @return MongoCursor|NULL a set of MongoGridFSFiles that were queried or NULL
      */
     public static function get_files($ids = array(), $sizes = 'original', $meta = array())
     {
-        $data = $query = array();
+        $query = array();
         if ($ids)
         {
             if (is_string($ids))
@@ -170,10 +174,9 @@ class MPFile
         }
         if ($query)
         {
-            $result = MonDB::getGridFS('mp')->find($query);
-            $data = iterator_to_array($data);
+            return MonDB::getGridFS('mp')->find($query);
         }
-        return $data;
+        return NULL;
     }
     // }}}
 }
