@@ -13,7 +13,6 @@ define('DIR_SYS', DIR_MP . '/system');
 define('DIR_EXT', DIR_MP . '/extension');
 define('DIR_CTRL', DIR_MP . '/controller');
 define('DIR_LIB', DIR_MP . '/library');
-define('DIR_MODEL', DIR_MP . '/model');
 define('DIR_MODULE', DIR_MP . '/module');
 define('DIR_TMPL', DIR_MP . '/template');
 define('DIR_VIEW', DIR_MP . '/view');
