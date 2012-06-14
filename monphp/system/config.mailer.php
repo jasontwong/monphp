@@ -8,7 +8,7 @@
 define('EMAIL_TRANSPORT', 'mail');
 
 // only needed for smtp emailing
-define('EMAIL_hostname', 'localhost');
+define('EMAIL_HOSTNAME', 'localhost');
 define('EMAIL_PORT', 25);
 define('EMAIL_USERNAME', '');
 define('EMAIL_PASSWORD', '');
