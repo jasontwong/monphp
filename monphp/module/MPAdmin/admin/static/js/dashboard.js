@@ -11,12 +11,12 @@
                         side = elside.attr('id').replace('admin_dashboard_', '');
                     $('> .admin_dashboard_element', elside).each(function(j) {
                         var id = $(this).attr('id'),
-                            parts = id.match(/^admin_dashboard_element__(.+(?=__))__(.+)$/),
+                            parts = id.match(/^admin_dashboard_element__([\d\w]+(?=__))__([\d\w]+)$/),
                             key = parts[1] + '__' + parts[2],
                             data = {
                                 module: parts[1],
                                 title: parts[2],
-                                fold: $('> div.content', this).css('display') == 'block' ? 'opened' : 'closed'
+                                fold: $('> div.content', this).css('display') === 'block' ? 'opened' : 'closed'
                             };
                         switch (side)
                         {
@@ -34,13 +34,13 @@
                 });
             $.post(
                 '/admin/rpc/MPAdmin/dashboard/', 
-                { json: admin.JSON.make(elements) }, 
+                { json: JSON.stringify(elements) }, 
                 function(data, tStatus)
                 {
                     // something?
                 }
             );
-        }
+        };
 
         //}}}
         //{{{ drag and drop ordering
@@ -56,11 +56,12 @@
                 {
                     $('.admin_dashboard_side')
                         .each(function() {
-                            var el = $(this);
+                            var el = $(this),
+                                other;
                             if (!$('> div.admin_dashboard_element', this).length)
                             {
                                 // var other = $('#admin_dashboard_' + (el.attr('id') === 'admin_dashboard_left' ? 'right' : 'left'));
-                                var other = $('#admin_dashboard_' + el.attr('id').replace('admin_dashboard_', ''));
+                                other = $('#admin_dashboard_' + el.attr('id').replace('admin_dashboard_', ''));
                                 if ($('> div.admin_dashboard_element', other).length)
                                 {
                                     el.height(other.height());
@@ -99,13 +100,13 @@
             .click(function(e) {
                 e.stopImmediatePropagation();
                 var el = $(this),
-                    dash_el = el.parent().parent();
+                    dash_el = el.parent().parent(),
+                    panel_text = dash_el.hasClass('admin_dashboard_element_closed')
+                        ? "Open panel &darr;"
+                        : "Close panel &uarr;";
                 dash_el
                     .toggleClass('admin_dashboard_element_closed')
                     .toggleClass('admin_dashboard_element_opened');
-                var panel_text = dash_el.hasClass('admin_dashboard_element_closed')
-                        ? "Open panel &darr;"
-                        : "Close panel &uarr;";
                 el.html(panel_text);
                     
                 dashboard_record();

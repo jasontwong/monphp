@@ -1,33 +1,15 @@
 (function($){
     "use strict";
     $(function() {
-        //{{{ messages
-        $('#body > #messages > ul > li')
-            .live('add_closer', function() {
-                $(this)
-                    .append('<div class="close" style="display: none;"><a><span>close</span></a></div>')
-                    .data('closer', $('> div.close', this));
-            })
-            .live('mouseover', function() {
-                $(this).data('closer').show();
-            })
-            .live('mouseout', function() {
-                $(this).data('closer').hide();
-            })
-            .trigger('add_closer');
-        $('#body > #messages > ul > li > div.close')
-            .live('click', function() {
-                var el = $(this),
-                    ul = el.closest('ul');
-                el.parent().remove();
-                if (ul.children().length < 1)
-                {
-                    ul.remove();
-                }
-            });
-        //}}}
+        var nav_ul = $('#nav > ul'),
+            quicklinks = $('#quicklinks'),
+            ql_list = $('> ul', quicklinks),
+            ql_add = $('<li>Add this page</li>'),
+            ql_add_button = $('<button>Add</button>'),
+            ql_cancel_button = $('<button>Cancel</button>'),
+            ql_input = $('<li><input type="text" /></li>'),
+            messages = $('#body > #messages');
         //{{{ navigation 
-        var nav_ul = $('#nav > ul');
         $('> li[class!="open"] > ul', nav_ul).hide();
         $('> li', nav_ul)
             .click(function() {
@@ -39,7 +21,7 @@
                 $('> ul', this).slideToggle(300, function(){
                     $.post(
                         '/admin/rpc/MPAdmin/nav/',
-                        { json: admin.JSON.make(titles) },
+                        { json: JSON.stringify(titles) },
                         function(data, tStatus)
                         {
                             // nothing?
@@ -63,14 +45,36 @@
             });
 
         //}}}
+        //{{{ messages
+        $('ul > li', messages)
+            .on({
+                add_closer: function() {
+                    $(this)
+                        .append('<div class="close" style="display: none;"><a><span>close</span></a></div>')
+                        .data('closer', $('> div.close', this));
+                },
+                mouseover: function() {
+                    $(this).data('closer').show();
+                },
+                mouseout: function() {
+                    $(this).data('closer').hide();
+                }
+            })
+            .trigger('add_closer');
+        $('ul > li > div.close', messages)
+            .on({
+                click: function() {
+                    var el = $(this),
+                        ul = el.closest('ul');
+                    el.parent().remove();
+                    if (ul.children().length < 1)
+                    {
+                        ul.remove();
+                    }
+                }
+            });
+        //}}}
         // {{{ quicklinks
-        var quicklinks = $('#quicklinks'),
-            ql_list = $('> ul', quicklinks),
-            ql_add = $('<li>Add this page</li>'),
-            ql_add_button = $('<button>Add</button>'),
-            ql_cancel_button = $('<button>Cancel</button>'),
-            ql_input = $('<li><input type="text" /></li>');
-
         ql_cancel_button
             .click(function(){
                 $(this).parent().remove();
@@ -93,7 +97,7 @@
                             });
                     $.post(
                         '/admin/rpc/MPAdmin/quicklinks/',
-                        { json: admin.JSON.make(elements) },
+                        { json: JSON.strinigfy(elements) },
                         function(data, tStatus)
                         {
                             ql_list.hide();
@@ -103,7 +107,7 @@
             });
         ql_input
             .append(ql_add_button)
-            .append(ql_cancel_button)
+            .append(ql_cancel_button);
 
         $('> button', ql_input).click(function(){
         });
@@ -111,7 +115,7 @@
         ql_add.click(function(){
             ql_input
                 .append(ql_add_button)
-                .append(ql_cancel_button)
+                .append(ql_cancel_button);
             $(this)
                 .after(ql_input.clone(true));
         });

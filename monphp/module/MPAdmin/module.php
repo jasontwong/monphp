@@ -32,7 +32,7 @@ class MPAdmin
     //{{{ private function _rpc_dashboard($data)
     private function _rpc_dashboard($data)
     {
-        $data = (array)json_decode($data['json']);
+        $data = (array)json_decode($data['json'], TRUE);
         foreach ($data as $side => &$elements)
         {
             $elements = (array)$elements;
@@ -48,8 +48,7 @@ class MPAdmin
     //{{{ private function _rpc_quicklinks($data)
     private function _rpc_quicklinks($data)
     {
-        $data = (array)json_decode($data['json']);
-        MPUser::update('setting', 'admin', 'quicklinks', $data);
+        $data = (array)json_decode($data['json'], TRUE);
         MPUser::update('setting', 'admin', 'quicklinks', $data);
     }
 
@@ -58,7 +57,6 @@ class MPAdmin
     private function _rpc_nav($data)
     {
         $data = json_decode($data['json'], TRUE);
-        MPUser::update('setting', 'admin', 'nav', $data);
         MPUser::update('setting', 'admin', 'nav', $data);
     }
 
