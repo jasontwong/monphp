@@ -501,8 +501,8 @@ class MPUser
                 '$ne' => MPUser::USER_ANONYMOUS,
             ),
         );
-        $users = iterator_to_array($uac->find($query));
-        foreach ($users as &$user)
+        $users = $uac->find($query);
+        foreach ($users as $user)
         {
             $user_dropdown[$user['name']] = $user['nice_name'];
         }
@@ -544,8 +544,8 @@ class MPUser
                 '$ne' => MPUser::GROUP_ANONYMOUS,
             ),
         );
-        $groups = iterator_to_array($ugc->find($query));
-        foreach ($groups as &$group)
+        $groups = $ugc->find($query);
+        foreach ($groups as $group)
         {
             $param_roles['role']['options'][$group['name']] = $group['nice_name'];
         }
@@ -631,8 +631,8 @@ class MPUser
         {
             if (empty(self::$groups))
             {
-                $groups = iterator_to_array($ugc->find());
-                foreach ($groups as &$g)
+                $groups = $ugc->find();
+                foreach ($groups as $g)
                 {
                     self::$groups[$g['name']] = $g;
                 }
@@ -866,9 +866,9 @@ class MPUser
     public static function field_form_group($name, $value, $extra)
     {
         $ugc = MPDB::selectCollection('mpuser_group');
-        $groups = iterator_to_array($ugc->find());
+        $groups = $ugc->find();
         $extra['options'][''] = 'none';
-        foreach ($groups as &$group)
+        foreach ($groups as $group)
         {
             $extra['options'][$group['name']] = $group['nice_name'];
         }
@@ -880,7 +880,7 @@ class MPUser
     public static function field_form_group_multiple($name, $value, $extra)
     {
         $ugc = MPDB::selectCollection('mpuser_group');
-        $groups = iterator_to_array($ugc->find());
+        $groups = $ugc->find();
         foreach ($groups as $group)
         {
             $extra['options'][$group['name']] = $group['nice_name'];
@@ -896,9 +896,9 @@ class MPUser
     public static function field_form_user($name, $value, $extra)
     {
         $uac = MPDB::selectCollection('mpuser_account');
-        $groups = iterator_to_array($uac->find());
+        $users = $uac->find();
         $extra['options'][''] = 'none';
-        foreach ($users as &$user)
+        foreach ($users as $user)
         {
             $extra['options'][$user['name']] = $user['nice_name'];
         }
@@ -954,8 +954,8 @@ class MPUser
     public static function field_form_user_multiple($name, $value, $extra)
     {
         $uac = MPDB::selectCollection('mpuser_account');
-        $groups = iterator_to_array($uac->find());
-        foreach ($users as &$user)
+        $users = $uac->find();
+        foreach ($users as $user)
         {
             $extra['options'][$user['name']] = $user['nice_name'];
         }
@@ -1272,8 +1272,8 @@ class MPUserInfo
                     '$in' => $user['group_ids'],
                 ),
             );
-            $groups = iterator_to_array($ugc->find($query));
-            foreach ($groups as &$group)
+            $groups = $ugc->find($query);
+            foreach ($groups as $group)
             {
                 $user['group'][] = $group;
                 $user['total_permission'] = array_merge($user['total_permission'], $group['permission']);
