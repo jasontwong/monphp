@@ -200,7 +200,7 @@ class MPField
      * Retrieves field schemas.
      *
      * @param mixed $ids MongoID or array of MongoID
-     * @return array
+     * @return MongoCursor
      */
     public static function get_field($ids)
     {
@@ -208,8 +208,8 @@ class MPField
             ? array('$in', $ids)
             : $ids;
         $mpfield = MPDB()->selectCollection('MPField');
-        $data = $mpfield->find($query, array('safe' => TRUE));
-        return iterator_to_array($data);
+        $cursor = $mpfield->find($query, array('safe' => TRUE));
+        return $data;
     }
 
     //}}}
