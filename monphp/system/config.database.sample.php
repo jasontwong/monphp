@@ -1,7 +1,5 @@
 <?php
 
-// example db config
-/*
 $_db_conn['default'] = array(
     'server' => 'mongodb://localhost:27017/',
     'options' => array(
@@ -10,4 +8,3 @@ $_db_conn['default'] = array(
         'db' => 'monphp',
     )
 );
-*/
