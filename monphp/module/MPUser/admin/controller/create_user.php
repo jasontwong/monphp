@@ -126,10 +126,10 @@ if (isset($_POST['form']))
         $user['group_ids'] = array();
         if (ake('groups', $upost))
         {
-            $groups = iterator_to_array(MPDB::selectCollection('user_group')->find(array('name' => array('$in' => $upost['groups']))));
+            $groups = MPDB::selectCollection('user_group')->find(array('name' => array('$in' => $upost['groups'])));
             $upost['group'] = array();
             $upost['group_ids'] = array();
-            foreach ($groups as &$group)
+            foreach ($groups as $group)
             {
                 $upost['group'][] = $group;
                 $upost['group_ids'][] = $group['_id'];
@@ -246,5 +246,3 @@ $form->add_group(
 $fh = $form->build();
 
 //}}}
-
-?>
