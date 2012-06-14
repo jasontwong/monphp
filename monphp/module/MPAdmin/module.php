@@ -675,9 +675,15 @@ class MPAdmin
             array('#^/admin/mod/.+/$#', $ctrl.'/mod.php', MPRouter::ROUTE_PCRE),
         );
 
-        foreach ($routes as $pattern => &$controller)
+        foreach ($routes as &$route)
         {
-            MPRouter::add($pattern, $controller, MPRouter::ROUTE_PCRE, MPRouter::PRIORITY_NORMAL, 'admin');
+            MPRouter::add(
+                $route[0], 
+                $route[1], 
+                ake(2, $route) ? $route[2] : MPRouter::ROUTE_STATIC, 
+                MPRouter::PRIORITY_NORMAL, 
+                'admin'
+            );
         }
 
         $static_routes = array(
