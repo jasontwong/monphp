@@ -42,8 +42,8 @@ class MPContent
                 ),
             );
             $cec = MPDB::selectCollection('mpcontent_entry');
-            $entries = iterator_to_array($cec->find($query));
-            foreach ($entries as &$entry)
+            $entries = $cec->find($query);
+            foreach ($entries as $entry)
             {
                 $weight = array_search($entry['_id'], $data);
                 if (is_numeric($weight))
