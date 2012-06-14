@@ -41,11 +41,11 @@ class MPData
                 $query['name'] = $name;
             }
             $cursor = MPDB::selectCollection('system_data')->find($query);
-            return $cursor->hasNext() ? $cursor : array();
+            return $cursor->hasNext() ? $cursor : NULL;
         }
         catch (Exception $e)
         {
-            return array();
+            return NULL;
         }
     }
     //}}}
@@ -164,9 +164,12 @@ class MPData
         if (is_null($result))
         {
             $result = call_user_func_array(array('MPData', 'lookup'), $args);
-            foreach ($result as $row)
+            if (!is_null($result))
             {
-                self::register($row);
+                foreach ($result as $row)
+                {
+                    self::register($row);
+                }
             }
             return array_drill(self::$data, $args);
         }
