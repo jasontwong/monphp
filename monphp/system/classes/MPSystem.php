@@ -161,8 +161,8 @@ class MPSystem
     public function hook_mpsystem_start()
     {
         mp_register_script('jquery', '/js/libs/jquery-1.7.1.min.js', array(), '1.7.1', TRUE);
-        mp_register_script('modernizr', '/js/libs/modernizr-2.5.3.min.js', array(), '2.5.3');
-        mp_register_style('screen', '/css/screen.css');
+        mp_enqueue_script('modernizr', '/js/libs/modernizr-2.5.3.min.js', array(), '2.5.3');
+        mp_enqueue_style('screen', '/css/screen.css');
     }
     // }}}
 }
