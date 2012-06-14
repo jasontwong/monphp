@@ -2,26 +2,24 @@
 
 class MPSystem
 {
-    // {{{ protected static function get_dependant_scripts($handle, $scripts, &$js_order, &$counter)
+    // {{{ protected static function get_dependant_scripts($handle, $scripts, &$holder)
     /*
      * @returns bool
      */
-    protected static function get_dependant_scripts($handle, $scripts, &$holder, &$counter)
+    protected static function get_dependant_scripts($handle, $scripts, &$holder)
     {
         if (!ake($handle, $scripts))
         {
             return FALSE;
         }
         global $_mp;
-        $l_js = deka(array(), $_mp, 'scripts', 'loaded');
         $script = $scripts[$handle];
-        $deps = array_diff($script['deps'], array_keys($holder), $l_js);
         $tmp = array();
-        foreach ($deps as &$dep)
+        foreach ($script['deps'] as &$dep)
         {
             if (!in_array($dep, $holder))
             {
-                $load = self::get_dependant_scripts($dep, $scripts, $holder, $counter);
+                $load = self::get_dependant_scripts($dep, $scripts, $holder);
                 if (!$load)
                 {
                     return FALSE;
@@ -30,7 +28,7 @@ class MPSystem
             }
         }
         $tmp[] = $handle;
-        $holder = array_merge($holder, $tmp);
+        $holder += $tmp;
         return TRUE;
     }
     // }}}
@@ -41,7 +39,7 @@ class MPSystem
     protected static function get_queued_scripts($for_footer = FALSE)
     {
         global $_mp;
-        $e_js = deka(array(), $_mp, 'scripts', 'enqueued');
+        $e_js = &deka(array(), $_mp, 'scripts', 'enqueued');
         $r_js = deka(array(), $_mp, 'scripts', 'registered');
         $l_js = deka(array(), $_mp, 'scripts', 'loaded');
         $scripts = array_merge($e_js, $r_js);
@@ -56,17 +54,20 @@ class MPSystem
                 $holder = array();
                 foreach ($deps as &$dep)
                 {
-                    $load = self::get_dependant_scripts($dep, $scripts, $holder, $counter);
+                    $load = self::get_dependant_scripts($dep, $scripts, $holder);
                 }
                 if ($load)
                 {
                     foreach ($holder as &$hold)
                     {
-                        $js_order[$hold] = $counter++;
+                        if (!ake($hold, $js_order))
+                        {
+                            $js_order[$hold] = $counter++;
+                        }
                     }
                     $js_order[$handle] = $counter++;
                 }
-                unset($_mp['scripts']['enqueued'][$handle]);
+                unset($e_js[$handle]);
             }
         }
         asort($js_order);
