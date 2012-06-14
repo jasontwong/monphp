@@ -202,7 +202,7 @@
 
         //}}}
         //{{{ turn reset button into link
-        link_cancel = $('<a class="cancel">Cancel</a>');
+        var link_cancel = $('<a class="cancel">Cancel</a>');
         link_cancel.click(function(){
             //$(this).closest('form').get(0).reset();
             history.go(-1);

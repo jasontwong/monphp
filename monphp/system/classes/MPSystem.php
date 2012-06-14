@@ -28,7 +28,7 @@ class MPSystem
             }
         }
         $tmp[] = $handle;
-        $holder += $tmp;
+        $holder = array_unique(array_merge($holder, $tmp));
         return TRUE;
     }
     // }}}

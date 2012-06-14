@@ -397,7 +397,7 @@ class MPAdmin
         mp_enqueue_script(
             'mpadmin_field',
             '/admin/static/MPAdmin/js/field.js',
-            array('jquery', 'tiny_mce'),
+            array('jquery', 'tiny_mce', 'jquery-ui-datepicker'),
             FALSE,
             TRUE
         );
