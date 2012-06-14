@@ -1,7 +1,8 @@
-        </div><!--content-->
+            </div><!-- #content -->
+        </section><!-- #body -->
         <footer>
         </footer>
-    </div><!--container-->
+    </div><!-- #container -->
 
     <?php MPModule::h('mpsystem_print_foot'); ?>
 </body>

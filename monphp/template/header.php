@@ -59,4 +59,5 @@
     <div id="container">
         <header>
         </header>
-        <div id="main" role="main">
+        <section id="body" role="main">
+            <div id="content">

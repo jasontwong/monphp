@@ -1,4 +1,4 @@
-<div id='nav'>
+<nav id='nav'>
 <?php 
 
 $nav = MPModule::h('mpadmin_nav'); 
@@ -21,4 +21,4 @@ foreach ($nav as $title => $links)
 }
 
 ?>
-</div>
+</nav>
