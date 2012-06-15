@@ -20,7 +20,7 @@ if (!defined('URI_PART_4'))
     exit;
 }
 
-$uac = MPDB::selectCollection('user_account');
+$uac = MPDB::selectCollection('mpuser_account');
 $ua = $uac->findOne(array('name' => URI_PART_4));
 
 if (is_null($ua))

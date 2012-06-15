@@ -78,8 +78,6 @@ $layout->add_layout(
 if (isset($_POST['form']))
 {
     $settings = $layout->acts('post', $_POST[$settings_key]);
-    // TODO this is for file upload. there should be a cleaner way to do this
-    $layout->acts('save', $_POST[$settings_key]);
     $layout->merge($_POST[$settings_key]);
     $mdepends = TRUE;
     if (ake('modules', $settings) && $settings_key === $default_key)
@@ -109,7 +107,6 @@ if (isset($_POST['form']))
             // TODO dependency check didn't pass
         }
     }
-    // if ($mdepends && $settings_key !== $default_key)
     if ($mdepends)
     {
         foreach ($settings as $name => $data)

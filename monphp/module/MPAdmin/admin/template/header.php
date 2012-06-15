@@ -9,7 +9,7 @@ $header = MPAdmin::get('header');
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <link type="image/x-icon" href="/favicon.ico" rel="icon"/>
     <title><?php echo is_null($title) ? '' : $title.' &mdash; ' ?>MPAdmin Interface (<?php echo MPData::query('_Site', 'title') ?>)</title>
-    <?php echo MPModule::h('mpadmin_header') ?>
+    <?php MPModule::h('mpadmin_header') ?>
 </head>
 <body>
     <!--[if lt IE 7]><p class="chromeframe">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
@@ -31,32 +31,34 @@ $header = MPAdmin::get('header');
             </a>
             </div>
         <?php endif ?>
-        <div class='user_ctrl'>
-            Currently logged in as <strong><?php echo MPUser::i('nice_name'); ?></strong>.<br />
-            <a href='/admin/logout/'>&larr; logout</a>
-        </div>
-        <div class='admin'>
-            <ul>
-                <li id='quicklinks'>
-                    &darr; Quicklinks
-                    <ul>
-                    <?php if (!is_null($quicklinks = MPUser::setting('admin', 'quicklinks'))): ?>
-                        <?php foreach ($quicklinks as $href => $label): ?>
-                        <li><a href='<?php echo $href; ?>'><?php echo $label; ?></a></li>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                    </ul>
-                </li>
-                <li><a href='/admin/'>&larr; MPAdmin Dashboard</a></li>
-            </ul>
-        </div>
+        <?php if (MPAdmin::is_logged_in()): ?>
+            <div class='user_ctrl'>
+                Currently logged in as <strong><?php echo MPUser::i('nice_name'); ?></strong>.<br />
+                <a href='/admin/logout/'>&larr; logout</a>
+            </div>
+            <div class='admin'>
+                <ul>
+                    <li id='quicklinks'>
+                        &darr; Quicklinks
+                        <ul>
+                        <?php if (!is_null($quicklinks = MPUser::setting('admin', 'quicklinks'))): ?>
+                            <?php foreach ($quicklinks as $href => $label): ?>
+                            <li><a href='<?php echo $href; ?>'><?php echo $label; ?></a></li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                        </ul>
+                    </li>
+                    <li><a href='/admin/'>&larr; Admin Dashboard</a></li>
+                </ul>
+            </div>
+        <?php endif; ?>
     </header>
 
     <section id='body' class='clear' role="main">
 
         <?php include DIR_MODULE.'/MPAdmin/admin/template/notifications.php'; ?>
         <div class='header'><?php echo is_null($title) ? '' : $title; ?></div>
-        <?php include DIR_MODULE.'/MPAdmin/admin/template/nav.php'; ?>
+        <?php if (MPAdmin::is_logged_in()) include DIR_MODULE.'/MPAdmin/admin/template/nav.php'; ?>
 
         <div id='content'>
 

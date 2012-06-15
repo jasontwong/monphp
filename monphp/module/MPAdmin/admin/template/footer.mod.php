@@ -1,9 +1,8 @@
-</div>
-</div>
+        </div><!-- #content -->
+    </section><!-- #body -->
+</div><!-- #container -->
 
-</div>
-
-<?php echo MPModule::h('mpadmin_js', URI_PART_2) ?>
+<?php MPModule::h('mpadmin_footer') ?>
 
 <?php MPModule::h('body_end', URI_PART_2) ?>
 

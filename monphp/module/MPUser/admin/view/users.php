@@ -1,6 +1,6 @@
 <p><a href='/admin/module/MPUser/create_user/'>Create a new user account</a></p>
 
-<?php if (count($users)): ?>
+<?php if ($users->hasNext()): ?>
 
 <style>
     table td { padding: 4px; }
@@ -9,7 +9,7 @@
 <table>
     <thead>
         <tr>
-            <td colspan='4'>Total users: <?php echo count($users) ?></td>
+            <td colspan='4'>Total users: <?php echo $users->count() ?></td>
         </tr>
         <tr>
             <th>username</th>
@@ -20,7 +20,7 @@
     </thead>
     <tfoot>
         <tr>
-            <td colspan='4'>Total users: <?php echo count($users) ?></td>
+            <td colspan='4'>Total users: <?php echo $users->count() ?></td>
         </tr>
     </tfoot>
     <tbody>

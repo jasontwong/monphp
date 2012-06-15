@@ -7,8 +7,8 @@ if (!MPUser::perm('create user'))
     return;
 }
 
-MPAdmin::set('title', 'Create New MPUser');
-MPAdmin::set('header', 'Create New MPUser');
+MPAdmin::set('title', 'Create New User');
+MPAdmin::set('header', 'Create New User');
 
 // {{{ layout
 $layout = new MPField();
@@ -152,7 +152,7 @@ $form->attr = array(
 );
 $rows[] = array(
     'label' => array(
-        'text' => 'MPUsername'
+        'text' => 'Username'
     ),
     'fields' => $layout->get_layout('name'),
 );
@@ -183,18 +183,6 @@ $form->add_group(
 
 if (isset($perm_mods))
 {
-    $form->add_group(
-        array(
-            'rows' => array(
-                array(
-                    'label' => array(
-                        'text' => 'Permissions'
-                    ),
-                    'fields' => $layout->get_layout('hidden')
-                )
-            )
-        )
-    );
     foreach ($perm_mods as $mod => $perm_groups)
     {
         foreach ($perm_groups as $group)

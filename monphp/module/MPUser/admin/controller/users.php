@@ -10,5 +10,5 @@ if (!MPUser::perm('view users'))
 MPAdmin::set('title', 'MPUser Accounts');
 MPAdmin::set('header', 'MPUser Accounts');
 
-$users = MPDB::selectCollection('user_account')->find();
+$users = MPDB::selectCollection('mpuser_account')->find();
 $href = '/admin/module/MPUser/edit_user';

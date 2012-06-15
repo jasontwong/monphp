@@ -1,11 +1,11 @@
 <p><a href='/admin/module/MPUser/create_group/'>Create a new group</a></p>
 
-<?php if (count($groups)): ?>
+<?php if ($groups->hasNext()): ?>
 
 <table>
     <thead>
         <tr>
-            <td colspan='2'>Total groups: <?php echo count($groups) ?></td>
+            <td colspan='2'>Total groups: <?php echo $groups->count() ?></td>
         </tr>
         <tr>
             <th>name</th>
@@ -14,7 +14,7 @@
     </thead>
     <tfoot>
         <tr>
-            <td colspan='2'>Total groups: <?php echo count($groups) ?></td>
+            <td colspan='2'>Total groups: <?php echo $groups->count() ?></td>
         </tr>
     </tfoot>
     <tbody>

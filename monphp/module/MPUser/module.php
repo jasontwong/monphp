@@ -29,7 +29,7 @@ class MPUser
 
     //}}}
     //{{{ constants
-    const USER_ADMIN = 'MPAdmin';
+    const USER_ADMIN = 'Admin';
     const USER_ANONYMOUS = 'Anonymous';
 
     const ID_ADMIN = 'admin';
@@ -39,11 +39,12 @@ class MPUser
     const GROUP_ANONYMOUS = 'anonymous';
 
     const MODULE_AUTHOR = 'Glenn';
-    const MODULE_DESCRIPTION = 'MPUser, group, and permission management';
+    const MODULE_DESCRIPTION = 'User, group, and permission management';
     const MODULE_WEBSITE = 'http://www.glennyonemitsu.com/';
 
     //}}}
-    //{{{ constructor
+
+    // {{{ public function __construct()
     /**
      * @param int $state current state of module manager
      */
@@ -53,40 +54,7 @@ class MPUser
     }
 
     //}}}
-    //{{{ public function hook_mpsystem_active()
-    public function hook_mpsystem_active()
-    {
-        $uac = MPDB::selectCollection('mpuser_account');
-        $uag = MPDB::selectCollection('mpuser_group');
-        $uac->ensureIndex(array('name' => 1), array(
-            'unique' => 1, 
-            'dropDups' => 1,
-        ));
-        $uag->ensureIndex(array('name' => 1), array(
-            'unique' => 1, 
-            'dropDups' => 1,
-        ));
-        self::find_info();
-        MPModule::h('mpuser_perm');
-    }
 
-    //}}}
-    //{{{ public function hook_mpadmin_dashboard()
-    public function hook_mpadmin_dashboard()
-    {
-        if (!MPUser::perm('admin'))
-        {
-            return array();
-        }
-        return array(
-            array(
-                'title' => 'MPUser Account Overview',
-                'content' => $this->_admin_dashboard_overview()
-            )
-        );
-    }
-
-    //}}}
     //{{{ private function _admin_dashboard_overview()
     private function _admin_dashboard_overview()
     {
@@ -94,36 +62,60 @@ class MPUser
         $groups = MPDB::selectCollection('mpuser_group')->count();
         $o = '
             <ul>
-                <li>Total MPUser Accounts: ' . $users . '</li>
-                <li>Total MPUser Groups: ' . $groups . '</li>
+                <li>Total User Accounts: ' . $users . '</li>
+                <li>Total User Groups: ' . $groups . '</li>
             </ul>';
         return $o;
     }
 
     //}}}
-    //{{{ public function hook_mpsystem_end()
+
+    //{{{ protected function is_account($name, $pass)
     /**
-     * Checks for user account updates and saves to DB if it is
+     * Checks if credentials match
+     * @param string $name username
+     * @param string $pass sha1 hashed password
      */
-    public function hook_mpsystem_end()
+    protected function is_account($name, $pass)
     {
-        if (self::$changed)
+        $user = MPDB::selectCollection('mpuser_account')->findOne(array('name' => $name));
+        if (!is_null($user) && $user['pass'] === sha1($user['salt'].$pass))
         {
-            $uac = MPDB::selectCollection('mpuser_account');
-            $user = $uac->findOne(array('_id' => $info['_id']));
-            $info = self::$info;
-            $info['group'] = array();
-            foreach (self::$info['group'] as $group)
-            {
-                $info['group'][] = $group;
-                $info['group_ids'][] = $group['_id'];
-            }
-            $user = array_merge($user, $info);
-            $uac->save($user);
+            return TRUE;
         }
+        return FALSE;
     }
 
     //}}}
+    //{{{ protected static function find_info()
+    protected static function find_info()
+    {
+        if (is_null(self::$user))
+        {
+            if (isset($_SESSION) && (eka($_SESSION, 'user', 'name') && eka($_SESSION, 'user', 'pass')))
+            {
+                self::$user = new MPUserInfo($_SESSION['user']['name']);
+                if (!self::$user->verify_password($_SESSION['user']['pass']))
+                {
+                    self::$user = new MPUserInfo(MPUser::USER_ANONYMOUS);
+                }
+            }
+            else
+            {
+                self::$user = new MPUserInfo(MPUser::USER_ANONYMOUS);
+            }
+            self::$methods = get_class_methods(self::$user);
+        }
+    }
+    //}}}
+
+    //{{{ public function cb_mpuser_perm($perms)
+    public function cb_mpuser_perm($perms)
+    {
+        self::$perm = $perms;
+    }
+    //}}}
+
     //{{{ public function hook_install_form_build()
     public function hook_install_form_build()
     {
@@ -179,7 +171,6 @@ class MPUser
         $user['email'] = $data['email'];
         $user['permission'] = array('admin');
         $user['group'] = array($group);
-        $user['group_ids'] = array($group['_id']);
         $user['setting'] = array();
         $uac->insert($user);
 
@@ -203,65 +194,49 @@ class MPUser
         $user['email'] = '';
         $user['permission'] = array();
         $user['group'] = array($group);
-        $user['group_ids'] = array($group['_id']);
         $user['setting'] = array();
         $uac->insert($user);
     }
     //}}}
-    //{{{ public function hook_mpuser_perm()
-    public function hook_mpuser_perm()
+    //{{{ public function hook_mpadmin_dashboard()
+    public function hook_mpadmin_dashboard()
     {
+        if (!MPUser::perm('admin'))
+        {
+            return array();
+        }
         return array(
-            'MPUser' => array(
-                'admin' => 'Full admin access',
-                'edit self' => 'Edit their own account',
-                'create users' => 'Create user accounts',
-                'view users' => 'View user accounts',
-                'edit users' => 'Edit user accounts',
-            ),
-            'Group' => array(
-                'create groups' => 'Create groups',
-                'view groups' => 'View groups',
-                'edit groups' => 'Edit groups',
-                'edit permissions' => 'Change user and group permissions'
+            array(
+                'title' => 'User Account Overview',
+                'content' => $this->_admin_dashboard_overview()
             )
         );
     }
 
     //}}}
-    //{{{ public function hook_mpadmin_css()
-    public function hook_mpadmin_css()
+    //{{{ public function hook_mpadmin_enqueue_css()
+    public function hook_mpadmin_enqueue_css()
     {
-        $css = array();
         if (URI_PATH === '/admin/module/MPUser/users/')
         {
-            $css['screen'] = array('/admin/static/MPUser/user.css/');
+            mp_enqueue_style('mpuser_user', '/admin/static/MPUser/user.css');
         }
-        return $css;
     }
 
     //}}}
-    //{{{ public function hook_mpadmin_js()
-    public function hook_mpadmin_js()
+    //{{{ public function hook_mpadmin_enqueue_js()
+    public function hook_mpadmin_enqueue_js()
     {
-        $js = array();
         if (strpos(URI_PATH, '/admin/module/MPUser/edit_user/') === 0)
         {
-            $js[] = '/admin/static/MPUser/account.js/';
+            mp_enqueue_script(
+                'mpuser_account',
+                '/admin/static/MPUser/account.js',
+                array('jquery'),
+                FALSE,
+                TRUE
+            );
         }
-        if (URI_PATH === '/admin/login/')
-        {
-            $js[] = '/admin/static/MPUser/login.js/';
-        }
-        return $js;
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_js_header()
-    public function hook_mpadmin_js_header()
-    {
-        $js = array();
-        return $js;
     }
 
     //}}}
@@ -314,7 +289,7 @@ class MPUser
             $user = $uac->findOne(array('name' => $data['name']));
             $user['logged_in'] = new MongoDate();
             $uac->save($user);
-            MPAdmin::log(MPAdmin::TYPE_SUCCESS, 'MPUser ' . $user['name'] . ' logged in');
+            MPAdmin::log(MPAdmin::TYPE_SUCCESS, 'User ' . $user['name'] . ' logged in');
             $_SESSION['user']['name'] = $user['name'];
             $_SESSION['user']['pass'] = $user['pass'];
             $results = array(
@@ -323,7 +298,7 @@ class MPUser
         }
         else
         {
-            MPAdmin::log(MPAdmin::TYPE_ERROR, 'MPUser ' . $data['name'] . ' failed to log in');
+            MPAdmin::log(MPAdmin::TYPE_ERROR, 'User ' . $data['name'] . ' failed to log in');
             $results = array(
                 'success' => FALSE,
                 'messages' => array(
@@ -360,7 +335,7 @@ class MPUser
         if (MPUser::perm('view users'))
         {
             $links = array_merge($links, array(
-                '<a href="/admin/module/MPUser/users/">MPUsers</a>',
+                '<a href="/admin/module/MPUser/users/">Users</a>',
             ));
         }
         if (MPUser::perm('view groups'))
@@ -372,7 +347,7 @@ class MPUser
         if (MPUser::perm('create users'))
         {
             $links = array_merge($links, array(
-                '<a href="/admin/module/MPUser/create_user/">Create MPUser</a>',
+                '<a href="/admin/module/MPUser/create_user/">Create User</a>',
             ));
         }
         if (MPUser::perm('create groups'))
@@ -381,92 +356,67 @@ class MPUser
                 '<a href="/admin/module/MPUser/create_group/">Create Group</a>',
             ));
         }
-        return array('MPUser' => $links);
+        return array('User' => $links);
     }
 
     //}}}
-    //{{{ public function hook_profile_fields($id, $data)
-    public function hook_profile_fields($id, $data)
+    //{{{ public function hook_mpsystem_active()
+    public function hook_mpsystem_active()
     {
-        $items = array(
-            array(
-                'label' => 'First Name',
-                'type' => 'text',
-                'name' => 'first_name',
-                'value' => deka('', $data, 'first_name')
-            ),
-            array(
-                'label' => 'Last Name',
-                'type' => 'text',
-                'name' => 'last_name',
-                'value' => deka('', $data, 'last_name')
-            ),
-            array(
-                'label' => 'City',
-                'type' => 'text',
-                'name' => 'city',
-                'value' => deka('', $data, 'city')
-            ),
-            array(
-                'label' => 'State',
-                'type' => 'text',
-                'name' => 'state',
-                'value' => deka('', $data, 'state')
-            ),
-            array(
-                'label' => 'AIM Scree Name',
-                'type' => 'text',
-                'name' => 'aim_sn',
-                'value' => deka('', $data, 'aim_sn')
-            ),
-            array(
-                'label' => 'Hide profile from other users?',
-                'type' => 'checkbox_boolean',
-                'name' => 'privacy',
-                'value' => deka('', $data, 'privacy')
-            ),
-        );
-
-        return $items;
+        $uac = MPDB::selectCollection('mpuser_account');
+        $uag = MPDB::selectCollection('mpuser_group');
+        $uac->ensureIndex(array('name' => 1), array(
+            'unique' => 1, 
+            'dropDups' => 1,
+        ));
+        $uag->ensureIndex(array('name' => 1), array(
+            'unique' => 1, 
+            'dropDups' => 1,
+        ));
+        self::find_info();
+        MPModule::h('mpuser_perm');
     }
 
     //}}}
-    //{{{ public function hook_profile_keys()
-    public function hook_profile_keys()
+    //{{{ public function hook_mpsystem_end()
+    /**
+     * Checks for user account updates and saves to DB if it is
+     */
+    public function hook_mpsystem_end()
     {
-        return array(
-            'first_name',
-            'last_name',
-            'city',
-            'state',
-            'aim_sn',
-            'privacy'
-        );
-    }
-
-    //}}}
-    //{{{ public function hook_profile_validate($id, $data)
-    public function hook_profile_validate($id, $data)
-    {
-        $success = TRUE;
-        foreach ($data as $k => $v)
+        if (self::$changed)
         {
-            switch ($k)
+            $uac = MPDB::selectCollection('mpuser_account');
+            $user = $uac->findOne(array('_id' => $info['_id']));
+            $info = self::$info;
+            $info['group'] = array();
+            foreach (self::$info['group'] as $group)
             {
-                case 'state':
-                    if ($v !== '' && strlen($v) !== 2)
-                    {
-                        $success = FALSE;
-                    }
-                break;
-                default:
-                    $success = TRUE;
+                $info['group'][] = $group;
             }
+            $user = array_merge($user, $info);
+            $uac->save($user, array('safe' => TRUE));
         }
+    }
+
+    //}}}
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
+    {
         return array(
-            'success' => $success,
-            'module_entry_id' => $id,
-            'data' => $data
+            'MPUser' => array(
+                'admin' => 'Full admin access',
+                'edit self' => 'Edit their own account',
+                'create users' => 'Create user accounts',
+                'view users' => 'View user accounts',
+                'edit users' => 'Edit user accounts',
+            ),
+            'Group' => array(
+                'create groups' => 'Create groups',
+                'view groups' => 'View groups',
+                'edit groups' => 'Edit groups',
+                'edit permissions' => 'Change user and group permissions'
+            )
         );
     }
 
@@ -573,47 +523,40 @@ class MPUser
         );
     }
     //}}}
-    //{{{ public function cb_mpuser_perm($perms)
-    public function cb_mpuser_perm($perms)
+
+    //{{{ public static function add_groups($groups)
+    public static function add_groups($groups)
     {
-        self::$perm = $perms;
+        self::find_info();
+        return self::$user->add_groups($groups);
     }
+    
     //}}}
-    //{{{ protected static function find_info()
-    protected static function find_info()
-    {
-        if (is_null(self::$user))
-        {
-            if (isset($_SESSION) && (eka($_SESSION, 'user', 'name') && eka($_SESSION, 'user', 'pass')))
-            {
-                self::$user = new MPUserInfo($_SESSION['user']['name']);
-                if (!self::$user->verify_password($_SESSION['user']['pass']))
-                {
-                    self::$user = new MPUserInfo(MPUser::USER_ANONYMOUS);
-                }
-            }
-            else
-            {
-                self::$user = new MPUserInfo(MPUser::USER_ANONYMOUS);
-            }
-            self::$methods = get_class_methods(self::$user);
-        }
-    }
-    //}}}
-    //{{{ protected function is_account($name, $pass)
+    //{{{ public static function check_group($group)
     /**
-     * Checks if credentials match
-     * @param string $name username
-     * @param string $pass sha1 hashed password
+     * Checks if current user has specific group token
+     *
+     * @param mixed $group group name or group id as integer
+     * @return boolean
      */
-    protected function is_account($name, $pass)
+    public static function check_group($group)
     {
-        $user = MPDB::selectCollection('mpuser_account')->findOne(array('name' => $name));
-        if (!is_null($user) && $user['pass'] === sha1($user['salt'].$pass))
-        {
-            return TRUE;
-        }
-        return FALSE;
+        self::find_info();
+        return self::$user->check_group($group);
+    }
+    
+    //}}}
+    //{{{ public static function check_perm($permission)
+    /**
+     * Checks if the current user has the permission token set
+     *
+     * @param string $permission permission token
+     * @return boolean
+     */
+    public static function check_perm($permission)
+    {
+        self::find_info();
+        return self::$user->check_perm($permission);
     }
 
     //}}}
@@ -651,85 +594,6 @@ class MPUser
     }
 
     //}}}
-    //{{{ public static function info($key)
-    /**
-     * Returns the user info
-     *
-     * @param string $key self::$info array key
-     * @return string|NULL
-     */
-    public static function info($key)
-    {
-        self::find_info();
-        return self::$user->info($key);
-    }
-
-    //}}}
-    //{{{ public static function i($key)
-    /**
-     * Alias for self::info($key)
-     */
-    public static function i($key)
-    {
-        return self::info($key);
-    }
-
-    //}}}
-    //{{{ public static function update($key, $value)
-    /**
-     * Update the user array and flag for updating
-     * The params are unlimited. If there are more than two parameters, the
-     * parameters except last is used to drill down into $user, and the
-     * last is the value.
-     *
-     * @param string $key
-     * @param mixed $value string or array
-     */
-    public static function update()
-    {
-        self::find_info();
-        $caller = array(self::$user, 'update');
-        $args = func_get_args();
-        return call_user_func_array($caller, $args);
-    }
-
-    //}}}
-    //{{{ public static function check_perm($permission)
-    /**
-     * Checks if the current user has the permission token set
-     *
-     * @param string $permission permission token
-     * @return boolean
-     */
-    public static function check_perm($permission)
-    {
-        self::find_info();
-        return self::$user->check_perm($permission);
-    }
-
-    //}}}
-    //{{{ public static function check_group($group)
-    /**
-     * Checks if current user has specific group token
-     *
-     * @param mixed $group group name or group id as integer
-     * @return boolean
-     */
-    public static function check_group($group)
-    {
-        self::find_info();
-        return self::$user->check_group($group);
-    }
-    
-    //}}}
-    //{{{ public static function add_groups($groups)
-    public static function add_groups($groups)
-    {
-        self::find_info();
-        return self::$user->add_groups($groups);
-    }
-    
-    //}}}
     //{{{ public static function has_perm()
     /**
      * Checks if a user has a certain permission token
@@ -745,6 +609,30 @@ class MPUser
     {
         self::find_info();
         return self::$user->has_perm(func_get_args());
+    }
+
+    //}}}
+    //{{{ public static function i($key)
+    /**
+     * Alias for self::info($key)
+     */
+    public static function i($key)
+    {
+        return self::info($key);
+    }
+
+    //}}}
+    //{{{ public static function info($key)
+    /**
+     * Returns the user info
+     *
+     * @param string $key self::$info array key
+     * @return string|NULL
+     */
+    public static function info($key)
+    {
+        self::find_info();
+        return self::$user->info($key);
     }
 
     //}}}
@@ -796,228 +684,21 @@ class MPUser
     }
 
     //}}}
-    //{{{ public static function field_content_group($type, $data)
-    public static function field_content_group($type, $data)
-    {
-        $ugc = MPDB::selectCollection('mpuser_group');
-        $group = $ugc->findOne(array('name' => self::GROUP_ANONYMOUS));
-        if (is_null($group))
-        {
-            $group = self::anonymous_info();
-        }
-        else
-        {
-            unset($group['permission']);
-        }
-        return $group;
-    }
-
-    //}}}
-    //{{{ public static function field_content_group_multiple($type, $data)
-    public static function field_content_group_multiple($type, $data)
-    {
-        return self::field_content_group($type, $data);
-    }
-
-    //}}}
-    //{{{ public static function field_content_user($type, $data)
-    public static function field_content_user($type, $data)
-    {
-        $uac = MPDB::selectCollection('mpuser_account');
-        $user = $uac->findOne(array('name' => $data));
-        if (is_null($user))
-        {
-            $user = self::anonymous_user();
-        }
-        else
-        {
-            unset($user['pass'], $user['salt'], $user['permission']);
-        }
-        return $user;
-    }
-
-    //}}}
-    //{{{ public static function field_content_user_current($type, $data)
-    public static function field_content_user_current($type, $data)
-    {
-        $uac = MPDB::selectCollection('mpuser_account');
-        $user = $uac->findOne(array('name' => $data));
-        if (is_null($user))
-        {
-            $user = self::anonymous_user();
-        }
-        else
-        {
-            unset($user['pass'], $user['salt'], $user['permission']);
-        }
-        return $user;
-    }
-
-    //}}}
-    //{{{ public static function field_content_user_multiple($type, $data)
-    //TODO uhh this! once multiple user accounts are made
-    public static function field_content_user_multiple($type, $data)
-    {
-        return self::field_content_user($type, $data);
-    }
-
-    //}}}
-    //{{{ public static function field_form_group($name, $value, $extra)
-    public static function field_form_group($name, $value, $extra)
-    {
-        $ugc = MPDB::selectCollection('mpuser_group');
-        $groups = $ugc->find();
-        $extra['options'][''] = 'none';
-        foreach ($groups as $group)
-        {
-            $extra['options'][$group['name']] = $group['nice_name'];
-        }
-        return MPField::act('form', 'dropdown', $name, $value, $extra);
-    }
-
-    //}}}
-    //{{{ public static function field_form_group_multiple($name, $value, $extra)
-    public static function field_form_group_multiple($name, $value, $extra)
-    {
-        $ugc = MPDB::selectCollection('mpuser_group');
-        $groups = $ugc->find();
-        foreach ($groups as $group)
-        {
-            $extra['options'][$group['name']] = $group['nice_name'];
-        }
-        unset($extra['options']['']);
-        $extra['attr']['multiple'] = 'multiple';
-        $extra['attr']['size'] = 3;
-        return MPField::act('form', 'dropdown', $name, $value, $extra);
-    }
-
-    //}}}
-    //{{{ public static function field_form_user($name, $value, $extra)
-    public static function field_form_user($name, $value, $extra)
-    {
-        $uac = MPDB::selectCollection('mpuser_account');
-        $users = $uac->find();
-        $extra['options'][''] = 'none';
-        foreach ($users as $user)
-        {
-            $extra['options'][$user['name']] = $user['nice_name'];
-        }
-        return MPField::act('form', 'dropdown', $name, $value, $extra);
-    }
-
-    //}}}
-    //{{{ public static function field_form_user_current($name, $value, $extra)
-    /** 
-     * In the content module, when going back into a revision this will cause
-     * problems. If editing an old revision with no data set for this field
-     * then saving will save the newest revision with that noted. And the 
-     * previously newest revision might have had this value set, but it is now
-     * over written. The best way to use this field is to assign it to the
-     * content type as early as possible.
+    //{{{ public static function update()
+    /**
+     * Update the user array and flag for updating
+     * The params are unlimited. If there are more than two parameters, the
+     * parameters except last is used to drill down into $user, and the
+     * last is the value.
+     *
+     * @return void
      */
-    public static function field_form_user_current($name, $value, $extra)
+    public static function update()
     {
-        $action = deka('add', $extra, 'form_action');
-        $value = is_array($value) ? $value[0] : $value;
-        if ($action === 'edit')
-        {
-            switch ($value)
-            {
-                case '':
-                case self::ID_NONE:
-                    $field_name = 'None';
-                    $field_value = self::ID_NONE;
-                break;
-                case self::ID_ANONYMOUS:
-                    $field_name = 'Anonymous';
-                    $field_value = self::ID_ANONYMOUS;
-                break;
-                default:
-                    $uac = MPDB::selectCollection('mpuser_account');
-                    $user = $uac->findOne(array('name' => $value));
-                    $field_name = $user ? $user['nice_name'] : 'user: '.$value.' (account no longer exists)';
-                    $field_value = $value;
-                break;
-            }
-        }
-        else
-        {
-            $field_name = self::info('nice_name');
-            $field_value = self::info('name');
-        }
-        $extra['html'] = '<p>'.$field_name.'</p>';
-        return MPField::act('form', 'hidden', $name, $field_value, $extra);
-    }
-
-    //}}}
-    //{{{ public static function field_form_user_multiple($name, $value, $extra)
-    public static function field_form_user_multiple($name, $value, $extra)
-    {
-        $uac = MPDB::selectCollection('mpuser_account');
-        $users = $uac->find();
-        foreach ($users as $user)
-        {
-            $extra['options'][$user['name']] = $user['nice_name'];
-        }
-        unset($extra['options']['']);
-        $extra['attr']['multiple'] = 'multiple';
-        $extra['attr']['size'] = 3;
-        return MPField::act('form', 'dropdown', $name, $value, $extra);
-    }
-
-    //}}}
-    //{{{ public static function field_public_group()
-    public static function field_public_group()
-    {
-        return array(
-            'description' => 'A user group',
-            'meta' => FALSE,
-            'name' => 'MPUser Group',
-        );
-    }
-
-    //}}}
-    //{{{ public static function field_public_group_multiple()
-    public static function field_public_group_multiple()
-    {
-        return array(
-            'description' => 'Multiple user groups',
-            'meta' => FALSE,
-            'name' => 'MPUser Group (multiple select menu)',
-        );
-    }
-
-    //}}}
-    //{{{ public static function field_public_user()
-    public static function field_public_user()
-    {
-        return array(
-            'description' => 'A user account',
-            'meta' => FALSE,
-            'name' => 'MPUser Account',
-        );
-    }
-
-    //}}}
-    //{{{ public static function field_public_user_current()
-    public static function field_public_user_current()
-    {
-        return array(
-            'description' => 'Records the current user',
-            'meta' => FALSE,
-            'name' => 'MPUser Account (the current one)',
-        );
-    }
-
-    //}}}
-    //{{{ public static function field_public_user_multiple()
-    public static function field_public_user_multiple()
-    {
-        return array(
-            'description' => 'Multiple user accounts',
-            'meta' => FALSE,
-            'name' => 'MPUser Account (multiple select menu)',
-        );
+        self::find_info();
+        $caller = array(self::$user, 'update');
+        $args = func_get_args();
+        return call_user_func_array($caller, $args);
     }
 
     //}}}
@@ -1031,76 +712,98 @@ class MPUserInfo
 {
     //{{{ properties
     public $user;
+    private $changed;
     //}}}
-    //{{{ public function __construct($name = MPUser::USER_ANONYMOUS)
-    public function __construct($name = MPUser::USER_ANONYMOUS)
-    {
-        $this->find_user($name);
-    }
-    //}}}
-    //{{{ public function info($key)
-    /**
-     * Returns the user info
-     *
-     * @param string $key self::$info array key
-     * @return string|NULL
-     */
-    public function info($key)
-    {
-        return deka(NULL, $this->user, $key);
-    }
 
-    //}}}
-    //{{{ public function i($key)
-    /**
-     * Alias for self::info($key)
-     */
-    public function i($key)
+    //{{{ private function find_user($name)
+    private function find_user($name)
     {
-        return $this->info($key);
-    }
-
-    //}}}
-    //{{{ public function update($key, $value)
-    /**
-     * Update the user array and flag for updating
-     * The params are unlimited. If there are more than two parameters, the
-     * parameters except last is used to drill down into $user, and the
-     * last is the value.
-     *
-     * @param string $key
-     * @param mixed $value string or array
-     */
-    public function update()
-    {
-        $c = func_num_args();
-        if ($c > 1)
+        $uac = MPDB::selectCollection('mpuser_account');
+        $user = $uac->findOne(array('name' => $name));
+        if (!is_null($user))
         {
-            $this->changed = TRUE;
-            $user = &$this->user;
-            for ($i = 0; $i < $c; ++$i)
+            $user['total_permission'] = $user['permission'];
+            $ugc = MPDB::selectCollection('mpuser_group');
+            foreach ($user['group'] as $group)
             {
-                $arg = func_get_arg($i);
-                if ($i === ($c - 1))
-                {
-                    $user = $arg;
-                    break;
-                }
-                elseif (eka($user, $arg))
-                {
-                    $user =& $user[$arg];
-                }
-                else
-                {
-                    $user[$arg] = array();
-                    $user =& $user[$arg];
-                    break;
-                }
+                $user['total_permission'] = array_merge($user['total_permission'], $group['permission']);
             }
-            $this->save_user();
+            $user['total_permission'] = array_unique($user['total_permission']);
+            $this->user = $user;
+        }
+        elseif ($name !== MPUser::USER_ANONYMOUS)
+        {
+            $this->find_user(MPUser::USER_ANONYMOUS);
+        }
+        else
+        {
+            $this->fake_user();
         }
     }
 
+    //}}}
+    //{{{ private function fake_user()
+    /**
+     * Returns a fallback anonymous account in case it's not in the database
+     * @return array
+     */
+    private function fake_user()
+    {
+        $this->user = array(
+            'id' => MPUser::ID_ANONYMOUS,
+            'pass' => sha1(random_string(40)),
+            'name' => MPUser::USER_ANONYMOUS,
+            'salt' => random_string(5),
+            'email' => '',
+            'permission' => array(),
+            'setting' => array()
+        );
+    }
+    //}}}
+    //{{{ private function save_user()
+    /**
+     * Checks for user account updates and saves to DB if it is
+     */
+    private function save_user()
+    {
+        if ($this->changed)
+        {
+            $info = $this->user;
+            $ugc = MPDB::selectCollection('mpuser_account');
+            $user = $ugc->findOne(array('_id' => $info['_id']));
+            $user = array_merge($user, $info);
+            $ugc->save($user);
+        }
+    }
+
+    //}}}
+
+    //{{{ public function __construct($name = MPUser::USER_ANONYMOUS)
+    public function __construct($name = MPUser::USER_ANONYMOUS)
+    {
+        $this->changed = FALSE;
+        $this->find_user($name);
+    }
+    //}}}
+    //{{{ public function check_group($group)
+    /**
+     * Checks if current user has specific group token
+     *
+     * @param mixed $group group name or group id as integer
+     * @return boolean
+     */
+    public function check_group($group)
+    {
+        foreach ($this->user['group'] as $g)
+        {
+            if ((is_string($group) && $g['name'] === $group) || ($g['_id'] === $group))
+            {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+    
     //}}}
     //{{{ public function check_perm($permission)
     /**
@@ -1114,40 +817,6 @@ class MPUserInfo
         return in_array($permission, $this->user['permission']);
     }
 
-    //}}}
-    //{{{ public function check_group($group)
-    /**
-     * Checks if current user has specific group token
-     *
-     * @param mixed $group group name or group id as integer
-     * @return boolean
-     */
-    public function check_group($group)
-    {
-        foreach ($this->user['group'] as $g)
-        {
-            if ((is_int($group) && (int)$g['id'] === $group) || ($g['name'] === $group))
-            {
-                return TRUE;
-            }
-        }
-        return FALSE;
-    }
-    
-    //}}}
-    //{{{ public function search_perms($needle)
-    public function search_perms($needle)
-    {
-        $perms = array();
-        foreach ($this->user['total_permission'] as $perm)
-        {
-            if (strpos($perm, $needle) !== FALSE)
-            {
-                $perms[] = $perm;
-            }
-        }
-        return $perms;
-    }
     //}}}
     //{{{ public function has_perm()
     /**
@@ -1203,6 +872,29 @@ class MPUserInfo
     }
 
     //}}}
+    //{{{ public function i($key)
+    /**
+     * Alias for self::info($key)
+     */
+    public function i($key)
+    {
+        return $this->info($key);
+    }
+
+    //}}}
+    //{{{ public function info($key)
+    /**
+     * Returns the user info
+     *
+     * @param string $key self::$info array key
+     * @return string|NULL
+     */
+    public function info($key)
+    {
+        return deka(NULL, $this->user, $key);
+    }
+
+    //}}}
     //{{{ public function perm($permission)
     /** 
      * Alias of has_perm()
@@ -1212,6 +904,20 @@ class MPUserInfo
         return $this->has_perm($permission);
     }
 
+    //}}}
+    //{{{ public function search_perms($needle)
+    public function search_perms($needle)
+    {
+        $perms = array();
+        foreach ($this->user['total_permission'] as $perm)
+        {
+            if (strpos($perm, $needle) !== FALSE)
+            {
+                $perms[] = $perm;
+            }
+        }
+        return $perms;
+    }
     //}}}
     //{{{ public function setting()
     /**
@@ -1252,80 +958,43 @@ class MPUserInfo
     }
 
     //}}}
+    //{{{ public function update()
+    /**
+     * Update the user array and flag for updating
+     * The params are unlimited. If there are more than two parameters, the
+     * parameters except last is used to drill down into $user, and the
+     * last is the value.
+     *
+     * @return void
+     */
+    public function update()
+    {
+        $args = func_get_args();
+        if (count($args) > 1)
+        {
+            $this->changed = TRUE;
+            $value = array_pop($args);
+            $user = &$this->user;
+            foreach ($args as &$arg)
+            {
+                if (!ake($arg, $user))
+                {
+                    $user[$arg] = array();
+                }
+                $user = &$user[$arg];
+            }
+            $user = $value;
+            $this->save_user();
+        }
+    }
+
+    //}}}
     //{{{ public function verify_password($password)
     public function verify_password($password)
     {
         return $password === $this->user['pass'];
     }
     //}}}
-    //{{{ private function find_user($name)
-    private function find_user($name)
-    {
-        $uac = MPDB::selectCollection('mpuser_account');
-        $user = $uac->findOne(array('name' => $name));
-        if (!is_null($user))
-        {
-            $user['total_permission'] = $user['permission'];
-            $ugc = MPDB::selectCollection('mpuser_group');
-            $query = array(
-                '_id' => array(
-                    '$in' => $user['group_ids'],
-                ),
-            );
-            $groups = $ugc->find($query);
-            foreach ($groups as $group)
-            {
-                $user['group'][] = $group;
-                $user['total_permission'] = array_merge($user['total_permission'], $group['permission']);
-            }
-            $user['total_permission'] = array_unique($user['total_permission']);
-            $this->user = $user;
-        }
-        elseif ($name !== MPUser::USER_ANONYMOUS)
-        {
-            $this->find_user(MPUser::USER_ANONYMOUS);
-        }
-        else
-        {
-            $this->fake_user();
-        }
-    }
 
-    //}}}
-    //{{{ private function fake_user()
-    /**
-     * Returns a fallback anonymous account in case it's not in the database
-     * @return array
-     */
-    private function fake_user()
-    {
-        $this->user = array(
-            'id' => MPUser::ID_ANONYMOUS,
-            'pass' => sha1(random_string(40)),
-            'name' => MPUser::USER_ANONYMOUS,
-            'salt' => random_string(5),
-            'email' => '',
-            'permission' => array(),
-            'setting' => array()
-        );
-    }
-    //}}}
-    //{{{ private function save_user()
-    /**
-     * Checks for user account updates and saves to DB if it is
-     */
-    private function save_user()
-    {
-        if ($this->changed)
-        {
-            $info = $this->user;
-            $ugc = MPDB::selectCollection('mpuser_account');
-            $user = $ugc->findOne(array('_id' => $info['_id']));
-            $user = array_merge($user, $info);
-            $ugc->save($user);
-        }
-    }
-
-    //}}}
 }
 //}}}

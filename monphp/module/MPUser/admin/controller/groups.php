@@ -13,4 +13,4 @@ MPAdmin::set('header', 'MPUser Groups');
 $query = MPUser::check_group(MPUser::GROUP_ADMIN)
     ? array()
     : array('name' => array('$ne' => MPUser::GROUP_ADMIN));
-$groups = MPDB::selectCollection('user_group')->find($query);
+$groups = MPDB::selectCollection('mpuser_group')->find($query);

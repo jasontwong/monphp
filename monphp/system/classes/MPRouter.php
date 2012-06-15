@@ -137,8 +137,6 @@ class MPRouter
             }
             if (!self::$ctrl && !isset($redirect) && substr(URI_PATH, -1) !== '/')
             {
-                        var_dump(self::$ctrl, $ctrl, is_file($ctrl), is_readable($ctrl), $pattern);
-                        die;
                 $redirect = URI_PATH.'/';
                 if (strlen(URI_PARAM))
                 {

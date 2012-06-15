@@ -256,7 +256,7 @@ class MPAdmin
         $_SESSION['admin']['logged_in'] = $success;
         if ($success)
         {
-            MPUser::update('setting', 'admin', 'last_login', time());
+            MPUser::update('setting', 'admin', 'last_login', new MongoDate());
         }
         return array(
             'login' => $success,
@@ -325,7 +325,7 @@ class MPAdmin
             );
         }
     
-        $settings = array_keys(MPModule::hook_user('data_info'));
+        $settings = array_keys(MPModule::hook_user('mpadmin_settings_fields'));
         foreach ($settings as $mod)
         {
             if (!MPUser::perm($mod.' settings') && !MPUser::has_perm('admin settings'))
@@ -395,7 +395,7 @@ class MPAdmin
         mp_enqueue_script(
             'mpadmin_field',
             '/admin/static/MPAdmin/js/field.js',
-            array('jquery', 'tiny_mce', 'jquery-ui-datepicker'),
+            array('jquery', 'tiny_mce', 'jquery-ui-datepicker', 'jquery-ui-tabs'),
             FALSE,
             TRUE
         );
@@ -491,33 +491,6 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function hook_mpadmin_tinymce()
-    public function hook_mpadmin_tinymce()
-    {
-        $options = array(
-            'plugins' => 'inlinepopups,spellchecker',
-            'theme' => 'advanced',
-            'skin' => 'krate',
-            'theme_advanced_blockformats' => 'p,div,h1,h2,h3,h4,h5,h6',
-            'theme_advanced_buttons1' => "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,separator,styleselect,formatselect,separator,sup,sub",
-            'theme_advanced_buttons2' => "bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,link,unlink,separator,anchor,image,separator,forecolor,charmap,removeformat,spellchecker,separator,hr,code",
-            'theme_advanced_buttons3' => "",
-            'theme_advanced_more_colors' => TRUE,
-            'theme_advanced_toolbar_location' => 'top',
-            'theme_advanced_statusbar_location' => 'bottom',
-            'theme_advanced_resizing' => TRUE,
-            'theme_advanced_resize_horizontal' => FALSE,
-            'relative_urls' => FALSE,
-            'width' => '508'
-        );
-        if (is_array(MPData::query('MPAdmin', 'tinyMCE')))
-        {
-            $options = array_merge($options, MPData::query('MPAdmin', 'tinyMCE'));
-        }
-        return $options;
-    }
-
-    //}}}
     //{{{ public function hook_mpadmin_settings_fields()
     public function hook_mpadmin_settings_fields()
     {
@@ -573,7 +546,8 @@ class MPAdmin
             'value' => $tiny_data
         );
 
-        return array($logo, $bgcolor, $tinyMCE);
+        // return array($logo, $bgcolor, $tinyMCE);
+        return array($bgcolor, $tinyMCE);
     }
 
     //}}}
@@ -644,21 +618,30 @@ class MPAdmin
     }
 
     //}}}
-    //{{{ public function hook_mpuser_perm()
-    public function hook_mpuser_perm()
+    //{{{ public function hook_mpadmin_tinymce()
+    public function hook_mpadmin_tinymce()
     {
-        $perms = array(
-            'admin access' => 'Can access admin back end',
-            'admin settings' => 'Can change system and module settings',
+        $options = array(
+            'plugins' => 'inlinepopups,spellchecker',
+            'theme' => 'advanced',
+            'skin' => 'krate',
+            'theme_advanced_blockformats' => 'p,div,h1,h2,h3,h4,h5,h6',
+            'theme_advanced_buttons1' => "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,separator,styleselect,formatselect,separator,sup,sub",
+            'theme_advanced_buttons2' => "bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,link,unlink,separator,anchor,image,separator,forecolor,charmap,removeformat,spellchecker,separator,hr,code",
+            'theme_advanced_buttons3' => "",
+            'theme_advanced_more_colors' => TRUE,
+            'theme_advanced_toolbar_location' => 'top',
+            'theme_advanced_statusbar_location' => 'bottom',
+            'theme_advanced_resizing' => TRUE,
+            'theme_advanced_resize_horizontal' => FALSE,
+            'relative_urls' => FALSE,
+            'width' => '508'
         );
-        $settings = MPModule::hook_user('mpadmin_settings_fields');
-        foreach ($settings as $mod => &$module)
+        if (is_array(MPData::query('MPAdmin', 'tinyMCE')))
         {
-            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
+            $options = array_merge($options, MPData::query('MPAdmin', 'tinyMCE'));
         }
-        return array(
-            'MPAdmin' => $perms
-        );
+        return $options;
     }
 
     //}}}
@@ -742,14 +725,30 @@ class MPAdmin
                         ? (URI_PARTS === 1 || URI_PART_1 !== 'login')
                         : FALSE;
 
-            $logged_in = MPUser::perm('admin access') && deka(FALSE, $_SESSION, 'admin', 'logged_in');
-
-            if (!$logged_in && $redirect)
+            if (!self::is_logged_in() && $redirect)
             {
                 header('Location: /admin/login/');
                 exit;
             }
         }
+    }
+
+    //}}}
+    //{{{ public function hook_mpuser_perm()
+    public function hook_mpuser_perm()
+    {
+        $perms = array(
+            'admin access' => 'Can access admin back end',
+            'admin settings' => 'Can change system and module settings',
+        );
+        $settings = MPModule::hook_user('mpadmin_settings_fields');
+        foreach ($settings as $mod => &$module)
+        {
+            $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
+        }
+        return array(
+            'MPAdmin' => $perms
+        );
     }
 
     //}}}
@@ -904,6 +903,18 @@ class MPAdmin
     public static function get($name, $default = NULL)
     {
         return isset(self::$v[$name]) ? self::$v[$name] : $default;
+    }
+
+    //}}}
+    //{{{ public static function is_logged_in()
+    /**
+     * Returns whether or not user is logged in
+     *
+     * @return bool
+     */
+    public static function is_logged_in()
+    {
+        return MPUser::perm('admin access') && deka(FALSE, $_SESSION, 'admin', 'logged_in');
     }
 
     //}}}
