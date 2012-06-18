@@ -310,50 +310,20 @@ class MPContentField
     //{{{ public static function field_layout_relationship($meta = array())
     public static function field_layout_relationship($meta = array())
     {
-        $id = deka('', $meta, 'data', 'meta', 'content_type_id');
-        $titles = $options = array();
-        if (is_numeric($id))
-        {
-            $cemt = Doctrine::getTable('MPContentEntryMeta');
-            $entries = $cemt->queryTypeEntries($id)->fetchArray();
-            foreach ($entries as $entry)
-            {
-                $titles[$entry['id']] = $entry['title'];
-            }
-            asort($titles);
-            $options += $titles;
-        }
-        if (deka(FALSE, $meta, 'data', 'meta', 'ordering'))
-        {
-            $field = MPField::layout('list_double_ordered');
-            $field['data']['options'] = $options;
-            return $field;
-        }
-        else
-        {
-            $options += array('' => 'None');
-            return array(
-                'data' => array(
-                    'element' => MPField::ELEMENT_SELECT,
-                    'options' => $options
-                )
-            );
-        }
-    }
-
-    //}}}
-    //{{{ public static function field_layout_relationship_multiple($meta = array())
-    public static function field_layout_relationship_multiple($meta = array())
-    {
         $ids = deka(array(), $meta, 'data', 'meta', 'content_type_id');
         $titles = $options = array();
-        foreach ($ids as $id)
+        if (is_array($ids) && $ids)
         {
-            $cemt = Doctrine::getTable('MPContentEntryMeta');
-            $entries = $cemt->queryTypeEntries($id)->fetchArray();
+            $entries = MPDB::selectCollection('mpcontent_entry')
+                ->find(array(
+                    'entry_type._id' => array(
+                        '$in' => $ids,
+                    ),
+                ));
+            // $entries = $cemt->queryTypeEntries($id)->fetchArray();
             foreach ($entries as $entry)
             {
-                $titles[$entry['id']] = $entry['title'];
+                $titles[$entry['_id']->{'$id'}] = $entry['title'];
             }
         }
         asort($titles);
@@ -458,39 +428,7 @@ class MPContentField
     //{{{ public static function field_meta_relationship()
     public static function field_meta_relationship()
     {
-        $types = MPDB::selectCollection('content_entry_type')->find();
-        $field = '<select>';
-        $options = array();
-        foreach ($types as $type)
-        {
-            $name = $type['name'];
-            $nice_name = $type['nice_name'];
-            $field .= "<option value='{$name}'>{$nice_name}</option>";
-            $options[$name] = $nice_name;
-        }
-        $field .= '</select>';
-
-        return array(
-            'data' => array(
-                'description' => 'Choose the content type',
-                'field' => $field,
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'dropdown'
-            ),
-            'ordering' => array(
-                'description' => '',
-                'field' => "<label><input type='checkbox' value='1' /> Allow Ordering?</label>",
-                'type' => 'checkbox_boolean'
-            ),
-        );
-    }
-
-    //}}}
-    //{{{ public static function field_meta_relationship_multiple()
-    public static function field_meta_relationship_multiple()
-    {
-        $types = MPDB::selectCollection('content_entry_type')->find();
+        $types = MPDB::selectCollection('mpcontent_entry_type')->find();
         $field = '';
         foreach ($types as $type)
         {

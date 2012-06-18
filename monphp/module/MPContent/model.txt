@@ -1,6 +1,8 @@
 [entry]
     - _id
-    - entry_type_name
+    - entry_type
+        - _id
+        - name
     - title
     - slug
     - updated
@@ -11,9 +13,10 @@
     - _id
     - entry_id
     - revision
-    - data (array_diff_assoc)
+    - data (array_diff_assoc?)
 
 [entry_type]
+    - _id
     - name
     - nice_name
     - description
