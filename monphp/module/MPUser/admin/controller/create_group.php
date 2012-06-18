@@ -67,9 +67,9 @@ if (isset($_POST['form']))
     }
     if (strlen($gpost['nice_name']))
     {
-        $ugc = MPDB::selectCollection('user_group');
+        $ugc = MPDB::selectCollection('mpuser_group');
         $gpost['name'] = slugify($gpost['nice_name']);
-        $ugc->save($gpost);
+        $ugc->insert($gpost, array('safe' => TRUE));
         MPAdmin::log(MPAdmin::TYPE_NOTICE, 'Group ' . $gpost['name'] . ' created');
         header('Location: /admin/module/MPUser/edit_group/' . $gpost['name'] . '/');
         exit;

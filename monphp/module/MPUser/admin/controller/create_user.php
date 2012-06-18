@@ -114,7 +114,7 @@ if (isset($_POST['form']))
     }
     if (strlen($upost['password']))
     {
-        $uac = MPDB::selectCollection('user_account');
+        $uac = MPDB::selectCollection('mpuser_account');
         $user = array();
         $user['name'] = '';
         $user['nice_name'] = '';
@@ -123,21 +123,18 @@ if (isset($_POST['form']))
         $user['email'] = '';
         $user['permission'] = array();
         $user['group'] = array();
-        $user['group_ids'] = array();
         if (ake('groups', $upost))
         {
-            $groups = MPDB::selectCollection('user_group')->find(array('name' => array('$in' => $upost['groups'])));
+            $groups = MPDB::selectCollection('mpuser_group')->find(array('name' => array('$in' => $upost['groups'])));
             $upost['group'] = array();
-            $upost['group_ids'] = array();
             foreach ($groups as $group)
             {
                 $upost['group'][] = $group;
-                $upost['group_ids'][] = $group['_id'];
             }
         }
         $user = array_join($user, $upost);
-        $uac->insert($user);
-        MPAdmin::log(MPAdmin::TYPE_NOTICE, 'MPUser ' . $user['name'] . ' created');
+        $uac->insert($user, array('safe' => TRUE));
+        MPAdmin::log(MPAdmin::TYPE_NOTICE, 'User ' . $user['name'] . ' created');
         header('Location: /admin/module/MPUser/edit_user/' . $user['name'] . '/');
         exit;
     }
