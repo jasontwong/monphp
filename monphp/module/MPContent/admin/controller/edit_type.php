@@ -14,8 +14,8 @@ if (!$entry_type)
     exit;
 }
 
-MPAdmin::set('title', 'Edit MPContent Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
-MPAdmin::set('header', 'Edit MPContent Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
+MPAdmin::set('title', 'Edit Content Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
+MPAdmin::set('header', 'Edit Content Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
 
 $other_links = MPModule::h('mpcontent_edit_type_other_links', MPModule::TARGET_ALL, URI_PART_4);
 
@@ -138,5 +138,3 @@ $tform->add_group(
 $tfh = $tform->build();
 
 //}}}
-
-?>

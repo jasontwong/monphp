@@ -7,42 +7,28 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-MPAdmin::set('title', 'Edit MPField Group');
-MPAdmin::set('header', 'Edit MPField Group');
+MPAdmin::set('title', 'Edit Field Group');
+MPAdmin::set('header', 'Edit Field Group');
 
-$field_group = MPContent::get_field_group_by_id(
-    URI_PART_4,
-    array('select' => array('fg.id', 'fg.name', 'fg.weight', 'fg.content_entry_type_id'))
-);
+$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$field_group = array();
+foreach ($entry_type['field_groups'] as &$group)
+{
+    if ($group['name'] === URI_PART_5)
+    {
+        $field_group = &$group;
+        break;
+    }
+}
 // {{{ layout
 $layout = new MPField();
 $layout->add_layout(
     array(
         'field' => MPField::layout('hidden'),
-        'name' => 'id',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => URI_PART_4
-        )
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('hidden'),
-        'name' => 'content_entry_type_id',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => $field_group['content_entry_type_id']
-        )
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('text'),
-        'name' => 'name',
+        'name' => 'nice_name',
         'type' => 'text',
         'value' => array(
-            'data' => $field_group['name']
+            'data' => $field_group['nice_name'],
         )
     )
 );
@@ -70,8 +56,11 @@ if (isset($_POST['field_group']))
 {
     $fpost = $layout->acts('post', $_POST['field_group']);
     $layout->merge($_POST['field_group']);
-    MPContent::save_field_group($fpost);
-    header('Location: /admin/module/MPContent/field_groups/'.$fpost['content_entry_type_id'].'/');
+    $field_group = array_merge($fpost);
+    var_dump($entry_type);
+    exit;
+    MPContent::save_entry_type($entry_type);
+    header('Location: /admin/module/MPContent/field_groups/' . $entry_type['name'] . '/');
     exit;
 }
 
@@ -83,21 +72,13 @@ $gform->attr = array(
     'method' => 'post'
 );
 $gform->label = array(
-    'text' => 'MPField Group'
+    'text' => 'Field Group'
 );
 $gform->add_group(
     array(
         'rows' => array(
             array(
-                'fields' => $layout->get_layout('content_entry_type_id'),
-                'hidden' => TRUE
-            ),
-            array(
-                'fields' => $layout->get_layout('id'),
-                'hidden' => TRUE
-            ),
-            array(
-                'fields' => $layout->get_layout('name'),
+                'fields' => $layout->get_layout('nice_name'),
                 'label' => array(
                     'text' => 'Name'
                 ),
@@ -125,5 +106,3 @@ $gform->add_group(
 $gfh = $gform->build();
 
 //}}}
-
-?>

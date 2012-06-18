@@ -125,15 +125,13 @@ class MPContent
     }
     //}}}
 
-    //{{{ public function hook_mpadmin_css()
-    public function hook_mpadmin_css()
+    //{{{ public function hook_mpadmin_enqueu_css()
+    public function hook_mpadmin_enqueu_css()
     {
-        $css = array();
         if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
         {
-            $css['screen'][] = '/admin/static/MPContent/content.css/';
+            mp_enqueue_style('mpcontent_content', '/admin/static/MPContent/content.css');
         }
-        return $css;
     }
 
     //}}}
@@ -149,13 +147,13 @@ class MPContent
         if ($can_edit || $can_view)
         {
             $entries = self::get_latest_entries_created();
-            $latest['title'] = 'Latest MPContent Entries';
+            $latest['title'] = 'Latest Content Entries';
             $latest['content'] = '<ul>';
             if (count($entries))
             {
                 foreach ($entries as $entry)
                 {
-                    $href = '/admin/module/MPContent/edit_entry/'.$entry['id'].'/';
+                    $href = '/admin/module/MPContent/edit_entry/' . $entry['_id']->{'$id'} . '/';
                     $latest['content'] .= '<li><a href="'.$href.'">'.$entry['title'].'</a> <small>added on '.gmdate('m-d-Y', $entry['created']).'</small></li>';
                 }
             }
@@ -167,13 +165,13 @@ class MPContent
             $dashboard_items[] = $latest;
 
             $entries = self::get_most_revised_entries();
-            $revised['title'] = 'Most Revised MPContent Entries';
+            $revised['title'] = 'Most Revised Content Entries';
             $revised['content'] = '<ul>';
             if (count($entries))
             {
                 foreach ($entries as $entry)
                 {
-                    $href = '/admin/module/MPContent/edit_entry/'.$entry['id'].'/';
+                    $href = '/admin/module/MPContent/edit_entry/' . $entry['id']->{'$id'} . '/';
                     $revised['content'] .= '<li><a href="'.$href.'">'.$entry['title'].'</a> <small>'.$entry['revisions'].' revisions</small></li>';
                 }
             }
@@ -214,8 +212,8 @@ class MPContent
 
                     if ($can_add)
                     {
-                        $title = 'Add New '.$nice_name;
-                        $href = '/admin/module/MPContent/new_entry/'.$name.'/';
+                        $title = 'Add New ' . $nice_name;
+                        $href = '/admin/module/MPContent/new_entry/' . $name . '/';
                         $add_entries[] = '<li><a href="'.$href.'">'.$title.'</a></li>';
                     }
 
@@ -247,36 +245,52 @@ class MPContent
     }
 
     //}}}
-    //{{{ public function hook_mpadmin_js()
-    public function hook_mpadmin_js()
+    //{{{ public function hook_mpadmin_enqueue_js()
+    public function hook_mpadmin_enqueue_js()
     {
-        $js = array();
         if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
         {
-            //$js[] = '/file/module/MPAdmin/tiny_mce/jquery.tinymce.js';
-            $js[] = '/admin/static/MPContent/content.js/';
+            mp_enqueue_script(
+                'mpcontent_content',
+                '/admin/static/MPContent/content.js',
+                array(),
+                FALSE,
+                TRUE
+            );
             if (URI_PARTS > 3)
             {
                 if (URI_PART_3 === 'new_entry' || URI_PART_3 === 'edit_entry')
                 {
-                    $js[] = '/admin/static/MPContent/field.js/';
+                    mp_enqueue_script(
+                        'mpcontent_field',
+                        '/admin/static/MPContent/field.js',
+                        array('jquery-ui-sortable'),
+                        FALSE,
+                        TRUE
+                    );
                 }
                 if (URI_PART_3 === 'fields')
                 {
-                    $js[] = '/admin/static/MPContent/field.type.js/';
+                    mp_enqueue_script(
+                        'mpcontent_field_type',
+                        '/admin/static/MPContent/field.type.js',
+                        array(),
+                        FALSE,
+                        TRUE
+                    );
                 }
             }
         }
-        if (strpos(URI_PATH, '/admin/module/MPContent/edit_entry/') !== FALSE)
-        {
-            $js[] = '/file/module/MPAdmin/js/jquery/ui/jquery.ui.sortable.js';
-        }
         if (strpos(URI_PATH, '/admin/module/MPContent/edit_entries/') !== FALSE)
         {
-            $js[] = '/file/module/MPAdmin/js/jquery/ui/jquery.ui.sortable.js';
-            $js[] = '/admin/static/MPContent/entries.js/';
+            mp_enqueue_script(
+                'mpcontent_entries',
+                '/admin/static/MPContent/entries.js',
+                array('jquery-ui-sortable'),
+                FALSE,
+                TRUE
+            );
         }
-        return $js;
     }
 
     //}}}
@@ -316,11 +330,11 @@ class MPContent
 
         if (MPUser::perm('add content type'))
         {
-            $links['Tools'][] = "<a href='$uri/new_type/'>New MPContent Type</a>";
+            $links['Tools'][] = "<a href='$uri/new_type/'>New Content Type</a>";
         }
         if (MPUser::perm('edit content type') && $types)
         {
-            $links['Tools'][] = "<a href='$uri/edit_types/'>Edit MPContent Types</a>";
+            $links['Tools'][] = "<a href='$uri/edit_types/'>Edit Content Types</a>";
         }
         return $links;
     }
@@ -890,7 +904,7 @@ class MPContent
         return $entries;
     }
     //}}}
-    //{{{ public function get_entry_details
+    // {{{ public function get_entry_details($query = array(), $fields = array())
     /**
      * This tries to be very minimal, getting as little info as needed.
      */
@@ -1007,28 +1021,23 @@ class MPContent
     //{{{ public function get_entry_type_by_entry_id($id, $fields = array())
     public function get_entry_type_by_entry_id($id, $fields = array())
     {
-        /*
-        $dfields = array(
-            'select' => array(
-                'em.id',
-                'ety.id as entry_type_id', 
-                'ety.name as name', 'ety.description as description',
-                'ety.ordering as ordering', 'ety.stack as stack'
-            ),
-            'from' => 'MPContentEntryMeta em',
-            'leftJoin' => 'em.MPContentEntryType ety',
-            'where' => 'em.id = ?'
-        );
-        $s = array_merge($dfields, $fields);
-        return array_pop(dql_exec($s, array($id)));
-        */
-        return array();
+        if (is_string($id))
+        {
+            $id = new MongoID($id);
+        }
+        $query = array('_id' => $id);
+        return self::get_entry_type($query, $fields);
     }
     //}}}
     //{{{ public function get_entry_type_by_name($name, $fields = array())
     public function get_entry_type_by_name($name, $fields = array())
     {
-        $query = array('name' => $name);
+        $query = array(
+            '$or' => array(
+                array('name' => $name),
+                array('nice_name' => $name),
+            ),
+        );
         return self::get_entry_type($query, $fields);
     }
     //}}}
@@ -1227,64 +1236,6 @@ class MPContent
         }
         */
         return $tree;
-    }
-    //}}}
-    //{{{ public function get_field_group($query = array(), $fields = array())
-    public function get_field_group($query = array(), $fields = array())
-    {
-        /*
-        $dfields = array(
-            'select' => array('fg.id', 'fg.name', 'fg.weight'),
-            'from' => 'MPContentMPFieldGroup fg',
-            'where' => 'fg.id = ?'
-        );
-        $s = array_merge($dfields, $fields);
-        return array_pop(dql_exec($s, $query));
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_field_group_by_id($id, $fields = array())
-    public function get_field_group_by_id($id, $fields = array())
-    {
-        $dfields = array('where' => 'fg.id = ?');
-        return self::get_field_group(array($id), array_merge($dfields, $fields));
-    }
-    //}}}
-    //{{{ public function get_field_group_by_type_id($id, $fields = array())
-    public function get_field_group_by_type_id($id, $fields = array())
-    {
-        /*
-        $dfields = array(
-            'select' => array('fg.id', 'fg.name', 'fg.weight'),
-            'from' => 'MPContentMPFieldGroup fg',
-            'where' => 'fg.content_entry_type_id = ?'
-        );
-        $s = array_merge($dfields, $fields);
-        return dql_exec($s, array($id));
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_field_group_details($query = array(), $fields = array())
-    public function get_field_group_details($query = array(), $fields = array())
-    {
-        /*
-        $dfields = array(
-            'select' => array(
-                'ft.id', 'ft.name', 'ft.type', 'ft.content_field_group_id',
-                'ft.weight', 'ft.multiple', 'ft.description'
-            ),
-            'from' => 'MPContentMPFieldType ft',
-            'where' => 'ft.content_field_group_id IN ?',
-            'orderBy' => array(
-                'ft.content_field_group_id asc', 'ft.weight asc', 'ft.name asc'
-            )
-        );
-        $s = array_merge($dfields, $fields);
-        return dql_exec($s, $query);
-        */
-        return array();
     }
     //}}}
     //{{{ public function get_field_meta($query = array(), $fields = array())
@@ -1585,7 +1536,7 @@ class MPContent
                 ),
             );
         }
-        $etc->save($entry_type);
+        $etc->save($entry_type, array('safe' => TRUE));
         return $entry_type;
     }
     //}}}

@@ -262,21 +262,6 @@ class MPContentField
         );
     }
     //}}}
-    //{{{ public static function field_fieldtype_relationship_multiple($data)
-    public static function field_fieldtype_relationship_multiple($data)
-    {
-        return array(
-            array(
-                'name' => 'data',
-                'meta' => array(
-                    'content_type_id' => deka('', $data, 'data'),
-                    'ordering' => deka(FALSE, $data, 'ordering')
-                ),
-                'default_data' => deka(array(), $data, 'default_data')
-            ),
-        );
-    }
-    //}}}
     //{{{ public static function field_fieldtype_text($data)
     public static function field_fieldtype_text($data)
     {
@@ -310,14 +295,14 @@ class MPContentField
     //{{{ public static function field_layout_relationship($meta = array())
     public static function field_layout_relationship($meta = array())
     {
-        $ids = deka(array(), $meta, 'data', 'meta', 'content_type_id');
+        $names = deka(array(), $meta, 'data', 'meta', 'content_type_name');
         $titles = $options = array();
-        if (is_array($ids) && $ids)
+        if (is_array($names) && $names)
         {
             $entries = MPDB::selectCollection('mpcontent_entry')
                 ->find(array(
-                    'entry_type._id' => array(
-                        '$in' => $ids,
+                    'entry_type.name' => array(
+                        '$in' => $names,
                     ),
                 ));
             // $entries = $cemt->queryTypeEntries($id)->fetchArray();
@@ -428,7 +413,8 @@ class MPContentField
     //{{{ public static function field_meta_relationship()
     public static function field_meta_relationship()
     {
-        $types = MPDB::selectCollection('mpcontent_entry_type')->find();
+        $types = MPDB::selectCollection('mpcontent_entry_type')
+            ->find(array(), array('name' => TRUE, 'nice_name' => TRUE));
         $field = '';
         foreach ($types as $type)
         {
@@ -483,17 +469,6 @@ class MPContentField
             'description' => 'Related entry',
             'meta' => TRUE,
             'name' => 'Relationship',
-        );
-    }
-
-    //}}}
-    //{{{ public static function field_public_relationship_multiple()
-    public static function field_public_relationship_multiple()
-    {
-        return array(
-            'description' => 'Related entry',
-            'meta' => TRUE,
-            'name' => 'Relationship Multiple',
         );
     }
 

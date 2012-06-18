@@ -129,5 +129,3 @@ $form->add_group(
 $fh = $form->build();
 
 //}}}
-
-?>

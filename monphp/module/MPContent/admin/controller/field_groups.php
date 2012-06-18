@@ -15,8 +15,8 @@ if (!$entry_type)
     exit;
 }
 
-MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; MPField Groups');
-MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; MPField Groups');
+MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Field Groups');
+MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Field Groups');
 // {{{ layout
 $layout = new MPField();
 $layout->add_layout(
@@ -115,5 +115,3 @@ $gform->add_group(
 $gfh = $gform->build();
 
 //}}}
-
-?>

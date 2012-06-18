@@ -3,7 +3,7 @@
     <form method='get' id='field_groups' action='/admin/module/MPContent/delete_field/'>
         <div class='form_wrapper'>
         <table>
-            <caption>MPField Groups</caption>
+            <caption>Field Groups</caption>
             <tfoot>
                 <tr>
                     <td colspan='2'>
@@ -16,18 +16,18 @@
             </tfoot>
             <tbody>
                 <?php foreach ($field_groups as $field_group): ?>
-
+                    <?php $group_url = $entry_type['name'] . '/' . $field_group['name']; ?>
                     <tr>
                         <th colspan='4'>
-                            <a href='/admin/module/MPContent/edit_field_group/<?php echo $field_group['name'] ?>/'><?php echo htmlentities($field_group['nice_name'], ENT_QUOTES) ?></a>
+                            <a href='/admin/module/MPContent/edit_field_group/<?php echo $group_url; ?>/'><?php echo htmlentities($field_group['nice_name'], ENT_QUOTES) ?></a>
                         </th>
                     </tr>
 
                     <?php foreach ($field_group['fields'] as $field): ?>
-
+                        <?php $field_url = $group_url . '/' . $field['name']; ?>
                         <tr>
                             <td><input type='checkbox' class='checkbox' name='f[]' value='<?php echo $field['name'] ?>'></td>
-                            <td><a href='/admin/module/MPContent/edit_field/<?php echo $field['name'] ?>/'><?php echo htmlentities($field['nice_name'], ENT_QUOTES) ?></a></td>
+                            <td><a href='/admin/module/MPContent/edit_field/<?php echo $field_url; ?>/'><?php echo htmlentities($field['nice_name'], ENT_QUOTES) ?></a></td>
                             <td><?php echo $field['type'] ?></td>
                             <td><?php echo $field['description'] ?></td>
                         </tr>
