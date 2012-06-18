@@ -17,7 +17,7 @@ if (!defined('URI_PART_4'))
     exit;
 }
 
-$ugc = MPDB::selectCollection('user_group');
+$ugc = MPDB::selectCollection('mpuser_group');
 $group = $ugc->findOne(array('name' => URI_PART_4));
 if (is_null($group))
 {
@@ -86,11 +86,21 @@ if (isset($_POST['form']))
             $new_data['permission'] = array_merge($new_data['permission'], $gpost[$mod.'_'.$perm_group]);
         }
     }
-    $success = $ugc->update(array('_id' => $group['_id']), array('$set' => $new_data), array('safe' => TRUE));
+    $success = $ugc->update(
+        array('_id' => $group['_id']), 
+        array('$set' => $new_data), 
+        array('safe' => TRUE)
+    );
     if (deka(FALSE, $success, 'ok'))
     {
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Group successfully updated');
         MPAdmin::log(MPAdmin::TYPE_NOTICE, 'Group ' . $group['name'] . ' updated');
+        MPDB::selectCollection('mpuser_account')
+            ->update(
+                array('group._id' => $group['_id']), 
+                array('$addToSet' => array('group' => $new_data)), 
+                array('safe' => TRUE)
+            );
         $layout->merge($_POST['group']);
     }
     else
@@ -156,5 +166,3 @@ $form->add_group(
 $fh = $form->build();
 
 //}}}
-
-?>

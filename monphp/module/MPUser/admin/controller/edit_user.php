@@ -30,6 +30,8 @@ if (is_null($ua))
     exit;
 }
 
+var_dump($ua); die;
+
 $edit_self = MPUser::i('name') === URI_PART_4;
 $ui = new MPUserInfo($ua['name']);
 $user = $ui->user;
@@ -115,7 +117,7 @@ foreach (MPUser::find_groups() as $name => $group)
 }
 foreach ($user['group'] as &$ugroup)
 {
-    $ugroup = $ugroup['name'];
+    $ugroup[] = $ugroup['name'];
 }
 $layout->add_layout(
     array(
@@ -130,7 +132,7 @@ $layout->add_layout(
         'name' => 'group',
         'type' => 'checkbox',
         'value' => array(
-            'data' => $user['group']
+            'data' => $ugroup
         )
     )
 );
@@ -211,9 +213,9 @@ if (isset($_POST['form']))
         {
             foreach ($upost['group'] as $g)
             {
-                if (isset($groups[$g]))
+                if (ake($g, $groups))
                 {
-                    $user_groups[$g] = $groups[$g];
+                    $user_groups[] = $groups[$g];
                 }
             }
             MPUser::update('group', $user_groups);
@@ -262,22 +264,29 @@ if (isset($_POST['form']))
         }
         if (ake('groups', $upost))
         {
-            $groups = MPDB::selectCollection('user_group')->find(array('name' => array('$in' => $upost['groups'])));
+            $groups = MPDB::selectCollection('mpuser_group')
+                ->find(array(
+                    'name' => array(
+                        '$in' => $upost['groups']
+                    )
+                ));
             $upost['group'] = array();
-            $upost['group_ids'] = array();
             foreach ($groups as $group)
             {
                 $upost['group'][] = $group;
-                $upost['group_ids'][] = $group['_id'];
             }
         }
         $user = array_join($user, $upost);
         unset($user['_id']);
-        $success = $uac->update(array('_id' => $ua['_id']), array('$set' => $user), array('safe' => TRUE));
+        $success = $uac->update(
+            array('_id' => $ua['_id']), 
+            array('$set' => $user), 
+            array('safe' => TRUE)
+        );
         if (deka(FALSE, $success, 'ok'))
         {
-            MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'MPUser successfully updated');
-            MPAdmin::log(MPAdmin::TYPE_NOTICE, 'MPUser ' . $user['name'] . ' updated');
+            MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'User successfully updated');
+            MPAdmin::log(MPAdmin::TYPE_NOTICE, 'User ' . $user['name'] . ' updated');
             $layout->merge($_POST['user']);
         }
         else

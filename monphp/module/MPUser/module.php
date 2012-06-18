@@ -404,7 +404,7 @@ class MPUser
     public function hook_mpuser_perm()
     {
         return array(
-            'MPUser' => array(
+            'User' => array(
                 'admin' => 'Full admin access',
                 'edit self' => 'Edit their own account',
                 'create users' => 'Create user accounts',
@@ -524,14 +524,6 @@ class MPUser
     }
     //}}}
 
-    //{{{ public static function add_groups($groups)
-    public static function add_groups($groups)
-    {
-        self::find_info();
-        return self::$user->add_groups($groups);
-    }
-    
-    //}}}
     //{{{ public static function check_group($group)
     /**
      * Checks if current user has specific group token
@@ -584,12 +576,8 @@ class MPUser
         }
         else
         {
-            $g = deka($ugc->findOne(array('name' => $group)), self::$groups, $group);
-            if (is_null($g))
-            {
-                $g = array();
-            }
-            return $g;
+            $g = $ugc->findOne(array('name' => $group));
+            return is_null($g) ? array() : $g;
         }
     }
 

@@ -747,7 +747,7 @@ class MPAdmin
             $perms[$mod.' settings'] = 'Can change '.$mod.' settings';
         }
         return array(
-            'MPAdmin' => $perms
+            'Admin' => $perms
         );
     }
 
