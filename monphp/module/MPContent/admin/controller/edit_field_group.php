@@ -24,7 +24,7 @@ foreach ($entry_type['field_groups'] as &$group)
 $layout = new MPField();
 $layout->add_layout(
     array(
-        'field' => MPField::layout('hidden'),
+        'field' => MPField::layout('text'),
         'name' => 'nice_name',
         'type' => 'text',
         'value' => array(
@@ -55,13 +55,37 @@ $layout->add_layout(
 if (isset($_POST['field_group']))
 {
     $fpost = $layout->acts('post', $_POST['field_group']);
+    $fpost['name'] = slugify($fpost['nice_name']);
+    if (!is_numeric($fpost['weight']))
+    {
+        $fpost['weight'] = 0;
+    }
+    $field_group = array_merge($field_group, $fpost);
+    $save = FALSE;
+    if ($field_group['name'] === $fpost['name'])
+    {
+        $save = TRUE;
+    }
+    if (!$save)
+    {
+        $save = TRUE;
+        foreach ($entry_type['field_groups'] as &$group)
+        {
+            if ($group['name'] === $field_group['name'])
+            {
+                $save = FALSE;
+                break;
+            }
+        }
+    }
+    if ($save)
+    {
+        MPContent::save_entry_type($entry_type);
+        MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Group successfully edited.');
+        header('Location: /admin/module/MPContent/field_groups/' . $entry_type['name'] . '/');
+        exit;
+    }
     $layout->merge($_POST['field_group']);
-    $field_group = array_merge($fpost);
-    var_dump($entry_type);
-    exit;
-    MPContent::save_entry_type($entry_type);
-    header('Location: /admin/module/MPContent/field_groups/' . $entry_type['name'] . '/');
-    exit;
 }
 
 //}}}

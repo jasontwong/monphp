@@ -7,28 +7,17 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-$entry_type = MPContent::get_entry_type_by_id(
-    URI_PART_4,
-    array('select' => array('ety.name'))
-);
+$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
 if (!$entry_type)
 {
     header('Location: /admin/');
     exit;
 }
 
-MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['name'], ENT_QUOTES).'&rdquo; MPFields');
-MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['name'], ENT_QUOTES).'&rdquo; MPFields');
+MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Fields');
+MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Fields');
 $field_types = MPField::type_options();
-$field_group = array();
-$fgs = MPContent::get_field_group_by_type_id(
-    URI_PART_4,
-    array('select' => array('fg.id', 'fg.name'))
-);
-foreach ($fgs as $fg)
-{
-    $field_group[$fg['id']] = $fg['name'];
-}
+$field_group = $entry_type['field_groups'];
 //{{{ layout
 $layout = new MPField();
 $layout->add_layout(
@@ -150,7 +139,7 @@ $fform->attr = array(
     'id' => 'custom-field'
 );
 $fform->label = array(
-    'text' => 'New Custom MPField'
+    'text' => 'New Custom Field'
 );
 $fform->add_group(
     array(
@@ -181,13 +170,13 @@ $fform->add_group(
                 ),
                 'fields' => $layout->get_layout('type'),
                 'label' => array(
-                    'text' => 'MPField Type'
+                    'text' => 'Field Type'
                 ),
             ),
             array(
                 'fields' => $layout->get_layout('content_field_group_id'),
                 'label' => array(
-                    'text' => 'MPField Group'
+                    'text' => 'Field Group'
                 ),
             ),
             array(
@@ -214,5 +203,3 @@ $ffh = $fform->build();
 
 //}}}
 $field_groups = MPContent::get_entry_type_fields_by_id(URI_PART_4);
-
-?>

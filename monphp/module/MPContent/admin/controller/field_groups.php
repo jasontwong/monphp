@@ -49,8 +49,6 @@ $layout->add_layout(
 if (isset($_POST['form']))
 {
     $data = $layout->acts('post', $_POST['field_group']);
-    var_dump($data);
-    exit;
     try
     {
         $data['name'] = slugify($data['nice_name']);
@@ -58,6 +56,13 @@ if (isset($_POST['form']))
         if (!is_numeric($data['weight']))
         {
             $data['weight'] = 0;
+        }
+        foreach ($entry_type['field_groups'] as &$group)
+        {
+            if ($data['name'] === $group['name'])
+            {
+                throw new Exception('That group already exists');
+            }
         }
         $entry_type['field_groups'][] = $data;
         MPContent::save_entry_type($entry_type);

@@ -182,7 +182,7 @@ class MPField
     /**
      * Deregisters a field to the database. Field schemas.
      *
-     * @param mixed $field should follow the field schema
+     * @param mixed $field a field query or MongoID object
      * @return void
      */
     public static function deregister_field($field)
@@ -195,7 +195,7 @@ class MPField
     }
 
     //}}}
-    //{{{ public static function get_field($ids)
+    // {{{ public static function get_field($ids)
     /**
      * Retrieves field schemas.
      *
@@ -208,8 +208,8 @@ class MPField
             ? array('$in', $ids)
             : $ids;
         $mpfield = MPDB()->selectCollection('MPField');
-        $cursor = $mpfield->find($query, array('safe' => TRUE));
-        return $data;
+        $cursor = $mpfield->find($query);
+        return $cursor;
     }
 
     //}}}
@@ -254,7 +254,7 @@ class MPField
         }
     }
     //}}}
-    //{{{ public static function register_field($field)
+    // {{{ public static function register_field($field)
     /**
      * Registers a field to the database. Field schemas.
      * Field schema 
@@ -276,6 +276,20 @@ class MPField
      */
     public static function register_field($field)
     {
+        $format = array_fill_keys(
+            array(
+                'name', 'nice_name', 'type', 'description', 'multiple', 'meta',
+            ), 
+            ''
+        );
+        $meta_format = array_fill_keys(
+            array(
+                'name', 'label', 'required', 'meta', 'default_data',
+            ), 
+            ''
+        );
+        $field = array_intersect_key(array_merge($format, $field), $format);
+        $field['meta'] = array_intersect_key(array_merge($meta_format, $field['meta']), $meta_format);
         $mpfield = MPDB()->selectCollection('MPField');
         $mpfield->save($field, array('safe' => TRUE));
         return $field;

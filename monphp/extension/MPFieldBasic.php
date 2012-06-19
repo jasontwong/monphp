@@ -11,6 +11,7 @@ class MPFieldBasic
     public $type = 'field';
 
     //}}}
+
     //{{{ public static function field_delete_file($data)
     public static function field_delete_file($data)
     {
@@ -23,6 +24,22 @@ class MPFieldBasic
     }
 
     //}}}
+
+    //{{{ public static function field_fallback_meta()
+    public static function field_fallback_meta()
+    {
+        return NULL;
+    }
+
+    //}}}
+    //{{{ public static function field_fallback_post($key, $data)
+    public static function field_fallback_post($key, $data)
+    {
+        return deka('', $data, 'data');
+    }
+
+    //}}}
+
     //{{{ public static function field_layout_checkbox($meta = array())
     public static function field_layout_checkbox($meta = array())
     {
@@ -238,29 +255,6 @@ class MPFieldBasic
     }
 
     //}}}
-    //{{{ public static function field_layout_password_sha1()
-    public static function field_layout_password_sha1()
-    {
-        return array(
-            'data' => array(
-                'attr' => array(
-                    'class' => 'password_sha1',
-                    'type' => 'password'
-                ),
-                'element' => MPField::ELEMENT_INPUT,
-            ),
-            'hashed' => array(
-                'attr' => array(
-                    'type' => 'hidden',
-                    'value' => '0'
-                ),
-                'element' => MPField::ELEMENT_INPUT,
-                'hidden' => TRUE
-            )
-        );
-    }
-
-    //}}}
     //{{{ public static function field_layout_password_confirm()
     public static function field_layout_password_confirm()
     {
@@ -286,8 +280,31 @@ class MPFieldBasic
     }
 
     //}}}
-    //{{{ public static function field_layout_password_confirm_sha1()
-    public static function field_layout_password_confirm_sha1()
+    //{{{ public static function field_layout_password_sha1()
+    public static function field_layout_password_sha1()
+    {
+        return array(
+            'data' => array(
+                'attr' => array(
+                    'class' => 'password_sha1',
+                    'type' => 'password'
+                ),
+                'element' => MPField::ELEMENT_INPUT,
+            ),
+            'hashed' => array(
+                'attr' => array(
+                    'type' => 'hidden',
+                    'value' => '0'
+                ),
+                'element' => MPField::ELEMENT_INPUT,
+                'hidden' => TRUE
+            )
+        );
+    }
+
+    //}}}
+    //{{{ public static function field_layout_password_sha1_confirm()
+    public static function field_layout_password_sha1_confirm()
     {
         return array(
             'password' => array(
@@ -495,16 +512,101 @@ class MPFieldBasic
     }
 
     //}}}
-    //{{{ public static function field_validate_password_confirm($key, $data)
-    public static function field_validate_password_confirm($key, $data)
+
+    //{{{ public static function field_meta_checkbox()
+    public static function field_meta_checkbox()
     {
-        if ($data['password'] !== $data['password_confirm'])
-        {
-            throw new Exception('Passwords do not match');
-        }
+        return array(
+            'data' => array(
+                'description' => 'One option per line',
+                'field' => '<textarea></textarea>',
+                'label_field' => TRUE,
+                'label_value' => '',
+                'required_option' => TRUE,
+                'required_value' => FALSE,
+                'type' => 'textarea_array'
+            ),
+            'default_data' => array(
+                'description' => 'default values',
+                'field' => '<textarea></textarea>',
+                'label_field' => FALSE,
+                'required_option' => FALSE,
+                'type' => 'textarea_array'
+            )
+        );
     }
 
     //}}}
+    //{{{ public static function field_meta_dropdown()
+    public static function field_meta_dropdown()
+    {
+        return array(
+            'data' => array(
+                'description' => 'One option per line',
+                'extra' => array(),
+                'field' => '<textarea></textarea>',
+                'type' => 'textarea_array'
+            )
+        );
+    }
+
+    //}}}
+    //{{{ public static function field_meta_link()
+    public static function field_meta_link()
+    {
+        return array(
+            'data' => array(
+                'label_field' => FALSE,
+                'required_option' => FALSE,
+                'type' => 'link'
+            ),
+            'uri' => array(
+                'label_field' => FALSE,
+                'required_option' => FALSE,
+                'type' => 'link'
+            )
+        );
+    }
+
+    //}}}
+    //{{{ public static function field_meta_radio()
+    public static function field_meta_radio()
+    {
+        return array(
+            'data' => array(
+                'description' => 'One option per line',
+                'field' => '<textarea></textarea>',
+                'label_field' => FALSE,
+                'required_option' => FALSE,
+                'type' => 'textarea_array'
+            ),
+            'default_data' => array(
+                'description' => 'default value',
+                'field' => "<input type='text' class='text'>",
+                'label_field' => FALSE,
+                'required_option' => FALSE,
+                'type' => 'text'
+            )
+        );
+    }
+
+    //}}}
+    //{{{ public static function field_meta_text()
+    public static function field_meta_text()
+    {
+        return array(
+            'default_data' => array(
+                'description' => 'default value',
+                'field' => "<input type='text' class='text'>",
+                'label_field' => FALSE,
+                'required_option' => FALSE,
+                'type' => 'text'
+            )
+        );
+    }
+
+    //}}}
+
     //{{{ public static function field_post_checkbox($key, $data)
     public static function field_post_checkbox($key, $data)
     {
@@ -621,6 +723,7 @@ class MPFieldBasic
     }
 
     //}}}
+
     //{{{ public static function field_prepare_delete($type, $data)
     public static function field_prepare_delete($type, $data)
     {
@@ -635,20 +738,7 @@ class MPFieldBasic
     }
 
     //}}}
-    //{{{ public static function field_fallback_meta()
-    public static function field_fallback_meta()
-    {
-        return NULL;
-    }
 
-    //}}}
-    //{{{ public static function field_fallback_post($key, $data)
-    public static function field_fallback_post($key, $data)
-    {
-        return deka('', $data, 'data');
-    }
-
-    //}}}
     //{{{ public static function field_public_checkbox()
     public static function field_public_checkbox()
     {
@@ -745,6 +835,17 @@ class MPFieldBasic
             'meta' => FALSE,
             'name' => 'Textarea',
         );
+    }
+
+    //}}}
+
+    //{{{ public static function field_validate_password_confirm($key, $data)
+    public static function field_validate_password_confirm($key, $data)
+    {
+        if ($data['password'] !== $data['password_confirm'])
+        {
+            throw new Exception('Passwords do not match');
+        }
     }
 
     //}}}
