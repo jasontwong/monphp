@@ -34,6 +34,7 @@ class MPField
     protected static $mapper = array();
 
     //}}}
+
     //{{{ public function __construct($layout = array())
     public function __construct($layout = array())
     {
@@ -55,23 +56,110 @@ class MPField
         }
     }
     //}}}
-    //{{{ public static function __callStatic($name, $args)
-    // This is a php 5.3.0 > function
-    public static function __callStatic($name, $args)
+
+    //{{{ protected function action($action, $key, $data)
+    /**
+     * Performs an action of a field type
+     * Parameters after the first will be taken as is and passed to the class
+     * and method based on self::$fields. But to get the type data it looks at
+     * the second parameter. If it is a string it uses that. If it's an array,
+     * it looks in the 'type' key. If the second parameter is a string, it
+     * assumes the rest of the parameters are the ones to pass, since it is
+     * silly to pass the field type when it is specified in the method. BUT it
+     * will be passed if it goes to the fallback method.
+     *
+     * @param string $action method to call: field_{$action}_
+     * @param mixed $data additional data
+     * @return mixed
+     */
+    protected function action($action, $key, $data)
     {
-        if (!empty($args))
+        self::scan();
+        if (!($type = $this->key_type($key)))
         {
-            $action = $name;
-            $key = $args[0];
-            $data = deka(array(), $args, 1);
-            return call_user_func_array(array('MPField', 'action'), array($action, $key, $data));
+            return NULL;
+        }
+
+        $args = array_slice(func_get_args(), 1);
+
+        if ($prep_caller = $this->action_array('prepare', $action))
+        {
+            $args = call_user_func_array($prep_caller, $args);
+        }
+
+        if ($caller = $this->action_array($action, $type))
+        {
+            $results = call_user_func_array($caller, $args);
+        }
+        elseif ($caller = $this->action_array('fallback', $action))
+        {
+            $results = call_user_func_array($caller, $args);
         }
         else
         {
-            throw new Exception('Call to undefined method');
+            $results = $args;
+        }
+
+        $caller = $this->action_array('conclude', $action);
+        return $caller ? call_user_func($caller, $results, $args) : $results;
+    }
+
+    //}}}
+    //{{{ protected function key_type($key)
+    /**
+     * Gets the type based on $layout key
+     * @param string $key
+     * @return string
+     */
+    protected function key_type($key)
+    {
+        return deka(NULL, $this->layout, $key, 'type');
+    }
+
+    //}}}
+
+    //{{{ protected static function data_type($data)
+    /**
+     * Gets the type based on $data for act and acts methods
+     * @param string|array $data
+     * @return string|FALSE
+     */
+    protected static function data_type($data)
+    {
+        if (is_string($data))
+        {
+            return $data;
+        }
+        elseif (is_array($data) && isset($data['type']))
+        {
+            return $data['type'];
+        }
+        else
+        {
+            return FALSE;
         }
     }
+
     //}}}
+    //{{{ protected static function name_value(&$extra, $params)
+    /**
+     * Shortcut method to add the name and value attributes into the array
+     * Just pass func_get_args() for $params and it will assume the first
+     * and second value are the name and value strings respectively.
+     *
+     * @param array &$extra the extra info array to alter
+     * @param array $params field_type_ method parameters
+     * @return array
+     */
+    protected static function name_value(&$extra, $params)
+    {
+        $extra['attr']['name'] = $params[0];
+        $extra['attr']['value'] = $params[1];
+        return $extra;
+    }
+
+    //}}}
+
     //{{{ public function act($action, $key, $data)
     public function act($action, $key, $data)
     {
@@ -168,6 +256,7 @@ class MPField
         }
     }
     //}}}
+
     //{{{ public static function action_array($action, $type)
     public static function action_array($action, $type)
     {
@@ -384,107 +473,6 @@ class MPField
             self::$public_types_options = $options;
         }
         return self::$public_types_options;
-    }
-
-    //}}}
-    //{{{ protected static function data_type($data)
-    /**
-     * Gets the type based on $data for act and acts methods
-     * @param string|array $data
-     * @return string|FALSE
-     */
-    protected static function data_type($data)
-    {
-        if (is_string($data))
-        {
-            return $data;
-        }
-        elseif (is_array($data) && isset($data['type']))
-        {
-            return $data['type'];
-        }
-        else
-        {
-            return FALSE;
-        }
-    }
-
-    //}}}
-    //{{{ protected static function name_value(&$extra, $params)
-    /**
-     * Shortcut method to add the name and value attributes into the array
-     * Just pass func_get_args() for $params and it will assume the first
-     * and second value are the name and value strings respectively.
-     *
-     * @param array &$extra the extra info array to alter
-     * @param array $params field_type_ method parameters
-     * @return array
-     */
-    protected static function name_value(&$extra, $params)
-    {
-        $extra['attr']['name'] = $params[0];
-        $extra['attr']['value'] = $params[1];
-        return $extra;
-    }
-
-    //}}}
-    //{{{ protected function action($action, $key, $data)
-    /**
-     * Performs an action of a field type
-     * Parameters after the first will be taken as is and passed to the class
-     * and method based on self::$fields. But to get the type data it looks at
-     * the second parameter. If it is a string it uses that. If it's an array,
-     * it looks in the 'type' key. If the second parameter is a string, it
-     * assumes the rest of the parameters are the ones to pass, since it is
-     * silly to pass the field type when it is specified in the method. BUT it
-     * will be passed if it goes to the fallback method.
-     *
-     * @param string $action method to call: field_{$action}_
-     * @param mixed $data additional data
-     * @return mixed
-     */
-    protected function action($action, $key, $data)
-    {
-        self::scan();
-        if (!($type = $this->key_type($key)))
-        {
-            return NULL;
-        }
-
-        $args = array_slice(func_get_args(), 1);
-
-        if ($prep_caller = $this->action_array('prepare', $action))
-        {
-            $args = call_user_func_array($prep_caller, $args);
-        }
-
-        if ($caller = $this->action_array($action, $type))
-        {
-            $results = call_user_func_array($caller, $args);
-        }
-        elseif ($caller = $this->action_array('fallback', $action))
-        {
-            $results = call_user_func_array($caller, $args);
-        }
-        else
-        {
-            $results = $args;
-        }
-
-        $caller = $this->action_array('conclude', $action);
-        return $caller ? call_user_func($caller, $results, $args) : $results;
-    }
-
-    //}}}
-    //{{{ protected function key_type($key)
-    /**
-     * Gets the type based on $layout key
-     * @param string $key
-     * @return string
-     */
-    protected function key_type($key)
-    {
-        return deka(NULL, $this->layout, $key, 'type');
     }
 
     //}}}

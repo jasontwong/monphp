@@ -270,7 +270,7 @@ abstract class MPForm
         $before = deka(array(), $field, 'html_before');
         $after = deka(array(), $field, 'html_after');
         $hidden = deka(array(), $field, 'hidden');
-        $name = deka('', $field, 'name');
+        $name = array_reverse((array)deka(array(), $field, 'name'));
         if ($array)
         {
             $max = $this->max_values($value);
@@ -300,7 +300,10 @@ abstract class MPForm
                     }
                     if ($name)
                     {
-                        $sub_field['attr']['name'] = prepend_name($name, $sub_field['attr']['name']);
+                        foreach ($name as &$n)
+                        {
+                            $sub_field['attr']['name'] = prepend_name($n, $sub_field['attr']['name']);
+                        }
                     }
                     if ($key)
                     {
@@ -350,7 +353,10 @@ abstract class MPForm
                     }
                     if ($name)
                     {
-                        $sub_field['attr']['name'] = prepend_name($name, $sub_field['attr']['name']);
+                        foreach ($name as &$n)
+                        {
+                            $sub_field['attr']['name'] = prepend_name($n, $sub_field['attr']['name']);
+                        }
                     }
                     if ($key)
                     {

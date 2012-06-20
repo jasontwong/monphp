@@ -518,21 +518,15 @@ class MPFieldBasic
     {
         return array(
             'data' => array(
-                'description' => 'One option per line',
-                'field' => '<textarea></textarea>',
-                'label_field' => TRUE,
-                'label_value' => '',
-                'required_option' => TRUE,
-                'required_value' => FALSE,
-                'type' => 'textarea_array'
+                'field' => MPField::layout('textarea_array'),
+                'label' => 'Enter one option per line',
+                'type' => 'textarea_array',
             ),
             'default_data' => array(
-                'description' => 'default values',
-                'field' => '<textarea></textarea>',
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'textarea_array'
-            )
+                'field' => MPField::layout('textarea_array'),
+                'label' => 'Enter in the default values',
+                'type' => 'textarea_array',
+            ),
         );
     }
 
@@ -542,29 +536,10 @@ class MPFieldBasic
     {
         return array(
             'data' => array(
-                'description' => 'One option per line',
-                'extra' => array(),
-                'field' => '<textarea></textarea>',
-                'type' => 'textarea_array'
-            )
-        );
-    }
-
-    //}}}
-    //{{{ public static function field_meta_link()
-    public static function field_meta_link()
-    {
-        return array(
-            'data' => array(
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'link'
+                'field' => MPField::layout('textarea_array'),
+                'label' => 'Enter one option per line',
+                'type' => 'textarea_array',
             ),
-            'uri' => array(
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'link'
-            )
         );
     }
 
@@ -574,19 +549,15 @@ class MPFieldBasic
     {
         return array(
             'data' => array(
-                'description' => 'One option per line',
-                'field' => '<textarea></textarea>',
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'textarea_array'
+                'field' => MPField::layout('textarea_array'),
+                'label' => 'Enter one option per line',
+                'type' => 'textarea_array',
             ),
             'default_data' => array(
-                'description' => 'default value',
-                'field' => "<input type='text' class='text'>",
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'text'
-            )
+                'field' => MPField::layout('text'),
+                'label' => 'Enter in the default value',
+                'type' => 'text',
+            ),
         );
     }
 
@@ -596,12 +567,10 @@ class MPFieldBasic
     {
         return array(
             'default_data' => array(
-                'description' => 'default value',
-                'field' => "<input type='text' class='text'>",
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'text'
-            )
+                'field' => MPField::layout('text'),
+                'label' => 'Enter in the default value',
+                'type' => 'text',
+            ),
         );
     }
 

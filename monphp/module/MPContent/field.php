@@ -46,26 +46,38 @@ class MPContentField
     public static function field_meta_relationship()
     {
         $types = MPDB::selectCollection('mpcontent_entry_type')
-            ->find(array(), array('name' => TRUE, 'nice_name' => TRUE));
-        $field = '';
+            ->find(
+                array(), 
+                array('name' => TRUE, 'nice_name' => TRUE)
+            );
+        $options = array();
         foreach ($types as $type)
         {
-            $name = $type['name'];
-            $nice_name = $type['nice_name'];
-            $field .= "<label><input type='checkbox' value='{$name}' />{$nice_name}</label>";
+            $options[$type['name']] = $type['nice_name'];
         }
 
         return array(
             'data' => array(
-                'description' => 'Choose the content type',
-                'field' => $field,
-                'label_field' => FALSE,
-                'required_option' => FALSE,
-                'type' => 'checkbox'
+                'field' => MPField::layout(
+                    'checkbox',
+                    array(
+                        'data' => array(
+                            'options' => $options,
+                        ),
+                    )
+                ),
+                'type' => 'checkbox',
+                'label' => 'Choose content types',
             ),
             'ordering' => array(
-                'description' => '',
-                'field' => "<label><input type='checkbox' value='1' /> Allow Ordering?</label>",
+                'field' => MPField::layout(
+                    'checkbox_boolean',
+                    array(
+                        'data' => array(
+                            'text' => 'Allow Ordering?',
+                        ),
+                    )
+                ),
                 'type' => 'checkbox_boolean'
             ),
         );
