@@ -272,6 +272,7 @@ class MPModule
         $param = array();
     
         $modules = self::hook_user($hook, $target);
+        MPCache::remove_by_hook($hook);
         foreach ($modules as $name => $module)
         {
             if ($can_prep)
