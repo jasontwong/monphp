@@ -33,7 +33,7 @@ class MPCache
         {
             $query = array(
                 'name' => $key,
-                'namespace' => is_null($namespace) ? NULL : $namespace,
+                'namespace' => $namespace,
             );
             $cdc = MPDB::selectCollection('cache_data');
             $data = array(
@@ -43,7 +43,7 @@ class MPCache
                     : time() + $time,
             );
             $data = array_merge($data, $query);
-            $cdc->update($query, array('$set' => $data), array('upsert' => TRUE));
+            $cdc->update($query, array('$set' => $data), array('upsert' => TRUE, 'safe' => TRUE));
             return TRUE;
         }
         catch (Exception $e)
@@ -161,22 +161,20 @@ class MPCache
             $cdc = MPDB::selectCollection('cache_data');
             if ($seconds === 0)
             {
-                $cdc->remove($query);
+                $return = $cdc->remove($query, array('safe' => TRUE));
             }
             else
             {
-                $return = NULL;
+                $return = array;
                 $data = array(
                     'expire' => time() - 1,
                     'lockout' => time() + $seconds,
                 );
-                $return = $cdc->update($query, array('$set' => $data));
-                if (is_null($return))
-                {
-                    return self::REMOVE_ITEM_MISSING;
-                }
+                $return = $cdc->update($query, array('$set' => $data), array('safe' => TRUE));
             }
-            return self::REMOVE_SUCCESSFUL;
+            return ake('err', $return) && !is_null($return['err'])
+                ? self::REMOVE_ITEM_MISSING;
+                : self::REMOVE_SUCCESSFUL;
         }
         catch (Exception $e)
         {
@@ -193,18 +191,53 @@ class MPCache
      *      entries in it
      *
      * @param string|array $hooks an array of multiple hooks or a single string hook
-     * @return void
+     * @return int status code
      */
     public static function remove_by_hook($hooks = array())
     {
-        $query = is_array($hooks)
-            ? array(
-                'hook' => array(
-                    '$in' => $hooks
+        try
+        {
+            $query = is_array($hooks)
+                ? array(
+                    'hook' => array(
+                        '$in' => $hooks
+                    )
                 )
-            )
-            : array('hook' => $hooks);
-        MPDB::selectCollection('cache_data')->remove($query);
+                : array('hook' => $hooks);
+            $return = MPDB::selectCollection('cache_data')->remove($query, array('safe' => TRUE));
+            return ake('err', $return) && !is_null($return['err'])
+                ? self::REMOVE_ITEM_MISSING;
+                : self::REMOVE_SUCCESSFUL;
+        }
+        catch (Exception $e)
+        {
+            return self::REMOVE_FAILURE;
+        }
+    }
+    //}}}
+    // {{{ public static function remove_by_namespace($namespace = NULL)
+    /**
+     * Deletes cache via namespace. 
+     *
+     * @param string $namespace
+     * @return int status code
+     */
+    public static function remove_by_namespace($namespace = NULL)
+    {
+        try
+        {
+            $query = array(
+                'namespace' => $namespace,
+            );
+            $return = MPDB::selectCollection('cache_data')->remove($query, array('safe' => TRUE));
+            return ake('err', $return) && !is_null($return['err'])
+                ? self::REMOVE_ITEM_MISSING;
+                : self::REMOVE_SUCCESSFUL;
+        }
+        catch (Exception $e)
+        {
+            return self::REMOVE_FAILURE;
+        }
     }
     //}}}
     //{{{ public static function remove_multi($keys, $seconds = 0, $key_prefix = '', $namespace = NULL)
@@ -235,22 +268,20 @@ class MPCache
             $cdc = MPDB::selectCollection('cache_data');
             if ($seconds === 0)
             {
-                $cdc->remove($query);
+                $return = $cdc->remove($query, array('safe' => TRUE));
             }
             else
             {
-                $return = NULL;
+                $return = array();
                 $data = array(
                     'expire' => time() - 1,
                     'lockout' => time() + $seconds,
                 );
-                $return = $cdc->update($query, array('$set' => $data), array('multiple' => TRUE));
-                if (is_null($return))
-                {
-                    return self::REMOVE_ITEM_MISSING;
-                }
+                $return = $cdc->update($query, array('$set' => $data), array('multiple' => TRUE, 'safe' => TRUE));
             }
-            return self::REMOVE_SUCCESSFUL;
+            return ake('err', $return) && !is_null($return['err'])
+                ? self::REMOVE_ITEM_MISSING;
+                : self::REMOVE_SUCCESSFUL;
         }
         catch (Exception $e)
         {
@@ -262,7 +293,7 @@ class MPCache
     /**
      * Deletes everything in the cache. Everything.
      *
-     * @return True on success, False on any error.
+     * @return boolean True on success, False on any error.
      */
     public static function flush_all()
     {
