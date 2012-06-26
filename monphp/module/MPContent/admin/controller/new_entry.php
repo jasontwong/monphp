@@ -353,5 +353,3 @@ $eform->add_group(
 $efh = $eform->build();
 
 //}}}
-
-?>

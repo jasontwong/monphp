@@ -165,7 +165,7 @@ class MPCache
             }
             else
             {
-                $return = array;
+                $return = array();
                 $data = array(
                     'expire' => time() - 1,
                     'lockout' => time() + $seconds,
@@ -173,7 +173,7 @@ class MPCache
                 $return = $cdc->update($query, array('$set' => $data), array('safe' => TRUE));
             }
             return ake('err', $return) && !is_null($return['err'])
-                ? self::REMOVE_ITEM_MISSING;
+                ? self::REMOVE_ITEM_MISSING
                 : self::REMOVE_SUCCESSFUL;
         }
         catch (Exception $e)
@@ -206,7 +206,7 @@ class MPCache
                 : array('hook' => $hooks);
             $return = MPDB::selectCollection('cache_data')->remove($query, array('safe' => TRUE));
             return ake('err', $return) && !is_null($return['err'])
-                ? self::REMOVE_ITEM_MISSING;
+                ? self::REMOVE_ITEM_MISSING
                 : self::REMOVE_SUCCESSFUL;
         }
         catch (Exception $e)
@@ -231,7 +231,7 @@ class MPCache
             );
             $return = MPDB::selectCollection('cache_data')->remove($query, array('safe' => TRUE));
             return ake('err', $return) && !is_null($return['err'])
-                ? self::REMOVE_ITEM_MISSING;
+                ? self::REMOVE_ITEM_MISSING
                 : self::REMOVE_SUCCESSFUL;
         }
         catch (Exception $e)
@@ -280,7 +280,7 @@ class MPCache
                 $return = $cdc->update($query, array('$set' => $data), array('multiple' => TRUE, 'safe' => TRUE));
             }
             return ake('err', $return) && !is_null($return['err'])
-                ? self::REMOVE_ITEM_MISSING;
+                ? self::REMOVE_ITEM_MISSING
                 : self::REMOVE_SUCCESSFUL;
         }
         catch (Exception $e)

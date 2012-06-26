@@ -116,6 +116,7 @@ foreach ($type_metas as &$meta)
             $key,
         );
         $hash = sha1(serialize($name) . serialize($field));
+        $name[] = $hash;
         $field['name'] = $name;
         $layout->add_layout(
             $field,
@@ -135,54 +136,35 @@ if (isset($_POST['form']))
 {
     $data = $layout->acts('post', $_POST['field']);
     $data['name'] = slugify($data['nice_name']);
-    $data['type'] = $layout->acts('post', $_POST['type']);
-    // $data['type'] = $types['type'];
-    /*
-     TODO the old code missed lots of meta data, but does this API call store
-     it correctly? re: what could MPContentMPFieldMeta.meta be missing?
-     */
-    var_dump($data);
-    exit;
-    $field_type = new MPContentFieldType;
-    $data['type'] = $types['type']['type'];
-    $field_type->merge($data);
-    if ($field_type->isValid())
+    $data['meta'] = array();
+    if (ake('type', $_POST))
     {
-        $field_type->save();
-        $fmeta = $layout->meta($field_type->type);
-        foreach (MPField::layout($field_type->type, $field_type->id) as $name => $field)
+        $ftdata = array();
+        foreach ($_POST['type'] as &$type)
         {
-            $field_meta = new MPContentFieldMeta;
-            if (is_array($fmeta))
+            foreach ($type as $k => &$pdata)
             {
-                foreach ($fmeta as $key => $meta)
-                {
-                    if ($key === $name)
-                    {
-                        // TODO make another loop if the meta type has multiple keys
-                        $mdata = $layout->acts('post', $meta['type'], array('meta', array('data' => $_POST['field']['meta'][$name])));
-                        if ($mdata !== FALSE)
-                        {
-                            $field_meta->meta = $mdata;
-                        }
-                        break;
-                    }
-                }
+                $tmp = $layout->acts('post', $pdata);
+                $ftdata[$k] = array_shift($tmp);
             }
-            $field_meta->name = $name;
-            $field_meta->content_field_type_id = $field_type->id;
-            if ($field_meta->isValid())
-            {
-                $field_meta->save();
-            }
-            else
-            {
-                $field_type->delete();
-            }
-            $field_meta->free();
+        }
+        $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
+    }
+    foreach ($entry_type['field_groups'] as &$group)
+    {
+        if ($group['name'] === $data['field_group_name'])
+        {
+            $field = MPField::register_field($data);
+            $group['fields'][] = array(
+                'id' => $field['_id'],
+                'weight' => $data['weight'],
+            );
+            break;
         }
     }
-    $field_type->free();
+    MPContent::save_entry_type($entry_type);
+    header('Location: ' . URI_PATH);
+    exit;
 }
 
 //}}}

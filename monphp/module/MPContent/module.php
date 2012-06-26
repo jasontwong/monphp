@@ -36,25 +36,27 @@ class MPContent
         $result['success'] = FALSE;
         try
         {
-            $query = array(
-                '_id' => array(
-                    '$in' => $ids,
-                ),
-            );
             $cec = MPDB::selectCollection('mpcontent_entry');
-            $entries = $cec->find($query);
-            foreach ($entries as $entry)
+            foreach ($ids as $weight => &$id)
             {
-                $weight = array_search($entry['_id'], $data);
-                if (is_numeric($weight))
-                {
-                    $entry['weight'] = $weight;
-                    $cec->save($entry);
-                }
+                $query = array('_id' => new MongoID($id));
+                $cec->update(
+                    $query, 
+                    array(
+                        '$set' => array(
+                            'weight' => $weight,
+                        )
+                    ),
+                    array(
+                        'safe' => TRUE,
+                    )
+                );
             }
             $result['success'] = TRUE;
-            $meta['content_entry_type_id'] = $type;
+            $meta['ids'] = $ids;
+            $meta['content_entry_type_name'] = $type;
             MPModule::h('mpcontent_order_entries_success', MPModule::TARGET_ALL, $meta);
+            MPModule::h('mpcontent_order_entries_success_'.$type, MPModule::TARGET_ALL, $meta);
         }
         catch (Exception $e)
         {
@@ -1602,28 +1604,6 @@ class MPContent
         $type = $cett->findById($id);
         $type->delete();
         //*/
-    }
-    //}}}
-    //{{{ public function delete_field_by_ids($ids)
-    public function delete_field_by_ids($ids)
-    {
-        $dql = dql_build(array('delete' => 'MPContentMPFieldMeta fm'));
-        $dql->where('fm.content_field_type_id IN ?', array($ids));
-        $dql->execute();
-
-        $dql = dql_build(array('delete' => 'MPContentMPFieldType ft'));
-        $dql->where('ft.id IN ?', array($ids));
-        $dql->execute();
-    }
-    //}}}
-    //{{{ public function delete_field_group_by_id($id)
-    public function delete_field_group_by_id($id)
-    {
-        /*
-        $cfgt = Doctrine_Core::getTable('MPContentMPFieldGroup');
-        $group = $cfgt->findById($id);
-        $group->delete();
-        */
     }
     //}}}
 

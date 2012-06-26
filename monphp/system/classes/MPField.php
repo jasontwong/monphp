@@ -279,7 +279,7 @@ class MPField
         $query = is_object($field) && get_class($field) === 'MongoID'
             ? array('_id' => $field)
             : $field;
-        $mpfield = MPDB()->selectCollection('MPField');
+        $mpfield = MPDB::selectCollection('MPField');
         $mpfield->remove($query, array('safe' => TRUE));
     }
 
@@ -296,7 +296,7 @@ class MPField
         $query['_id'] = is_array($ids)
             ? array('$in', $ids)
             : $ids;
-        $mpfield = MPDB()->selectCollection('MPField');
+        $mpfield = MPDB::selectCollection('MPField');
         $cursor = $mpfield->find($query);
         return $cursor;
     }
@@ -352,11 +352,11 @@ class MPField
      * - nice_name
      * - type
      * - description
+     * - required
      * - multiple
      * - meta
      *     - name
      *     - label
-     *     - required
      *     - meta (array)
      *     - default_data (array)
      *
@@ -367,19 +367,19 @@ class MPField
     {
         $format = array_fill_keys(
             array(
-                'name', 'nice_name', 'type', 'description', 'multiple', 'meta',
+                'name', 'nice_name', 'type', 'description', 'multiple', 'meta', 'required',
             ), 
             ''
         );
-        $meta_format = array_fill_keys(
-            array(
-                'name', 'label', 'required', 'meta', 'default_data',
-            ), 
-            ''
-        );
+        $meta_format = array(
+            'name' => '',
+            'label' => '',
+            'meta' => array(),
+            'default_data' => array(),
+        ); 
         $field = array_intersect_key(array_merge($format, $field), $format);
         $field['meta'] = array_intersect_key(array_merge($meta_format, $field['meta']), $meta_format);
-        $mpfield = MPDB()->selectCollection('MPField');
+        $mpfield = MPDB::selectCollection('MPField');
         $mpfield->save($field, array('safe' => TRUE));
         return $field;
     }

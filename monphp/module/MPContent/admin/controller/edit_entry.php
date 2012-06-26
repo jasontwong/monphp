@@ -21,7 +21,7 @@ $entry_type = MPContent::get_entry_type_by_id(
     $entry['content_entry_type_id'],
     array('select' => array('ety.id', 'ety.name'))
 );
-MPAdmin::set('header', 'Edit '.$entry_type['name']);
+MPAdmin::set('header', 'Edit '.$entry_type['nice_name']);
 
 if ($user_access = MPUser::has_perm('edit content entries type', 'edit content entries type-'.$entry_type['id']))
 {
@@ -379,7 +379,7 @@ if (isset($_POST['form']))
                     MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
                     //}}}
 
-                    MPModule::h('mpcontent_entry_new_finish', MPModule::TARGET_ALL, $content['meta']);
+                    MPModule::h('mpcontent_entry_edit_finish', MPModule::TARGET_ALL, $content['meta']);
                     header('Location: /admin/module/MPContent/edit_entry/'.$eid.'/');
                     exit;
                 }
@@ -557,5 +557,3 @@ if ($access_level === MPContent::ACCESS_EDIT)
 $efh = $eform->build();
 
 //}}}
-
-?>

@@ -2,8 +2,23 @@
 
 class MPContentField
 {
-    //{{{ public static function field_layout_relationship($meta = array())
-    public static function field_layout_relationship($meta = array())
+    //{{{ public static function field_fieldtype_mpcontent_relationship($key, $data)
+    public static function field_fieldtype_mpcontent_relationship($key, $data)
+    {
+        return array(
+            array(
+                'name' => 'data',
+                'meta' => array(
+                    'content_type_id' => deka('', $data, 'data'),
+                    'ordering' => deka(FALSE, $data, 'ordering')
+                ),
+                'default_data' => deka('', $data, 'default_data')
+            ),
+        );
+    }
+    //}}}
+    //{{{ public static function field_layout_mpcontent_relationship($meta = array())
+    public static function field_layout_mpcontent_relationship($meta = array())
     {
         $names = deka(array(), $meta, 'data', 'meta', 'content_type_name');
         $titles = $options = array();
@@ -42,14 +57,10 @@ class MPContentField
     }
 
     //}}}
-    //{{{ public static function field_meta_relationship()
-    public static function field_meta_relationship()
+    //{{{ public static function field_meta_mpcontent_relationship()
+    public static function field_meta_mpcontent_relationship()
     {
-        $types = MPDB::selectCollection('mpcontent_entry_type')
-            ->find(
-                array(), 
-                array('name' => TRUE, 'nice_name' => TRUE)
-            );
+        $types = MPContent::get_entry_types(array(), array('name' => TRUE, 'nice_name' => TRUE));
         $options = array();
         foreach ($types as $type)
         {
@@ -84,8 +95,8 @@ class MPContentField
     }
 
     //}}}
-    //{{{ public static function field_public_relationship()
-    public static function field_public_relationship()
+    //{{{ public static function field_public_mpcontent_relationship()
+    public static function field_public_mpcontent_relationship()
     {
         return array(
             'description' => 'Related entry',

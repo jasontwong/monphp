@@ -25,19 +25,85 @@ class MPFieldBasic
 
     //}}}
 
-    //{{{ public static function field_fallback_meta()
-    public static function field_fallback_meta()
-    {
-        return NULL;
-    }
-
-    //}}}
     //{{{ public static function field_fallback_post($key, $data)
     public static function field_fallback_post($key, $data)
     {
         return deka('', $data, 'data');
     }
 
+    //}}}
+    //{{{ public static function field_fallback_fieldtype($key, $data)
+    public static function field_fallback_fieldtype($key, $data)
+    {
+        if (is_array($data['data']))
+        {
+            $meta = array_combine($data['data'], $data['data']);
+            $default = deka(array(), $data, 'default_data');
+        }
+        elseif (is_string($data['data']))
+        {
+            $meta = deka('', $data, 'data');
+            $default = deka('', $data, 'default_data');
+        }
+        else
+        {
+            $meta = deka('', $data, 'data');
+            $default = deka('', $data, 'default_data');
+        }
+        return array(
+            array(
+                'name' => 'data',
+                'meta' => $meta,
+                'default_data' => $default
+            ),
+        );
+    }
+    //}}}
+
+    //{{{ public static function field_fieldtype_checkbox($key, $data)
+    public static function field_fieldtype_checkbox($key, $data)
+    {
+        return array(
+            array(
+                'name' => 'data',
+                'meta' => array(
+                    'options' => array_combine($data['data'], $data['data'])
+                ),
+                'default_data' => deka(array(), $data, 'default_data')
+            ),
+        );
+    }
+    //}}}
+    //{{{ public static function field_fieldtype_dropdown($key, $data)
+    public static function field_fieldtype_dropdown($key, $data)
+    {
+        if (is_array($data))
+        {
+            return array(
+                array(
+                    'name' => 'data',
+                    'meta' => array(
+                        'options' => array_combine($data['data'], $data['data'])
+                    ),
+                    'default_data' => deka('', $data, 'default_data')
+                ),
+            );
+        }
+    }
+    //}}}
+    //{{{ public static function field_fieldtype_radio($key, $data)
+    public static function field_fieldtype_radio($key, $data)
+    {
+        return array(
+            array(
+                'name' => 'data',
+                'meta' => array(
+                    'options' => array_combine($data['data'], $data['data'])
+                ),
+                'default_data' => deka('', $data, 'default_data')
+            ),
+        );
+    }
     //}}}
 
     //{{{ public static function field_layout_checkbox($meta = array())
@@ -586,7 +652,7 @@ class MPFieldBasic
     //{{{ public static function field_post_checkbox_boolean($key, $data)
     public static function field_post_checkbox_boolean($key, $data)
     {
-        return ake('data', $data) ? (boolean)$data['data'] : FALSE;
+        return ake('data', $data) ? (bool)$data['data'] : FALSE;
     }
 
     //}}}
