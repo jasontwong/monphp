@@ -8,7 +8,7 @@ if (!MPUser::perm('edit content type'))
 }
 
 $entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
-if (!$entry_type)
+if (is_null($entry_type))
 {
     header('Location: /admin/');
     exit;
@@ -16,8 +16,8 @@ if (!$entry_type)
 
 MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Fields');
 MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Fields');
-$field_types = MPField::type_options();
-$field_groups = &$entry_type['field_groups'];
+$entry_field_types = MPField::type_options();
+$entry_field_groups = &$entry_type['field_groups'];
 //{{{ layout
 $layout = new MPField();
 $layout->add_layout(
@@ -41,10 +41,10 @@ $layout->add_layout(
         'type' => 'textarea'
     )
 );
-$field_group_options = array();
-foreach ($field_groups as &$group)
+$entry_field_group_options = array();
+foreach ($entry_field_groups as &$group)
 {
-    $field_group_options[$group['name']] = $group['nice_name'];
+    $entry_field_group_options[$group['name']] = $group['nice_name'];
 }
 $layout->add_layout(
     array(
@@ -52,7 +52,7 @@ $layout->add_layout(
             'dropdown',
             array(
                 'data' => array(
-                    'options' => $field_group_options,
+                    'options' => $entry_field_group_options,
                 ),
             )
         ),
@@ -134,37 +134,58 @@ foreach ($type_metas as &$meta)
 //{{{ form submission
 if (isset($_POST['form']))
 {
-    $data = $layout->acts('post', $_POST['field']);
-    $data['name'] = slugify($data['nice_name']);
-    $data['meta'] = array();
-    if (ake('type', $_POST))
+    try
     {
-        $ftdata = array();
-        foreach ($_POST['type'] as &$type)
+        $data = $layout->acts('post', $_POST['field']);
+        $type_data = $layout->acts('post', $_POST['type']);
+        $data['name'] = slugify($data['nice_name']);
+        $data['meta'] = array();
+        if (ake('type', $_POST))
         {
-            foreach ($type as $k => &$pdata)
+            $ftdata = array();
+            foreach ($_POST['type'] as &$type)
             {
-                $tmp = $layout->acts('post', $pdata);
-                $ftdata[$k] = array_shift($tmp);
+                foreach ($type as $k => &$pdata)
+                {
+                    $tmp = $layout->acts('post', $pdata);
+                    $ftdata[$k] = array_shift($tmp);
+                }
+            }
+            $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
+        }
+        foreach ($entry_field_groups as &$group)
+        {
+            if ($group['name'] === $data['field_group_name'])
+            {
+                $weights = array();
+                foreach ($group['fields'] as &$cfield)
+                {
+                    if ($cfield['name'] === $data['name'])
+                    {
+                        throw new Exception('Field name already exists');
+                    }
+                    $weights[] = $cfield['weight'];
+                }
+                $field = MPField::register_field($data);
+                $group['fields'][] = array(
+                    'id' => $field['_id'],
+                    'name' => $field['name'],
+                    'weight' => $data['weight'],
+                );
+                $weights[] = $data['weight'];
+                array_multisort($weights, SORT_NUMERIC, SORT_ASC, $group['fields']);
+                break;
             }
         }
-        $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
+        MPContent::save_entry_type($entry_type);
+        MPAdmin::notify(MPAdmin::SUCCESS, 'Field successfully added');
+        header('Location: ' . URI_PATH);
+        exit;
     }
-    foreach ($entry_type['field_groups'] as &$group)
+    catch (Exception $e)
     {
-        if ($group['name'] === $data['field_group_name'])
-        {
-            $field = MPField::register_field($data);
-            $group['fields'][] = array(
-                'id' => $field['_id'],
-                'weight' => $data['weight'],
-            );
-            break;
-        }
+        MPAdmin::notify(MPAdmin::ERROR, 'Field unsuccessfully added');
     }
-    MPContent::save_entry_type($entry_type);
-    header('Location: ' . URI_PATH);
-    exit;
 }
 
 //}}}

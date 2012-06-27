@@ -2,14 +2,14 @@
 
 class MPContentField
 {
-    //{{{ public static function field_fieldtype_mpcontent_relationship($key, $data)
-    public static function field_fieldtype_mpcontent_relationship($key, $data)
+    //{{{ public static function field_fieldtype_mpcontent_relationship($key, $data = array())
+    public static function field_fieldtype_mpcontent_relationship($key, $data = array())
     {
         return array(
             array(
                 'name' => 'data',
                 'meta' => array(
-                    'content_type_id' => deka('', $data, 'data'),
+                    'content_type_name' => deka('', $data, 'data'),
                     'ordering' => deka(FALSE, $data, 'ordering')
                 ),
                 'default_data' => deka('', $data, 'default_data')
@@ -57,9 +57,15 @@ class MPContentField
     }
 
     //}}}
-    //{{{ public static function field_meta_mpcontent_relationship()
-    public static function field_meta_mpcontent_relationship()
+    //{{{ public static function field_meta_mpcontent_relationship($key, $data = array())
+    public static function field_meta_mpcontent_relationship($key, $data = array())
     {
+        $values = array();
+        foreach ($data as &$fmeta)
+        {
+            $values['data'] = $fmeta['meta']['content_type_name'];
+            $values['ordering'] = $fmeta['meta']['ordering'];
+        }
         $types = MPContent::get_entry_types(array(), array('name' => TRUE, 'nice_name' => TRUE));
         $options = array();
         foreach ($types as $type)
@@ -79,6 +85,9 @@ class MPContentField
                 ),
                 'type' => 'checkbox',
                 'label' => 'Choose content types',
+                'value' => array(
+                    'data' => deka(array(), $values, 'data'),
+                ),
             ),
             'ordering' => array(
                 'field' => MPField::layout(
@@ -89,7 +98,10 @@ class MPContentField
                         ),
                     )
                 ),
-                'type' => 'checkbox_boolean'
+                'type' => 'checkbox_boolean',
+                'value' => array(
+                    'data' => deka(FALSE, $values, 'ordering'),
+                ),
             ),
         );
     }

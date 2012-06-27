@@ -1020,17 +1020,6 @@ class MPContent
         return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
     }
     //}}}
-    //{{{ public function get_entry_type_by_entry_id($id, $fields = array())
-    public function get_entry_type_by_entry_id($id, $fields = array())
-    {
-        if (is_string($id))
-        {
-            $id = new MongoID($id);
-        }
-        $query = array('_id' => $id);
-        return self::get_entry_type($query, $fields);
-    }
-    //}}}
     //{{{ public function get_entry_type_by_name($name, $fields = array())
     public function get_entry_type_by_name($name, $fields = array())
     {
@@ -1041,73 +1030,6 @@ class MPContent
             ),
         );
         return self::get_entry_type($query, $fields);
-    }
-    //}}}
-    //{{{ public function get_entry_type_details_by_id($id)
-    public function get_entry_type_details_by_id($id)
-    {
-        $details = array();
-        $details['type'] = self::get_entry_type_by_id($id);
-        $details['fields'] = self::get_entry_type_fields_by_id($id);
-        return $details;
-    }
-    //}}}
-    //{{{ public function get_entry_type_details_by_name($name)
-    public function get_entry_type_details_by_name($name)
-    {
-        $details = array();
-        $details['type'] = self::get_entry_type_by_name($name);
-        $details['fields'] = self::get_entry_type_fields_by_name($name);
-        return $details;
-    }
-    //}}}
-    //{{{ public function get_entry_type_fields($query = array(), $fields = array())
-    public function get_entry_type_fields($query = array(), $fields = array())
-    {
-        /*
-        $dfields = array(
-            'select' => array(
-                'fg.id', 'fg.weight', 'fg.name', 
-            ),
-            'from' => 'MPContentMPFieldGroup fg',
-            'where' => 'fg.id = ?',
-            'orderBy' => 'fg.weight asc'
-        );
-        $s = array_merge($dfields, $fields);
-        $groups = dql_exec($s, $query);
-        $type['groups'] = $groups;
-        $group_ids = array();
-        $group_map = array();
-        foreach ($type['groups'] as &$group)
-        {
-            $gid = $group['id'];
-            $group_ids[] = $gid;
-            $group_map[$gid] = &$group;
-            $group['fields'] = array();
-        }
-        $fields = self::get_field_group_details(array($group_ids));
-        foreach ($fields as $field)
-        {
-            $gid = $field['content_field_group_id'];
-            $group_map[$gid]['fields'][] = $field;
-        }
-        return $type;
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_entry_type_fields_by_id($id, $fields = array())
-    public function get_entry_type_fields_by_id($id, $fields = array())
-    {
-        $dfields = array('where' => 'fg.content_entry_type_id = ?');
-        return self::get_entry_type_fields(array($id), array_merge($dfields, $fields));
-    }
-    //}}}
-    //{{{ public function get_entry_type_fields_by_name($name, $fields = array())
-    public function get_entry_type_fields_by_name($name, $fields = array())
-    {
-        $dfields = array('where' => 'fg.name = ?');
-        return self::get_entry_type_fields(array($name), array_merge($dfields, $fields));
     }
     //}}}
     //{{{ public function get_entry_types($query = array(), $fields = array())
@@ -1623,5 +1545,4 @@ class MPContent
             ->execute();
     }
     //}}}
-
 }

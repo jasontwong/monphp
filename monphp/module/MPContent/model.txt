@@ -1,8 +1,9 @@
 [entry]
     - _id
     - entry_type
-        - _id
+        - id
         - name
+        - nice_name
     - title
     - slug
     - updated
@@ -25,5 +26,6 @@
         - display_name
         - weight
         - fields
-            - _id
+            - id
+            - name
             - weight

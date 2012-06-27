@@ -23,7 +23,7 @@
                         </th>
                     </tr>
 
-                    <?php foreach ($field_group['fields'] as $field): ?>
+                    <?php foreach ($field_group['fields'] as &$field): ?>
                         <?php $field_url = $group_url . '/' . $field['name']; ?>
                         <tr>
                             <td><input type='checkbox' class='checkbox' name='f[]' value='<?php echo $field['name'] ?>'></td>
@@ -31,7 +31,6 @@
                             <td><?php echo $field['type'] ?></td>
                             <td><?php echo $field['description'] ?></td>
                         </tr>
-
                     <?php endforeach ?>
 
                 <?php endforeach ?>
