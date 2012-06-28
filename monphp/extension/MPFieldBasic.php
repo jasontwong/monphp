@@ -12,8 +12,8 @@ class MPFieldBasic
 
     //}}}
 
-    //{{{ public static function field_delete_file($data)
-    public static function field_delete_file($data)
+    //{{{ public static function field_delete_file($key, $data = array())
+    public static function field_delete_file($key, $data = array())
     {
 
         $file = DIR_FILE.'/'.$data['cdata'];
@@ -25,14 +25,7 @@ class MPFieldBasic
 
     //}}}
 
-    //{{{ public static function field_fallback_post($key, $data)
-    public static function field_fallback_post($key, $data)
-    {
-        return deka('', $data, 'data');
-    }
-
-    //}}}
-    //{{{ public static function field_fallback_fieldtype($key, $data)
+    //{{{ public static function field_fallback_fieldtype($key, $data = array())
     public static function field_fallback_fieldtype($key, $data)
     {
         if (is_array($data['data']))
@@ -59,9 +52,16 @@ class MPFieldBasic
         );
     }
     //}}}
+    //{{{ public static function field_fallback_post($key, $data = array())
+    public static function field_fallback_post($key, $data = array())
+    {
+        return deka('', $data, 'data');
+    }
 
-    //{{{ public static function field_fieldtype_checkbox($key, $data)
-    public static function field_fieldtype_checkbox($key, $data)
+    //}}}
+
+    //{{{ public static function field_fieldtype_checkbox($key, $data = array())
+    public static function field_fieldtype_checkbox($key, $data = array())
     {
         return array(
             array(
@@ -74,25 +74,23 @@ class MPFieldBasic
         );
     }
     //}}}
-    //{{{ public static function field_fieldtype_dropdown($key, $data)
-    public static function field_fieldtype_dropdown($key, $data)
+    //{{{ public static function field_fieldtype_dropdown($key, $data = array())
+    public static function field_fieldtype_dropdown($key, $data = array())
     {
-        if (is_array($data))
-        {
-            return array(
-                array(
-                    'name' => 'data',
-                    'meta' => array(
-                        'options' => array_combine($data['data'], $data['data'])
-                    ),
-                    'default_data' => deka('', $data, 'default_data')
+        $options = deka(array(), $data, 'data');
+        return array(
+            array(
+                'name' => 'data',
+                'meta' => array(
+                    'options' => array_combine($options, $options),
                 ),
-            );
-        }
+                'default_data' => deka('', $data, 'default_data'),
+            ),
+        );
     }
     //}}}
-    //{{{ public static function field_fieldtype_radio($key, $data)
-    public static function field_fieldtype_radio($key, $data)
+    //{{{ public static function field_fieldtype_radio($key, $data = array())
+    public static function field_fieldtype_radio($key, $data = array())
     {
         return array(
             array(
@@ -579,91 +577,102 @@ class MPFieldBasic
 
     //}}}
 
-    //{{{ public static function field_meta_checkbox()
-    public static function field_meta_checkbox()
+    //{{{ public static function field_meta_checkbox($key, $data = array())
+    public static function field_meta_checkbox($key, $data = array())
     {
         return array(
             'data' => array(
                 'field' => MPField::layout('textarea_array'),
                 'label' => 'Enter one option per line',
                 'type' => 'textarea_array',
+                'value' => array(
+                    'data' => deka(array(), $data, 0, 'meta', 'options'),
+                ),
             ),
             'default_data' => array(
                 'field' => MPField::layout('textarea_array'),
                 'label' => 'Enter in the default values',
                 'type' => 'textarea_array',
+                'value' => array(
+                    'data' => deka(array(), $data, 0, 'default_data'),
+                ),
             ),
         );
     }
 
     //}}}
-    //{{{ public static function field_meta_dropdown()
-    public static function field_meta_dropdown()
+    //{{{ public static function field_meta_dropdown($key, $data = array())
+    public static function field_meta_dropdown($key, $data = array())
     {
         return array(
             'data' => array(
                 'field' => MPField::layout('textarea_array'),
                 'label' => 'Enter one option per line',
                 'type' => 'textarea_array',
+                'value' => array(
+                    'data' => deka(array(), $data, 0, 'meta', 'options'),
+                ),
             ),
         );
     }
 
     //}}}
-    //{{{ public static function field_meta_radio()
-    public static function field_meta_radio()
+    //{{{ public static function field_meta_radio($key, $data = array())
+    public static function field_meta_radio($key, $data = array())
     {
         return array(
             'data' => array(
                 'field' => MPField::layout('textarea_array'),
                 'label' => 'Enter one option per line',
                 'type' => 'textarea_array',
+                'value' => array(
+                    'data' => deka(array(), $data, 0, 'meta', 'options'),
+                ),
             ),
             'default_data' => array(
                 'field' => MPField::layout('text'),
                 'label' => 'Enter in the default value',
                 'type' => 'text',
+                'value' => array(
+                    'data' => deka(array(), $data, 0, 'default_data'),
+                ),
             ),
         );
     }
 
     //}}}
-    //{{{ public static function field_meta_text()
-    public static function field_meta_text()
+    //{{{ public static function field_meta_text($key, $data = array())
+    public static function field_meta_text($key, $data = array())
     {
         return array(
             'default_data' => array(
                 'field' => MPField::layout('text'),
                 'label' => 'Enter in the default value',
                 'type' => 'text',
+                'value' => array(
+                    'data' => deka(array(), $data, 0, 'default_data'),
+                ),
             ),
         );
     }
 
     //}}}
 
-    //{{{ public static function field_post_checkbox($key, $data)
-    public static function field_post_checkbox($key, $data)
+    //{{{ public static function field_post_checkbox($key, $data = array())
+    public static function field_post_checkbox($key, $data = array())
     {
         return deka(array(), $data, 'data');
     }
 
     //}}}
-    //{{{ public static function field_post_checkbox_boolean($key, $data)
-    public static function field_post_checkbox_boolean($key, $data)
+    //{{{ public static function field_post_checkbox_boolean($key, $data = array())
+    public static function field_post_checkbox_boolean($key, $data = array())
     {
         return ake('data', $data) ? (bool)$data['data'] : FALSE;
     }
 
     //}}}
-    //{{{ public static function field_post_submit_confirm($key, $data)
-    public static function field_post_submit_confirm($key, $data)
-    {
-        return ake('submit',$data);
-    }
-
-    //}}}
-    //{{{ public static function field_post_file($key, $data)
+    //{{{ public static function field_post_file($key, $data = array())
     /**
      * Gets the info of the uploaded file if there are no errors
      * Since the form and field classes use data and type array keys, this will
@@ -673,7 +682,7 @@ class MPFieldBasic
      * @param array $data POST data
      * @return array|boolean FALSE if there is an upload error
      */
-    public static function field_post_file($key, $data)
+    public static function field_post_file($key, $data = array())
     {
         $result = array();
         $v = $data['group_key'];
@@ -695,72 +704,74 @@ class MPFieldBasic
     }
 
     //}}}
-    //{{{ public static function field_post_link($key, $data)
+    //{{{ public static function field_post_link($key, $data = array())
     /**
      * @param string $key array key for the $_FILES array
      * @param array $data POST data
      * @return array
      */
-    public static function field_post_link($key, $data)
+    public static function field_post_link($key, $data = array())
     {
         return $data;
     }
 
     //}}}
-    //{{{ public static function field_post_password_sha1($key, $data)
-    public static function field_post_password_sha1($key, $data)
+    //{{{ public static function field_post_password_sha1($key, $data = array())
+    public static function field_post_password_sha1($key, $data = array())
     {
         return $data['hashed'] ? $data['data'] : sha1($data['data']);
     }
 
     //}}}
-    //{{{ public static function field_post_password_confirm($key, $data)
-    public static function field_post_password_confirm($key, $data)
+    //{{{ public static function field_post_password_confirm($key, $data = array())
+    public static function field_post_password_confirm($key, $data = array())
     {
-        return $data['password'];
+        return deka(NULL, $data, 'password');
     }
 
     //}}}
-    //{{{ public static function field_post_password_confirm_sha1($key, $data)
-    public static function field_post_password_confirm_sha1($key, $data)
+    //{{{ public static function field_post_password_confirm_sha1($key, $data = array())
+    public static function field_post_password_confirm_sha1($key, $data = array())
     {
+        if (!ake('password', $data) || !ake('password_hashed', $data) || !ake('password_confirm', $data))
+        {
+            return NULL;
+        }
         if (!$data['password_hashed'] && !(empty($data['password']) || empty($data['password_confirm'])))
         {
             $data['password'] = sha1($data['password']);
             $data['password_confirm'] = sha1($data['password_confirm']);
         }
-        return $data['password'] === $data['password_confirm'] ? $data['password'] : FALSE;
+        return $data['password'] === $data['password_confirm'] ? $data['password'] : NULL;
     }
 
     //}}}
-    //{{{ public static function field_post_select_multiple($key, $data)
-    public static function field_post_select_multiple($key, $data)
+    //{{{ public static function field_post_select_multiple($key, $data = array())
+    public static function field_post_select_multiple($key, $data = array())
     {
-        return ake('data', $data) 
-            ? $data['data'] 
-            : array();
+        return deka(array(), $data, 'data');
     }
 
     //}}}
-    //{{{ public static function field_post_text($key, $data)
-    public static function field_post_text($key, $data)
+    //{{{ public static function field_post_submit_confirm($key, $data = array())
+    public static function field_post_submit_confirm($key, $data = array())
     {
-        return deka('', $data, 'data');
+        return ake('submit',$data);
     }
 
     //}}}
-    //{{{ public static function field_post_textarea_array($key, $data)
-    public static function field_post_textarea_array($key, $data)
+    //{{{ public static function field_post_textarea_array($key, $data = array())
+    public static function field_post_textarea_array($key, $data = array())
     {
-        return eka($data, 'data') 
+        return ake('data', $data)
             ? preg_split("/[\n\r]+/", $data['data']) 
             : array();
     }
 
     //}}}
 
-    //{{{ public static function field_prepare_delete($type, $data)
-    public static function field_prepare_delete($type, $data)
+    //{{{ public static function field_prepare_delete($key, $data = array())
+    public static function field_prepare_delete($key, $data = array())
     {
         return array($data);
     }
@@ -874,8 +885,8 @@ class MPFieldBasic
 
     //}}}
 
-    //{{{ public static function field_validate_password_confirm($key, $data)
-    public static function field_validate_password_confirm($key, $data)
+    //{{{ public static function field_validate_password_confirm($key, $data = array())
+    public static function field_validate_password_confirm($key, $data = array())
     {
         if ($data['password'] !== $data['password_confirm'])
         {

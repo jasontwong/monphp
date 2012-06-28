@@ -259,6 +259,7 @@ class MPContent
                 FALSE,
                 TRUE
             );
+            /*
             if (URI_PARTS > 3)
             {
                 if (URI_PART_3 === 'new_entry' || URI_PART_3 === 'edit_entry')
@@ -282,7 +283,9 @@ class MPContent
                     );
                 }
             }
+            */
         }
+        /*
         if (strpos(URI_PATH, '/admin/module/MPContent/edit_entries/') !== FALSE)
         {
             mp_enqueue_script(
@@ -293,6 +296,7 @@ class MPContent
                 TRUE
             );
         }
+        */
     }
 
     //}}}
@@ -1451,6 +1455,7 @@ class MPContent
         {
             $entry_type['name'] = slugify($entry_type['nice_name']);
             $entry_type['ordering'] = FALSE;
+            $entry_type['statuses'] = array();
             $entry_type['field_groups'] = array(
                 array(
                     'name' => $entry_type['name'],
@@ -1464,6 +1469,44 @@ class MPContent
         return $entry_type;
     }
     //}}}
+    //{{{ public function save_entry_field(&$fgs, $data)
+    /**
+     * This function will register a field with the MPField class and record the
+     * field into the proper entry type group
+     *
+     * @param array &$fgs A pointer to the field groups array of the entry type
+     *                    to save to
+     * @param array $data The field to be saved
+     * @return void
+     */
+    public function save_entry_field(&$fgs, $data)
+    {
+        foreach ($fgs as &$group)
+        {
+            if ($group['name'] === $data['field_group_name'])
+            {
+                $weights = array();
+                foreach ($group['fields'] as &$cfield)
+                {
+                    if ($cfield['name'] === $data['name'])
+                    {
+                        throw new Exception('Field name already exists');
+                    }
+                    $weights[] = $cfield['weight'];
+                }
+                $field = MPField::register_field($data);
+                $group['fields'][] = array(
+                    'id' => $field['_id'],
+                    'name' => $field['name'],
+                    'weight' => $data['weight'],
+                );
+                $weights[] = $data['weight'];
+                array_multisort($weights, SORT_NUMERIC, SORT_ASC, $group['fields']);
+                break;
+            }
+        }
+    }
+    // }}}
 
     /**
      * delete_ API methods

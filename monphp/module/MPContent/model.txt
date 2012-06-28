@@ -6,6 +6,7 @@
         - nice_name
     - title
     - slug
+    - status
     - updated
     - weight
     - data (array)
@@ -22,6 +23,7 @@
     - nice_name
     - description
     - ordering
+    - statuses
     - field_groups
         - display_name
         - weight

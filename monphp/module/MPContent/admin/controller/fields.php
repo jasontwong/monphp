@@ -14,6 +14,14 @@ if (is_null($entry_type))
     exit;
 }
 
+mp_enqueue_script(
+    'mpcontent_field_type',
+    '/admin/static/MPContent/field.type.js',
+    array('jquery'),
+    FALSE,
+    TRUE
+);
+
 MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Fields');
 MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Fields');
 $entry_field_types = MPField::type_options();
@@ -153,38 +161,15 @@ if (isset($_POST['form']))
             }
             $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         }
-        foreach ($entry_field_groups as &$group)
-        {
-            if ($group['name'] === $data['field_group_name'])
-            {
-                $weights = array();
-                foreach ($group['fields'] as &$cfield)
-                {
-                    if ($cfield['name'] === $data['name'])
-                    {
-                        throw new Exception('Field name already exists');
-                    }
-                    $weights[] = $cfield['weight'];
-                }
-                $field = MPField::register_field($data);
-                $group['fields'][] = array(
-                    'id' => $field['_id'],
-                    'name' => $field['name'],
-                    'weight' => $data['weight'],
-                );
-                $weights[] = $data['weight'];
-                array_multisort($weights, SORT_NUMERIC, SORT_ASC, $group['fields']);
-                break;
-            }
-        }
+        MPContent::save_entry_field($entry_field_groups, $data);
         MPContent::save_entry_type($entry_type);
-        MPAdmin::notify(MPAdmin::SUCCESS, 'Field successfully added');
+        MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully added');
         header('Location: ' . URI_PATH);
         exit;
     }
     catch (Exception $e)
     {
-        MPAdmin::notify(MPAdmin::ERROR, 'Field unsuccessfully added');
+        MPAdmin::notify(MPAdmin::TYPE_ERROR, 'Field unsuccessfully added');
     }
 }
 

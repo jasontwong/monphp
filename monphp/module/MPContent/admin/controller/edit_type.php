@@ -27,8 +27,8 @@ $layout->add_layout(
         'name' => 'nice_name',
         'type' => 'text',
         'value' => array(
-            'data' => $entry_type['nice_name']
-        )
+            'data' => $entry_type['nice_name'],
+        ),
     )
 );
 $layout->add_layout(
@@ -37,8 +37,18 @@ $layout->add_layout(
         'name' => 'description',
         'type' => 'textarea',
         'value' => array(
-            'data' => $entry_type['description']
-        )
+            'data' => $entry_type['description'],
+        ),
+    )
+);
+$layout->add_layout(
+    array(
+        'field' => MPField::layout('textarea_array'),
+        'name' => 'statuses',
+        'type' => 'textarea_array',
+        'value' => array(
+            'data' => implode("\n", $entry_type['statuses']),
+        ),
     )
 );
 $layout->add_layout(
@@ -47,8 +57,8 @@ $layout->add_layout(
         'name' => 'ordering',
         'type' => 'checkbox_boolean',
         'value' => array(
-            'data' => $entry_type['ordering']
-        )
+            'data' => $entry_type['ordering'],
+        ),
     )
 );
 
@@ -106,6 +116,12 @@ $tform->add_group(
                 'fields' => $layout->get_layout('description'),
                 'label' => array(
                     'text' => 'Description'
+                ),
+            ),
+            array(
+                'fields' => $layout->get_layout('statuses'),
+                'label' => array(
+                    'text' => 'Statuses'
                 ),
             ),
             array(

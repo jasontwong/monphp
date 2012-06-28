@@ -30,7 +30,6 @@ class MPContentField
                         '$in' => $names,
                     ),
                 ));
-            // $entries = $cemt->queryTypeEntries($id)->fetchArray();
             foreach ($entries as $entry)
             {
                 $titles[$entry['_id']->{'$id'}] = $entry['title'];
@@ -60,12 +59,6 @@ class MPContentField
     //{{{ public static function field_meta_mpcontent_relationship($key, $data = array())
     public static function field_meta_mpcontent_relationship($key, $data = array())
     {
-        $values = array();
-        foreach ($data as &$fmeta)
-        {
-            $values['data'] = $fmeta['meta']['content_type_name'];
-            $values['ordering'] = $fmeta['meta']['ordering'];
-        }
         $types = MPContent::get_entry_types(array(), array('name' => TRUE, 'nice_name' => TRUE));
         $options = array();
         foreach ($types as $type)
@@ -86,7 +79,7 @@ class MPContentField
                 'type' => 'checkbox',
                 'label' => 'Choose content types',
                 'value' => array(
-                    'data' => deka(array(), $values, 'data'),
+                    'data' => deka(array(), $data, 0, 'meta', 'content_type_name'),
                 ),
             ),
             'ordering' => array(
@@ -100,7 +93,7 @@ class MPContentField
                 ),
                 'type' => 'checkbox_boolean',
                 'value' => array(
-                    'data' => deka(FALSE, $values, 'ordering'),
+                    'data' => deka(array(), $data, 0, 'meta', 'ordering'),
                 ),
             ),
         );

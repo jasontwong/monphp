@@ -2,16 +2,14 @@
 
 MPAdmin::set('title', 'Create New Entry');
 
-$cett = Doctrine::getTable('MPContentEntryType');
-$entry_type = $cett->find(URI_PART_4);
-if (!$entry_type)
+$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+if (is_null($entry_type))
 {
     header('Location: /admin/');
     exit;
 }
-MPAdmin::set('header', 'Add a new '.$entry_type->name);
-$cfmt = Doctrine::getTable('MPContentMPFieldMeta');
-$field_groups = $cett->fieldLayout(URI_PART_4);
+MPAdmin::set('header', 'Add a new &ldquo;' . $entry_type['nice_name'] . '&rdquo;');
+$entry_field_groups = &$entry_type['field_groups'];
 
 if ($user_access = MPUser::has_perm('add content entries type', 'add content entries type-'.$entry_type->id))
 {

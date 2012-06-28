@@ -279,7 +279,7 @@ class MPField
         $query = is_object($field) && get_class($field) === 'MongoID'
             ? array('_id' => $field)
             : $field;
-        $mpfield = MPDB::selectCollection('MPField');
+        $mpfield = MPDB::selectCollection('mpfield_field');
         $mpfield->remove($query, array('safe' => TRUE));
     }
 
@@ -296,7 +296,7 @@ class MPField
         $query['_id'] = is_string($id)
             ? new MongoID($id)
             : $id;
-        $mpfield = MPDB::selectCollection('MPField');
+        $mpfield = MPDB::selectCollection('mpfield_field');
         $field = $mpfield->findOne($query, $fields);
         return $field;
     }
@@ -314,7 +314,7 @@ class MPField
         $query['_id'] = array(
             '$in' => $ids,
         );
-        $mpfield = MPDB::selectCollection('MPField');
+        $mpfield = MPDB::selectCollection('mpfield_field');
         $cursor = $mpfield->find($query, $fields);
         return $cursor;
     }
@@ -381,7 +381,7 @@ class MPField
      * @param array $field should follow the field schema
      * @return array
      */
-    public static function register_field($field)
+    public static function register_field($data)
     {
         $format = array_fill_keys(
             array(
@@ -389,15 +389,23 @@ class MPField
             ), 
             ''
         );
+        $format['meta'] = array();
         $meta_format = array(
             'name' => '',
             'label' => '',
             'meta' => array(),
             'default_data' => array(),
         ); 
-        $field = array_intersect_key(array_merge($format, $field), $format);
-        $field['meta'] = array_intersect_key(array_merge($meta_format, $field['meta']), $meta_format);
-        $mpfield = MPDB::selectCollection('MPField');
+        $field = array_intersect_key(array_merge($format, $data), $format);
+        foreach ($field['meta'] as &$fmeta)
+        {
+            $fmeta = array_intersect_key(array_merge($meta_format, $fmeta), $meta_format);
+        }
+        if (ake('_id', $data))
+        {
+            $field['_id'] = $data['_id'];
+        }
+        $mpfield = MPDB::selectCollection('mpfield_field');
         $mpfield->save($field, array('safe' => TRUE));
         return $field;
     }

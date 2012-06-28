@@ -13,7 +13,7 @@ if (is_null($entry_type))
     header('Location: /admin/');
     exit;
 }
-$entry_field_group = $entry_field = array();
+$entry_field_group = $entry_field = $entry_field_data = array();
 foreach ($entry_type['field_groups'] as &$fg)
 {
     if (URI_PART_5 === $fg['name'])
@@ -23,13 +23,22 @@ foreach ($entry_type['field_groups'] as &$fg)
         {
             if (URI_PART_6 === $fgf['name'])
             {
-                $entry_field = array_merge($fgf, MPField::get_field($fgf['id']));
+                $entry_field = &$fgf;
+                $entry_field_data = array_merge($fgf, MPField::get_field($fgf['id']));
                 break;
             }
         }
         break;
     }
 }
+
+mp_enqueue_script(
+    'mpcontent_field_type',
+    '/admin/static/MPContent/field.type.js',
+    array('jquery'),
+    FALSE,
+    TRUE
+);
 
 MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; &rarr; &ldquo;'.hsc($entry_field_group['nice_name']).'&rdquo; Fields');
 MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; &rarr; &ldquo;'.hsc($entry_field_group['nice_name']).'&rdquo; Fields');
@@ -43,7 +52,7 @@ $layout->add_layout(
         'name' => 'nice_name',
         'type' => 'text',
         'value' => array(
-            'data' => $entry_field['nice_name'],
+            'data' => $entry_field_data['nice_name'],
         ),
     )
 );
@@ -53,7 +62,7 @@ $layout->add_layout(
         'name' => 'weight',
         'type' => 'text',
         'value' => array(
-            'data' => $entry_field['weight'],
+            'data' => $entry_field_data['weight'],
         ),
     )
 );
@@ -63,7 +72,7 @@ $layout->add_layout(
         'name' => 'description',
         'type' => 'textarea',
         'value' => array(
-            'data' => $entry_field['description'],
+            'data' => $entry_field_data['description'],
         ),
     )
 );
@@ -112,7 +121,7 @@ $layout->add_layout(
         'name' => 'type',
         'type' => 'dropdown',
         'value' => array(
-            'data' => $entry_field['type'],
+            'data' => $entry_field_data['type'],
         ),
     )
 );
@@ -122,7 +131,7 @@ $layout->add_layout(
         'name' => 'multiple',
         'type' => 'checkbox_boolean',
         'value' => array(
-            'data' => $entry_field['multiple'],
+            'data' => $entry_field_data['multiple'],
         ),
     )
 );
@@ -132,7 +141,7 @@ $layout->add_layout(
         'name' => 'required',
         'type' => 'checkbox_boolean',
         'value' => array(
-            'data' => $entry_field['required'],
+            'data' => $entry_field_data['required'],
         ),
     )
 );
@@ -146,7 +155,7 @@ $layout->add_layout(
 $meta_fields = array();
 foreach ($type_metas as &$meta)
 {
-    $fmeta = $entry_field['type'] === $meta ? $entry_field['meta'] : array();
+    $fmeta = $entry_field_data['type'] === $meta ? $entry_field_data['meta'] : array();
     $fields = MPField::quick_act('meta', $meta, $fmeta);
     foreach ($fields as $key => &$field)
     {
@@ -192,38 +201,33 @@ if (isset($_POST['form']))
             }
             $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         }
-        foreach ($entry_field_groups as &$group)
+        $data = array_merge($entry_field_data, $data);
+        if ($entry_field_group['name'] !== $data['field_group_name'])
         {
-            if ($group['name'] === $data['field_group_name'])
+            MPContent::save_entry_field($entry_field_groups, $data);
+            $entry_field = array();
+            foreach ($entry_field_group['fields'] as $k => &$v)
             {
-                $weights = array();
-                foreach ($group['fields'] as &$cfield)
+                if (empty($v))
                 {
-                    if ($cfield['name'] === $data['name'])
-                    {
-                        throw new Exception('Field name already exists');
-                    }
-                    $weights[] = $cfield['weight'];
+                    unset($entry_field_group['fields'][$k]);
                 }
-                $field = MPField::register_field($data);
-                $group['fields'][] = array(
-                    'id' => $field['_id'],
-                    'name' => $field['name'],
-                    'weight' => $data['weight'],
-                );
-                $weights[] = $data['weight'];
-                array_multisort($weights, SORT_NUMERIC, SORT_ASC, $group['fields']);
-                break;
             }
         }
+        else
+        {
+            $field = MPField::register_field($data);
+            $entry_field['name'] = $data['name'];
+            $entry_field['weight'] = $data['weight'];
+        }
         MPContent::save_entry_type($entry_type);
-        MPAdmin::notify(MPAdmin::SUCCESS, 'Field successfully added');
-        header('Location: ' . URI_PATH);
+        MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully updated');
+        header('Location: /admin/module/MPContent/edit_field/' . $entry_type['name'] . '/' . $entry_field_group['name'] . '/' . $field['name'] . '/');
         exit;
     }
     catch (Exception $e)
     {
-        MPAdmin::notify(MPAdmin::ERROR, 'Field unsuccessfully added');
+        MPAdmin::notify(MPAdmin::TYPE_ERROR, 'Field unsuccessfully updated');
     }
 }
 
@@ -236,7 +240,7 @@ $fform->attr = array(
     'id' => 'custom-field'
 );
 $fform->label = array(
-    'text' => 'Edit ' . hsc($entry_field['nice_name']) . ' Field'
+    'text' => 'Edit &ldquo;' . hsc($entry_field_data['nice_name']) . '&rdquo; Field'
 );
 $fform->add_group(
     array(
