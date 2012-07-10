@@ -271,12 +271,12 @@ class MPField
     /**
      * Deregisters a field to the database. Field schemas.
      *
-     * @param mixed $field a field query or MongoID object
+     * @param mixed $field a field query or MongoId object
      * @return void
      */
     public static function deregister_field($field)
     {
-        $query = is_object($field) && get_class($field) === 'MongoID'
+        $query = is_object($field) && get_class($field) === 'MongoId'
             ? array('_id' => $field)
             : $field;
         $mpfield = MPDB::selectCollection('mpfield_field');
@@ -288,13 +288,13 @@ class MPField
     /**
      * Retrieves field schemas.
      *
-     * @param MongoID|string $id MongoID or string representation of MongoID
+     * @param MongoId|string $id MongoId or string representation of MongoId
      * @return array
      */
     public static function get_field($id, $fields = array())
     {
         $query['_id'] = is_string($id)
-            ? new MongoID($id)
+            ? new MongoId($id)
             : $id;
         $mpfield = MPDB::selectCollection('mpfield_field');
         $field = $mpfield->findOne($query, $fields);
@@ -306,7 +306,7 @@ class MPField
     /**
      * Retrieves field schemas.
      *
-     * @param array $ids MongoID or string representation of MongoID
+     * @param array $ids MongoId or string representation of MongoId
      * @return MongoCursor
      */
     public static function get_fields($ids, $fields = array())
@@ -391,7 +391,6 @@ class MPField
         );
         $format['meta'] = array();
         $meta_format = array(
-            'name' => '',
             'label' => '',
             'meta' => array(),
             'default_data' => array(),

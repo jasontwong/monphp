@@ -185,9 +185,7 @@ if (isset($_POST['form']))
     try
     {
         $data = $layout->acts('post', $_POST['field']);
-        $type_data = $layout->acts('post', $_POST['type']);
         $data['name'] = slugify($data['nice_name']);
-        $data['meta'] = array();
         if (ake('type', $_POST))
         {
             $ftdata = array();
@@ -199,8 +197,8 @@ if (isset($_POST['form']))
                     $ftdata[$k] = array_shift($tmp);
                 }
             }
-            $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         }
+        $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         $data = array_merge($entry_field_data, $data);
         if ($entry_field_group['name'] !== $data['field_group_name'])
         {

@@ -6,8 +6,7 @@ class MPContentField
     public static function field_fieldtype_mpcontent_relationship($key, $data = array())
     {
         return array(
-            array(
-                'name' => 'data',
+            'data' => array(
                 'meta' => array(
                     'content_type_name' => deka('', $data, 'data'),
                     'ordering' => deka(FALSE, $data, 'ordering')
@@ -79,7 +78,7 @@ class MPContentField
                 'type' => 'checkbox',
                 'label' => 'Choose content types',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'meta', 'content_type_name'),
+                    'data' => deka(array(), $data, 'data', 'meta', 'content_type_name'),
                 ),
             ),
             'ordering' => array(
@@ -93,7 +92,7 @@ class MPContentField
                 ),
                 'type' => 'checkbox_boolean',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'meta', 'ordering'),
+                    'data' => deka(array(), $data, 'data', 'meta', 'ordering'),
                 ),
             ),
         );

@@ -7,10 +7,16 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-MPAdmin::set('title', 'Delete Custom MPField');
-MPAdmin::set('header', 'Delete Custom MPField');
+MPAdmin::set('title', 'Delete Custom Field');
+MPAdmin::set('header', 'Delete Custom Field');
 
-$_GET = $_GET ? $_GET : array('f' => array(''), 'et' => '');
+if (!$_POST)
+{
+    header('Location: /admin/');
+    exit;
+}
+
+$options = deka(array(''), $_POST, 'f');
 
 // {{{ layout
 $layout = new MPField();
@@ -20,7 +26,7 @@ $layout->add_layout(
         'name' => 'entry_type',
         'type' => 'hidden',
         'value' => array(
-            'data' => $_GET['et']
+            'data' => deka('', $_POST, 'et'),
         )
     )
 );
@@ -30,14 +36,14 @@ $layout->add_layout(
             'checkbox',
             array(
                 'data' => array(
-                    'options' => array_combine($_GET['f'], $_GET['f'])
+                    'options' => array_combine($options, $options),
                 )
             )
         ),
         'name' => 'field',
         'type' => 'checkbox',
         'value' => array(
-            'data' => $_GET['f']
+            'data' => $options,
         )
     )
 );
@@ -56,9 +62,9 @@ if (eka($_POST, 'confirm'))
     $confirm = $layout->acts('post', $_POST['confirm']);
     if ($confirm['do'])
     {
-        MPContent::delete_field_by_ids($confirm['field']);
+        MPContent::delete_fields_by_type_name_and_ids($confirm['entry_type'], $confirm['field']);
     }
-    header('Location: /admin/module/MPContent/edit_type/'.$confirm['entry_type'].'/');
+    header('Location: /admin/module/MPContent/edit_type/' . $confirm['entry_type'] . '/');
     exit;
 }
 
@@ -93,5 +99,3 @@ $form->add_group(
 $cfh = $form->build();
 
 //}}}
-
-?>

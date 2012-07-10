@@ -1571,6 +1571,25 @@ class MPContent
         //*/
     }
     //}}}
+    //{{{ public function delete_fields_by_type_name_and_ids($name, $ids)
+    public function delete_fields_by_type_name_and_ids($name, $ids)
+    {
+        $entry_type = self::get_entry_type_by_name($name);
+        foreach ($entry_type['field_groups'] as &$entry_field_group)
+        {
+            foreach ($entry_field_group['fields'] as $k => &$entry_field)
+            {
+                $id = $entry_field['id']->{'$id'};
+                if (in_array($id, $ids))
+                {
+                    MPField::deregister_field($entry_field['id']);
+                    unset($entry_field_group['fields'][$k]);
+                }
+            }
+        }
+        self::save_entry_type($entry_type);
+    }
+    //}}}
 
     /**
      * modify_ API methods

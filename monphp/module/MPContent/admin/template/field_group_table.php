@@ -1,6 +1,6 @@
 <?php if (isset($entry_field_groups) && !empty($entry_field_groups)): ?>
 
-    <form method='get' id='field_groups' action='/admin/module/MPContent/delete_field/'>
+    <form method='post' id='field_groups' action='/admin/module/MPContent/delete_field/'>
         <div class='form_wrapper'>
         <table>
             <caption>Field Groups</caption>
@@ -27,7 +27,7 @@
                         <?php $field = MPField::get_field($entry_field['id']); ?>
                         <?php $field_url = $group_url . '/' . $field['name']; ?>
                         <tr>
-                            <td><input type='checkbox' class='checkbox' name='f[]' value='<?php echo $field['name'] ?>'></td>
+                            <td><input type='checkbox' class='checkbox' name='f[]' value='<?php echo $field['_id']->{'$id'} ?>'></td>
                             <td><a href='/admin/module/MPContent/edit_field/<?php echo $field_url; ?>/'><?php echo htmlentities($field['nice_name'], ENT_QUOTES) ?></a></td>
                             <td><?php echo $field['type'] ?></td>
                             <td><?php echo $field['description'] ?></td>

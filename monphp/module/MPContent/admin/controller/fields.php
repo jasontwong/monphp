@@ -145,9 +145,8 @@ if (isset($_POST['form']))
     try
     {
         $data = $layout->acts('post', $_POST['field']);
-        $type_data = $layout->acts('post', $_POST['type']);
         $data['name'] = slugify($data['nice_name']);
-        $data['meta'] = array();
+        $ftdata = array('data' => '');
         if (ake('type', $_POST))
         {
             $ftdata = array();
@@ -159,8 +158,8 @@ if (isset($_POST['form']))
                     $ftdata[$k] = array_shift($tmp);
                 }
             }
-            $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         }
+        $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         MPContent::save_entry_field($entry_field_groups, $data);
         MPContent::save_entry_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully added');

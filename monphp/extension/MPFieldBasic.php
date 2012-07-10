@@ -28,15 +28,10 @@ class MPFieldBasic
     //{{{ public static function field_fallback_fieldtype($key, $data = array())
     public static function field_fallback_fieldtype($key, $data)
     {
-        if (is_array($data['data']))
+        if (ake('data', $data) && is_array($data['data']))
         {
             $meta = array_combine($data['data'], $data['data']);
             $default = deka(array(), $data, 'default_data');
-        }
-        elseif (is_string($data['data']))
-        {
-            $meta = deka('', $data, 'data');
-            $default = deka('', $data, 'default_data');
         }
         else
         {
@@ -44,8 +39,7 @@ class MPFieldBasic
             $default = deka('', $data, 'default_data');
         }
         return array(
-            array(
-                'name' => 'data',
+            'data' => array(
                 'meta' => $meta,
                 'default_data' => $default
             ),
@@ -586,7 +580,7 @@ class MPFieldBasic
                 'label' => 'Enter one option per line',
                 'type' => 'textarea_array',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'meta', 'options'),
+                    'data' => deka(array(), $data, 'data', 'meta', 'options'),
                 ),
             ),
             'default_data' => array(
@@ -594,7 +588,7 @@ class MPFieldBasic
                 'label' => 'Enter in the default values',
                 'type' => 'textarea_array',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'default_data'),
+                    'data' => deka(array(), $data, 'data', 'default_data'),
                 ),
             ),
         );
@@ -610,7 +604,7 @@ class MPFieldBasic
                 'label' => 'Enter one option per line',
                 'type' => 'textarea_array',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'meta', 'options'),
+                    'data' => deka(array(), $data, 'data', 'meta', 'options'),
                 ),
             ),
         );
@@ -626,7 +620,7 @@ class MPFieldBasic
                 'label' => 'Enter one option per line',
                 'type' => 'textarea_array',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'meta', 'options'),
+                    'data' => deka(array(), $data, 'data', 'meta', 'options'),
                 ),
             ),
             'default_data' => array(
@@ -634,7 +628,7 @@ class MPFieldBasic
                 'label' => 'Enter in the default value',
                 'type' => 'text',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'default_data'),
+                    'data' => deka(array(), $data, 'data', 'default_data'),
                 ),
             ),
         );
@@ -650,7 +644,7 @@ class MPFieldBasic
                 'label' => 'Enter in the default value',
                 'type' => 'text',
                 'value' => array(
-                    'data' => deka(array(), $data, 0, 'default_data'),
+                    'data' => deka(array(), $data, 'data', 'default_data'),
                 ),
             ),
         );

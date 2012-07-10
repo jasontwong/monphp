@@ -11,7 +11,7 @@ if (is_null($entry_type))
 MPAdmin::set('header', 'Add a new &ldquo;' . $entry_type['nice_name'] . '&rdquo;');
 $entry_field_groups = &$entry_type['field_groups'];
 
-if ($user_access = MPUser::has_perm('add content entries type', 'add content entries type-'.$entry_type->id))
+if ($user_access = MPUser::has_perm('add content entries type', 'add content entries type-' . $entry_type['name']))
 {
     $user_access_level = MPContent::ACCESS_ALLOW;
 }
@@ -20,7 +20,7 @@ else
     $user_access_level = MPContent::ACCESS_DENY;
 }
 
-$module_access_level = MPModule::h('mpcontent_entry_add_access', MPModule::TARGET_ALL, $entry_type->id);
+$module_access_level = MPModule::h('mpcontent_entry_add_access', MPModule::TARGET_ALL, $entry_type['name']);
 $access_level = max($module_access_level, $user_access_level);
 
 if ($access_level < MPContent::ACCESS_ALLOW)
@@ -94,12 +94,22 @@ $layout->add_layout(
     )
 );
 // {{{ custom fields
-foreach ($field_groups as $field_group)
+foreach ($entry_field_groups as &$entry_field_group)
 {
     $rows = array();
-    foreach ($field_group['fields'] as $fid => $field)
+    foreach ($entry_field_group['fields'] as &$entry_field)
     {
-        $cfm = $cfmt->findByMPContentMPFieldTypeId($field['id'])->toArray();
+        $field = MPField::get_field($entry_field['id']);
+        $fval = array();
+        var_dump($field);
+        foreach ($field['meta'] as $nm => &$fm)
+        {
+            $fval[$nm] = $fm['default_data'];
+            unset($fm['default_data']);
+        }
+        var_dump($fval);
+        die;
+        /*
         $fmeta = $fval = array();
         foreach ($cfm as $fm)
         {
@@ -108,20 +118,17 @@ foreach ($field_groups as $field_group)
             {
                 $fmeta[$fm['name']]['label'] = $fm['label'];
             }
-            /* This isn't doing anything...
-            $fmeta[$fm['name']]['class'] = $fm['required']
-                ? 'required_field'
-                : '';
-            */
             $fval[$fm['name']] = $fm['default_data'];
         }
+        */
         $layout->add_layout(
             array(
-                'field' => MPField::layout($field['type'], $fmeta),
+                'field' => MPField::layout($field['type'], $field['meta']),
                 'name' => $field['id'],
                 'type' => $field['type'],
-                'array' => (boolean)$field['multiple'],
-                'value' => $fval
+                'required' => $field['required'],
+                'array' => $field['multiple'],
+                'value' => $field['meta']['default_data'],
             )
         );
         if (isset($_POST['data']))
@@ -185,7 +192,7 @@ if (isset($_POST['entry']))
         if ($eid !== FALSE)
         {
             $content['meta']['content_entry_meta_id'] = $eid;
-            MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, &$layout, $content['meta'], $_POST['module']);
+            MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, $layout, $content['meta'], $_POST['module']);
 
             //{{{ MPCache: updating block
             $content_type = MPContent::get_entry_type_details_by_id($content['meta']['content_entry_type_id']);
