@@ -200,8 +200,10 @@ if (isset($_POST['form']))
         }
         $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         $data = array_merge($entry_field_data, $data);
+        $field_group_changed = FALSE;
         if ($entry_field_group['name'] !== $data['field_group_name'])
         {
+            $field_group_changed = TRUE;
             MPContent::save_entry_field($entry_field_groups, $data);
             $entry_field = array();
             foreach ($entry_field_group['fields'] as $k => &$v)
@@ -220,8 +222,11 @@ if (isset($_POST['form']))
         }
         MPContent::save_entry_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully updated');
-        header('Location: /admin/module/MPContent/edit_field/' . $entry_type['name'] . '/' . $entry_field_group['name'] . '/' . $field['name'] . '/');
-        exit;
+        if ($field_group_changed)
+        {
+            header('Location: /admin/module/MPContent/fields/' . $entry_type['name'] . '/');
+            exit;
+        }
     }
     catch (Exception $e)
     {
