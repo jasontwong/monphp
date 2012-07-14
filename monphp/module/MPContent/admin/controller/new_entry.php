@@ -100,42 +100,29 @@ foreach ($entry_field_groups as &$entry_field_group)
     foreach ($entry_field_group['fields'] as &$entry_field)
     {
         $field = MPField::get_field($entry_field['id']);
-        $fval = array();
-        var_dump($field);
+        $fmeta = $fval = array();
         foreach ($field['meta'] as $nm => &$fm)
         {
             $fval[$nm] = $fm['default_data'];
             unset($fm['default_data']);
+            $fmeta[$nm] = $fm;
         }
-        var_dump($fval);
-        die;
-        /*
-        $fmeta = $fval = array();
-        foreach ($cfm as $fm)
-        {
-            $fmeta[$fm['name']]['meta'] = $fm['meta'];
-            if (strlen($fm['label']))
-            {
-                $fmeta[$fm['name']]['label'] = $fm['label'];
-            }
-            $fval[$fm['name']] = $fm['default_data'];
-        }
-        */
         $layout->add_layout(
             array(
                 'field' => MPField::layout($field['type'], $field['meta']),
-                'name' => $field['id'],
+                'name' => $field['_id']->{'$id'},
                 'type' => $field['type'],
                 'required' => $field['required'],
                 'array' => $field['multiple'],
-                'value' => $field['meta']['default_data'],
+                'value' => $fval,
             )
         );
         if (isset($_POST['data']))
         {
             $layout->merge($_POST['data']);
         }
-        $flayout = $layout->get_layout($field['id']);
+        $flayout = $layout->get_layout($field['_id']->{'$id'});
+        /*
         switch ($flayout['type'])
         {
             case 'file':
@@ -144,6 +131,7 @@ foreach ($entry_field_groups as &$entry_field_group)
                     : TRUE;
             break;
         }
+        */
         $row['fields'] = $flayout;
         $row['label']['text'] = $field['name'];
         if (strlen($field['description']))
@@ -164,13 +152,12 @@ foreach ($entry_field_groups as &$entry_field_group)
                 'class' => 'clear tabbed'
             ),
             'label' => array(
-                'text' => $field_group['name']
+                'text' => $entry_field_group['name']
             ),
             'rows' => $rows
         );
     }
 }
-
 // }}}
 //}}}
 //{{{ form submission

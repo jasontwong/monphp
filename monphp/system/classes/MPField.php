@@ -395,10 +395,10 @@ class MPField
             'meta' => array(),
             'default_data' => array(),
         ); 
-        $field = array_intersect_key(array_merge($format, $data), $format);
+        $field = array_join($format, $data);
         foreach ($field['meta'] as &$fmeta)
         {
-            $fmeta = array_intersect_key(array_merge($meta_format, $fmeta), $meta_format);
+            $fmeta = array_join($meta_format, $fmeta);
         }
         if (ake('_id', $data))
         {

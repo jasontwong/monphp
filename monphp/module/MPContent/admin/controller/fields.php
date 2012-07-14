@@ -146,6 +146,10 @@ if (isset($_POST['form']))
     {
         $data = $layout->acts('post', $_POST['field']);
         $data['name'] = slugify($data['nice_name']);
+        if (!is_numeric($data['weight']))
+        {
+            $data['weight'] = 0;
+        }
         $ftdata = array('data' => '');
         if (ake('type', $_POST))
         {

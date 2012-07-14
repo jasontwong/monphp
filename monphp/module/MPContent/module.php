@@ -1465,6 +1465,23 @@ class MPContent
                 ),
             );
         }
+        else
+        {
+            $fgns = $fgs = array();
+            foreach ($entry_type['field_groups'] as &$fg)
+            {
+                $fgs[] = $fg['weight'];
+                $fgns[] = $fg['name'];
+                $fns = $fs = array();
+                foreach ($fg['fields'] as &$f)
+                {
+                    $fs[] = $f['weight'];
+                    $fns[] = $f['name'];
+                }
+                array_multisort($fs, SORT_NUMERIC, SORT_ASC, $fns, SORT_ASC, $fg['fields']);
+            }
+            array_multisort($fgs, SORT_NUMERIC, SORT_ASC, $fgns, SORT_ASC, $entry_type['field_groups']);
+        }
         $etc->save($entry_type, array('safe' => TRUE));
         return $entry_type;
     }
@@ -1485,14 +1502,12 @@ class MPContent
         {
             if ($group['name'] === $data['field_group_name'])
             {
-                $weights = array();
                 foreach ($group['fields'] as &$cfield)
                 {
                     if ($cfield['name'] === $data['name'])
                     {
                         throw new Exception('Field name already exists');
                     }
-                    $weights[] = $cfield['weight'];
                 }
                 $field = MPField::register_field($data);
                 $group['fields'][] = array(
@@ -1500,8 +1515,6 @@ class MPContent
                     'name' => $field['name'],
                     'weight' => $data['weight'],
                 );
-                $weights[] = $data['weight'];
-                array_multisort($weights, SORT_NUMERIC, SORT_ASC, $group['fields']);
                 break;
             }
         }

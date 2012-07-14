@@ -395,7 +395,7 @@ abstract class MPForm
         $max = 1;
         foreach ($values as $k => $value)
         {
-            if (empty($value))
+            if (!is_array($value) || empty($value))
             {
                 return $max;
             }

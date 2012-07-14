@@ -3,24 +3,35 @@
 //{{{ function ake($key, $array)
 /**
  * Shortcut for array_key_exists()
+ *
+ * @param string $key the key to check for
+ * @param array $array array to find key in
+ * @return bool
  */
 function ake($key, $array)
 {
     return is_array($array) && array_key_exists($key, $array);
 }
-
 //}}}
-//{{{ function array_clean($array)
+//{{{ function array_clean($array, $deep = FALSE)
 /**
- * Goes one level into array and removes empty elements
+ * Goes into array and removes empty elements
+ *
+ * @param array $array an array to be cleaned
+ * @param bool $deep go multiple levels deep if true, else one level
+ * @return array cleaned array or original array
  */
-function array_clean($array)
+function array_clean($array, $deep = FALSE)
 {
     foreach ($array as $k => $v)
     {
         if (empty($v))
         {
             unset($array[$k]);
+        }
+        elseif ($deep && is_array($v))
+        {
+            $array[$k] = array_clean($v, TRUE);
         }
     }
     return $array;
@@ -30,9 +41,10 @@ function array_clean($array)
 //{{{ function array_drill($array, $keys)
 /**
  * Drills down the array into the keys provided
+ *
  * @param array $array
  * @param string|array $key,... optional keys to drill down to, or array of keys
- * @return mixed|null null if key doesn't exist
+ * @return array|null null if key doesn't exist
  */
 function array_drill($array)
 {
@@ -75,6 +87,10 @@ function array_drill($array)
 /**
  * This is similar to array_merge with the exception that
  * only the keys of the master array will be returned
+ *
+ * @param array $master the formatted array structure
+ * @param array $array,... arrays of data to merge
+ * @return array formatted and merged array based on the $master
  */
 function array_join($master)
 {
@@ -82,38 +98,12 @@ function array_join($master)
 }
 
 //}}}
-// {{{ function array_to_xml($root_element_name, $array)
-/**
- * Return associative array as XML string
- *
- * @param string $root_element_name     top level xml name
- * @param string $array                 associative array needed to turned into XML
- */
-function array_to_xml($root_element_name, $array)
-{
-    $xml = new SimpleXMLElement("<{$root_element_name}></{$root_element_name}>");
-    $f = create_function('$f,$c,$a','
-            foreach ($a as $k => $v) 
-            {
-                if (is_array($v)) 
-                {
-                    $ch = $c->addChild($k);
-                    $f($f,$ch,$v);
-                } 
-                else 
-                {
-                    $c->addChild($k,$v);
-                }
-            }');
-    $f($f,$xml,$array);
-    return $xml->asXML();
-} 
-// }}}
 //{{{ function available_filename($filename)
 /**
  * Get an available filename
  * If the filename is taken, it appends a _n before the extension, with n
  * being the index starting at 0.
+ *
  * @param string $filename full path to the file to check
  * @return string filename including path
  */
@@ -152,30 +142,20 @@ function available_filename($filename)
  *      $foo = isset($bar['baz']) ? $bar['baz'] : 'default';
  *      can become:
  *      $foo = deka('default', $bar, 'baz');
+ *
+ * @param mixed $default what to return if the drill fails
+ * @param string $key,... keys to drill down to
+ * @return mixed the $default param if data isn't found
  */
-function deka($default = NULL)
+function deka($default)
 {
     $args = array_slice(func_get_args(), 1);
-    $data = $default;
+    $data = NULL;
     if (!empty($args) && call_user_func_array('eka', $args))
     {
-        $data = array_shift($args);
-        if (!empty($args))
-        {
-            foreach ($args as $arg)
-            {
-                if (array_key_exists($arg, $data))
-                {
-                    $data = $data[$arg];
-                }
-                else
-                {
-                    return $default;
-                }
-            }
-        }
+        $data = array_drill($args);
     }
-    return $data;
+    return is_null($data) ? $default : $data;
 }
 
 //}}}
@@ -184,6 +164,12 @@ function deka($default = NULL)
  * If the parameter $inclusive = TRUE, the folder specified in $src will be 
  * copied to the directory. So if source is /usr and dest is /home, you will
  * end up with /home/usr.
+ *
+ * @param string $src the directory you want to copy
+ * @param string $dest where you want the $src copied
+ * @param bool $inclusive if true, use the $src dir name
+ * @param int $chmod octal mask for the $dest dir
+ * @return bool
  */
 function dir_copy($src, $dest, $inclusive = TRUE, $chmod = 0777)
 {
@@ -235,6 +221,10 @@ function dir_copy($src, $dest, $inclusive = TRUE, $chmod = 0777)
 /**
  * Works like array_key_exists() but with array name first then multiple keys
  * Letters reversed because the parameters are sort of reversed to ake()
+ *
+ * @param array $array array to search
+ * @param string $key,... keys to drill down to
+ * @return bool
  */
 function eka($array)
 {
@@ -299,6 +289,7 @@ function extension($string, $ext)
 //{{{ function file_extension($filename)
 /**
  * Get the bare name and extension of a filename
+ *
  * @param string $filename
  * @return array
  */
@@ -315,6 +306,7 @@ function file_extension($filename)
 //{{{ function file_mime_type($filename)
 /**
  * Get the mime_type of the file
+ *
  * @param string $filename
  * @return string
  */
@@ -341,7 +333,6 @@ function file_mime_type($filename)
  *
  * @param array $desktops An array of views to be treated as desktops
  * @param string $override Override all following get_device_type calls with single device
- *
  * @return string
  */
 function get_device_type($desktops = array(), $override = '')
@@ -442,7 +433,10 @@ function get_device_type($desktops = array(), $override = '')
 // }}}
 // {{{ function hex_to_rgb($color)
 /**
+ * Converts hex color value to rgb color value
  *
+ * @param string $color the hex value for the color
+ * @return array
  */
 function hex_to_rgb($color)
 {
@@ -453,20 +447,28 @@ function hex_to_rgb($color)
 
     if (strlen($color) == 6)
     {
-        list($r, $g, $b) = array($color[0].$color[1],
-                                 $color[2].$color[3],
-                                 $color[4].$color[5]);
+        list($r, $g, $b) = array(
+            $color[0].$color[1],
+            $color[2].$color[3],
+            $color[4].$color[5],
+        );
     }
     elseif (strlen($color) == 3)
     {
-        list($r, $g, $b) = array($color[0].$color[0], $color[1].$color[1], $color[2].$color[2]);
+        list($r, $g, $b) = array(
+            $color[0].$color[0], 
+            $color[1].$color[1], 
+            $color[2].$color[2],
+        );
     }
     else
     {
         return false;
     }
 
-    $r = hexdec($r); $g = hexdec($g); $b = hexdec($b);
+    $r = hexdec($r); 
+    $g = hexdec($g); 
+    $b = hexdec($b);
 
     return array($r, $g, $b);
 }
@@ -482,7 +484,12 @@ function hsc($string, $ent = ENT_QUOTES, $enc = 'UTF-8')
 }
 //}}}
 //{{{ function is_email($email)
-// follows ~99.99% of RFC 2822 according to http://www.regular-expressions.info/email.html
+/**
+ * follows ~99.99% of RFC 2822 according to http://www.regular-expressions.info/email.html
+ *
+ * @param string $email email address
+ * @return bool
+ */
 function is_email($email)
 {
     $regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
@@ -490,61 +497,13 @@ function is_email($email)
     return (bool)$result;
 }
 //}}}
-//{{{ function is_mobile()
-// adapted from http://code.google.com/p/php-mobile-detect/
-function is_mobile()
-{
-    static $mobility = NULL;
-
-    if (is_null($mobility))
-    {
-        $mobility = FALSE;
-        $devices = array(
-            "android"       => "android",
-            "blackberry"    => "blackberry",
-            "iphone"        => "(iphone|ipod)",
-            "opera"         => "opera mini",
-            "palm"          => "(avantgo|blazer|elaine|hiptop|palm|plucker|xiino)",
-            "windows"       => "windows ce; (iemobile|ppc|smartphone)",
-            "generic"       => "(kindle|mobile|mmp|midp|o2|pda|pocket|psp|symbian|smartphone|treo|up.browser|up.link|vodafone|wap)"
-        );
-
-        $userAgent = &$_SERVER['HTTP_USER_AGENT'];
-        $accept = &$_SERVER['HTTP_ACCEPT'];
-
-        if ((isset($_SERVER['HTTP_X_WAP_PROFILE'])|| isset($_SERVER['HTTP_PROFILE'])) ||
-            (strpos($accept,'text/vnd.wap.wml') > 0 || strpos($accept,'application/vnd.wap.xhtml+xml') > 0))
-            {
-                $mobility = TRUE;
-            } 
-            else 
-            {
-                foreach ($devices as $device => $regexp) 
-                {
-                    if (!$mobility && preg_match("/" . $regexp . "/i", $userAgent))
-                    {
-                        $mobility = TRUE;
-                    }
-                }
-            }
-    }
-    return $mobility;
-}
-//}}}
-//{{{ function is_slug($slug)
-function is_slug($slug)
-{
-    return preg_match('/^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$/', $slug);
-}
-
-//}}}
 //{{{ function prepend_name($key, $name)
 /**
  * Prepends $name with $key while keeping it in array notation
  *
  * @param string $key string to prepend with
  * @param string $name string to change
- * @param boolean $multiple append [] for html array fields
+ * @param bool $multiple append [] for html array fields
  */
 function prepend_name($key, $name)
 {
@@ -563,6 +522,13 @@ function prepend_name($key, $name)
 
 //}}}
 //{{{ function random_string($length = 10, $base = 62)
+/**
+ * Create a random using only numbers and letters
+ *
+ * @param int $length length of the random string
+ * @param int $base the base number for math random number
+ * @return string
+ */
 function random_string($length = 10, $base = 62)
 {
     $c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
@@ -576,9 +542,14 @@ function random_string($length = 10, $base = 62)
 }
 
 //}}}
-// {{{ function rgb_to_hex($r, $g=-1, $b=-1)
+// {{{ function rgb_to_hex($r, $g = -1, $b = -1)
 /**
+ * Converts rgb color value to hex color value
  *
+ * @param int $r the read numeric value (1-255)
+ * @param int $g the read numeric value (1-255)
+ * @param int $b the read numeric value (1-255)
+ * @return string
  */
 function rgb_to_hex($r, $g=-1, $b=-1)
 {
@@ -604,7 +575,12 @@ function rgb_to_hex($r, $g=-1, $b=-1)
 // }}}
 // {{{ function rgb_to_yuv($r, $g=-1, $b=-1)
 /**
+ * Converts rgb color value to yuv color value
  *
+ * @param int $r the read numeric value (1-255)
+ * @param int $g the read numeric value (1-255)
+ * @param int $b the read numeric value (1-255)
+ * @return array
  */
 function rgb_to_yuv($r, $g=-1, $b=-1)
 {
@@ -624,9 +600,10 @@ function rgb_to_yuv($r, $g=-1, $b=-1)
 //{{{ function rm_resource_dir($path, $rm_path = TRUE)
 /**
  * Recursively remove files and directories
+ *
  * @param string $path file path
- * @param boolean $rm_path remove path directory if TRUE
- * @return boolean
+ * @param bool $rm_path remove path directory if TRUE
+ * @return bool
  */
 function rm_resource_dir($path, $rm_path = TRUE)
 {
@@ -773,7 +750,7 @@ function time_zones()
 /**
  *
  * @param string $str The text string to split
- * @param integer $words The number of words to extract. Defaults to 15
+ * @param int $words The number of words to extract. Defaults to 15
  */
 function word_split($str, $words = 15, $random = FALSE)
 {
