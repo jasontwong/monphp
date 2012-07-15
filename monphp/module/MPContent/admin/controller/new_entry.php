@@ -10,7 +10,6 @@ if (is_null($entry_type))
 MPAdmin::set('title', 'Create New Entry');
 MPAdmin::set('header', 'Add a new &ldquo;' . $entry_type['nice_name'] . '&rdquo;');
 $entry_field_groups = &$entry_type['field_groups'];
-
 // {{{ check user access
 if ($user_access = MPUser::has_perm('add content entries type', 'add content entries type-' . $entry_type['name']))
 {
@@ -32,7 +31,6 @@ if ($access_level < MPContent::ACCESS_ALLOW)
     return;
 }
 // }}}
-
 mp_enqueue_script(
     'mpcontent_field',
     '/admin/static/MPContent/field.js',
@@ -40,7 +38,6 @@ mp_enqueue_script(
     FALSE,
     TRUE
 );
-
 // {{{ layout
 $layout = new MPField();
 $layout_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
@@ -62,47 +59,38 @@ $layout->add_layout(
     array(
         'field' => MPField::layout('text'),
         'name' => 'title',
-        'type' => 'text'
+        'type' => 'text',
     )
 );
-/*
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('hidden'),
-        'name' => 'content_entry_type_name',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => URI_PART_4
-        )
-    )
-);
-*/
 $layout->add_layout(
     array(
         'field' => MPField::layout('text'),
         'name' => 'slug',
-        'type' => 'text'
+        'type' => 'text',
     )
 );
 $layout->add_layout(
     array(
-        'field' => MPField::layout('date'),
-        'name' => 'start_date',
-        'type' => 'date'
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('date'),
-        'name' => 'end_date',
-        'type' => 'date'
+        'field' => MPField::layout(
+            'dropdown',
+            array(
+                'data' => array(
+                    'options' => array_combine(
+                        $entry_type['statuses'], 
+                        $entry_type['statuses']
+                    ),
+                ),
+            )
+        ),
+        'name' => 'status',
+        'type' => 'dropdown',
     )
 );
 $layout->add_layout(
     array(
         'field' => MPField::layout('submit_reset'),
         'name' => 'submit',
-        'type' => 'submit_reset'
+        'type' => 'submit_reset',
     )
 );
 // {{{ custom fields
@@ -122,7 +110,6 @@ foreach ($entry_field_groups as &$entry_field_group)
         $layout->add_layout(
             array(
                 'field' => MPField::layout($field['type'], $field['meta']),
-                // 'name' => $field['_id']->{'$id'},
                 'name' => $field['nice_name'],
                 'type' => $field['type'],
                 'required' => $field['required'],
@@ -179,47 +166,24 @@ if (ake('entry', $_POST))
     try
     {
         $content['entry'] = $layout->acts('post', $_POST['entry']);
-        // $content['meta'] = $layout->acts('post', $_POST['meta']);
         if (!isset($_POST['data']))
         {
             $_POST['data'] = array();
         }
-        // $content['data'] = $layout->acts('save', $_POST['data'], $content['entry']);
         $content['data'] = $layout->acts('post', $_POST['data']);
         $layout->merge($_POST['entry']);
-        // $layout->merge($_POST['meta']);
         $layout->merge($_POST['data']);
-        var_dump($content, $entry_type);
-        die;
         $entry_data = MPContent::save_entry($content, $entry_type);
-        if (ake('_id', $entry_data))
+        if (is_array($entry_data) && ake('_id', $entry_data))
         {
-            $content['meta']['content_entry_meta_id'] = $eid;
-            MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, $layout, $content['meta'], $_POST['module']);
+            MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, $layout, $entry_data, $_POST['module']);
+            MPModule::h('mpcontent_entry_sidebar_new_process_' . $entry_type['name'], MPModule::TARGET_ALL, $layout, $entry_data, $_POST['module']);
 
-            /*
-            //{{{ MPCache: updating block
-            $content_type = MPContent::get_entry_type_details_by_id($content['meta']['content_entry_type_name']);
-            $content_type_name = $content_type['type']['name'];
-
-            // MPCache: update single entry
-            $entry = MPContent::get_entry_details_by_id($eid, FALSE);
-            MPCache::set('entry:'.$eid, $entry, 0, 'MPContent');
-
-            // MPCache: update all entries for content type
-            $entries = MPContent::get_entries_details_by_type_id($content['meta']['content_entry_type_id'], array(), FALSE);
-            MPCache::set($content_type_name.' - entries', $entries, 0, 'MPContent');
-
-            // MPCache: update ids slugs map for content type
-            $ids_slugs = MPContent::get_entries_slugs($content_type_name, FALSE);
-            MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
-            //}}}
-            */
-
-            MPModule::h('mpcontent_entry_new_finish', MPModule::TARGET_ALL, $content['meta']);
+            MPModule::h('mpcontent_entry_new_finish', MPModule::TARGET_ALL, $entry_data);
+            MPModule::h('mpcontent_entry_new_finish_' . $entry_type['name'], MPModule::TARGET_ALL, $entry_data);
 
             MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'The entry was successfully created');
-            header('Location: /admin/module/MPContent/edit_entry/' . $eid->{'$id'} . '/');
+            header('Location: /admin/module/MPContent/edit_entry/' . $entry_data['_id']->{'$id'} . '/');
             exit;
         }
     }
@@ -237,7 +201,7 @@ $eform->attr = array(
     'method' => 'post'
 );
 
-//$form_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
+// $form_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
 
 foreach ($esides as &$eside)
 {
@@ -248,11 +212,11 @@ foreach ($esides as &$eside)
     $eform->add_group(
         array(
             'attr' => array(
-                'class' => $class
+                'class' => $class,
             ),
             'rows' => array(
-                $eside
-            )
+                $eside,
+            ),
         ),
         'module'
     );
@@ -260,32 +224,43 @@ foreach ($esides as &$eside)
 $eform->add_group(
     array(
         'attr' => array(
-            'class' => 'tsc'
+            'class' => 'tsc',
         ),
         'rows' => array(
             array(
                 'row' => array(
                     'attr' => array(
-                        'class' => 'title'
-                    )
+                        'class' => 'status',
+                    ),
                 ),
-                'fields' => $layout->get_layout('title'),
+                'fields' => $layout->get_layout('status'),
                 'label' => array(
-                    'text' => 'Title'
-                )
+                    'text' => 'Status',
+                ),
             ),
             array(
                 'row' => array(
                     'attr' => array(
-                        'class' => 'slug'
+                        'class' => 'title',
+                    ),
+                ),
+                'fields' => $layout->get_layout('title'),
+                'label' => array(
+                    'text' => 'Title',
+                ),
+            ),
+            array(
+                'row' => array(
+                    'attr' => array(
+                        'class' => 'slug',
                     )
                 ),
                 'fields' => $layout->get_layout('slug'),
                 'label' => array(
-                    'text' => 'URL Slug'
-                )
-            )
-        )
+                    'text' => 'URL Slug',
+                ),
+            ),
+        ),
     ),
     'entry'
 );
@@ -296,66 +271,16 @@ if (isset($cfgroups))
         $eform->add_group($cfgroup, 'data');
     }
 }
-/*
 $eform->add_group(
     array(
-        'attr' => array(
-            'class' => 'hiddens'
-        ),
         'rows' => array(
             array(
-                'fields' => $layout->get_layout('content_entry_type_name')
-            )
-        )
-    ),
-    'meta'
-);
-if ($entry_type->status || $entry_type->flagging)
-{
-    $srows[] = array(
-        'fields' => $layout->get_layout('date_control'),
-        'label' => array(
-            'text' => 'Option to use with date'
-        )
-    );
-    $srows[] = array(
-        'fields' => $layout->get_layout('start_date'),
-        'label' => array(
-            'text' => 'Begin with this date'
-        )
-    );
-    $srows[] = array(
-        'fields' => $layout->get_layout('end_date'),
-        'label' => array(
-            'text' => 'End with this date'
-        )
-    );
-}
-if (isset($srows))
-{
-    $eform->add_group(
-        array(
-            'attr' => array(
-                'class' => 'status_flags'
+                'fields' => $layout->get_layout('submit'),
             ),
-            'rows' => $srows,
         ),
-        'meta'
-    );
-}
-*/
-
-$eform->add_group(
-    array(
-        'rows' => array(
-            array(
-                'fields' => $layout->get_layout('submit')
-            )
-        )
     ),
     'form'
 );
 
 $efh = $eform->build();
-
 // }}}

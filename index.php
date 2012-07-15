@@ -1,7 +1,7 @@
 <?php
 
 ob_start('ob_gzhandler');
-//{{{ defining constants
+// {{{ defining constants
 define('MP_SESSION', 'monphp');
 define('MP_DEBUG', TRUE);
 define('WEB_DIR_INSTALL', '/install');
@@ -17,9 +17,8 @@ define('DIR_MODULE', DIR_MP . '/module');
 define('DIR_TMPL', DIR_MP . '/template');
 define('DIR_VIEW', DIR_MP . '/view');
 define('MP_VERSION', '0.0.1');
-
-//}}}
-//{{{ disecting the URI
+// }}}
+// {{{ disecting the URI
 $ru = &$_SERVER['REQUEST_URI'];
 $qmp = strpos($ru, '?');
 list($path, $params) = $qmp === FALSE
@@ -38,7 +37,7 @@ define('URI_PARAM', isset($params) ? '' : $params);
 define('URI_PARTS', $i);
 define('URI_PATH', $path);
 define('URI_REQUEST', $_SERVER['REQUEST_URI']);
-//}}}
+// }}}
 // {{{ init
 if (MP_DEBUG)
 {
@@ -59,7 +58,7 @@ spl_autoload_register('mp_autoload');
 $tz = MPData::query('_Site', 'time_zone');
 date_default_timezone_set(is_null($tz) ? 'America/New_York' : $tz);
 // }}}
-//{{{ routing 
+// {{{ routing 
 $installed = !is_null(MPData::query('_System', 'version'));
 if (MP_DEBUG || !$installed)
 {
@@ -122,4 +121,4 @@ else
 MPModule::h('mpsystem_end');
 
 MPData::save();
-//}}}
+// }}}

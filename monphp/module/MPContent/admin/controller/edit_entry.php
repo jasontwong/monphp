@@ -1,28 +1,32 @@
 <?php
 
-MPAdmin::set('title', 'Edit Entry');
+$mpentry = MPDB::selectCollection('mpcontent_entry');
+$entry_id = new MongoId(URI_PART_4);
+$entry = $mpentry->findOne(array('_id' => $entry_id));
 
-$cemt = Doctrine::getTable('MPContentEntryMeta');
-
+if (is_null($entry))
+{
+    MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry does not exist');
+    header('Location: /admin/');
+    exit;
+}
+// {{{ get revision
+$revision = NULL;
 if (eka($_GET, 'revision'))
 {
-    $entry = $cemt->findEntryRevision(URI_PART_4, $_GET['revision']); 
+    $revision = $cemt->findEntryRevision($entry_id, $_GET['revision']); 
 }
 elseif (URI_PARTS > 5)
 {
-    $entry = $cemt->findEntryRevision(URI_PART_4, URI_PART_5);
+    $revision = $cemt->findEntryRevision($entry_id, URI_PART_5);
 }
-else
+
+if (!is_null($revision))
 {
-    $entry = $cemt->findCurrentEntry(URI_PART_4);
+    $entry = array_join($entry, $revision['entry']);
 }
-
-$entry_type = MPContent::get_entry_type_by_id(
-    $entry['content_entry_type_id'],
-    array('select' => array('ety.id', 'ety.name'))
-);
-MPAdmin::set('header', 'Edit '.$entry_type['nice_name']);
-
+// }}}
+// {{{ check access
 if ($user_access = MPUser::has_perm('edit content entries type', 'edit content entries type-'.$entry_type['id']))
 {
     $user_access_level = MPContent::ACCESS_EDIT;
@@ -46,7 +50,17 @@ if ($access_level === MPContent::ACCESS_DENY)
     $efh = '';
     return;
 }
+// }}}
+MPAdmin::set('header', 'Edit ' . $entry['entry_type']['nice_name']);
+MPAdmin::set('title', 'Edit Entry');
 
+mp_enqueue_script(
+    'mpcontent_field',
+    '/admin/static/MPContent/field.js',
+    array('jquery', 'tiny_mce'),
+    FALSE,
+    TRUE
+);
 //{{{ layout
 $layout = new MPField();
 $entry_sidebar = MPModule::h('mpcontent_entry_sidebar_edit', MPModule::TARGET_ALL, &$entry);

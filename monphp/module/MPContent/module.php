@@ -1344,6 +1344,10 @@ class MPContent
         );
         $entry_type_data = array_join($entry_type_data_format, $entry_type);
         $entry_data = $entry['entry'];
+        if (!ake('weight', $entry_data))
+        {
+            $entry_data['weight'] = 0;
+        }
         $entry_data['entry_type'] = $entry_type_data;
         $entry_data['updated'] = new MongoDate();
         $entry_data['data'] = $entry['data'];
