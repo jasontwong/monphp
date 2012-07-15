@@ -259,31 +259,6 @@ class MPContent
                 FALSE,
                 TRUE
             );
-            /*
-            if (URI_PARTS > 3)
-            {
-                if (URI_PART_3 === 'new_entry' || URI_PART_3 === 'edit_entry')
-                {
-                    mp_enqueue_script(
-                        'mpcontent_field',
-                        '/admin/static/MPContent/field.js',
-                        array('jquery-ui-sortable'),
-                        FALSE,
-                        TRUE
-                    );
-                }
-                if (URI_PART_3 === 'fields')
-                {
-                    mp_enqueue_script(
-                        'mpcontent_field_type',
-                        '/admin/static/MPContent/field.type.js',
-                        array(),
-                        FALSE,
-                        TRUE
-                    );
-                }
-            }
-            */
         }
         /*
         if (strpos(URI_PATH, '/admin/module/MPContent/edit_entries/') !== FALSE)
@@ -605,7 +580,6 @@ class MPContent
      * Caching is enabled with the $use_cache parameter, but this parameter 
      * only exists for methods that return results like those listed above.
      */
-
     //{{{ public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
     /**
      * Gets the row from the id/slug provided from self::get_entries_slugs()
@@ -1361,90 +1335,31 @@ class MPContent
      * as well as data formatting specified in the model itself. If an id array
      * key exists then it is treated as an update.
      */
-    //{{{ public function save_entry($entry)
-    public function save_entry($entry)
+    //{{{ public function save_entry($entry, $entry_type)
+    public function save_entry($entry, $entry_type)
     {
-        /*
-        $cem = new MPContentEntryMeta;
-        $cem->content_entry_type_id = $entry['meta']['content_entry_type_id'];
-        $cem->save();
+        $entry_type_data_format = array_fill_keys(
+            array('_id', 'name', 'nice_name'),
+            ''
+        );
+        $entry_type_data = array_join($entry_type_data_format, $entry_type);
+        $entry_data = $entry['entry'];
+        $entry_data['entry_type'] = $entry_type_data;
+        $entry_data['updated'] = new MongoDate();
+        $entry_data['data'] = $entry['data'];
 
-        $ceti = new MPContentEntryTitle;
-        $ceti->merge($entry['entry']);
-        $ceti->content_entry_meta_id = $cem['id'];
-        $ceti->save();
+        $mpentry = MPDB::selectCollection('mpcontent_entry');
+        $mpentry->save($entry_data, array('safe' => TRUE));
 
-        if (!empty($entry['data']))
-        {
-            $type_ids = array_keys($entry['data']);
-            $params = array($type_ids);
-            $specs = array(
-                'select' => array(
-                    'fm.id', 'fm.name', 'fm.required', 
-                    'fm.content_field_type_id'
-                ),
-                'where' => 'fm.content_field_type_id IN ?'
-            );
-            $fields = array();
-            $fields_rows = self::get_field_meta($params, $specs);
-            foreach ($fields_rows as $field_row)
-            {
-                $field_type_id = $field_row['content_field_type_id'];
-                $field_meta_name = $field_row['name'];
-                $fields[$field_type_id][$field_meta_name] = $field_row;
-            }
-
-            $data_rows = new Doctrine_Collection('MPContentMPFieldMPData');
-            $di = 0;
-            foreach ($entry['data'] as $type_id => $field_metas)
-            {
-                foreach ($field_metas as $meta_name => $field_datas)
-                {
-                    if ($field_datas)
-                    {
-                        foreach ($field_datas as $field_data)
-                        {
-                            if (eka($fields, $type_id, $meta_name))
-                            {
-                                $data_rows[$di]->akey = $field_data['akey'];
-                                $data_rows[$di]->cdata = $field_data['cdata'];
-                                $data_rows[$di]->meta = array();
-                                $data_rows[$di]->content_entry_meta_id = $cem['id'];
-                                $data_rows[$di]->content_field_meta_id = $fields[$type_id][$meta_name]['id'];
-                                ++$di;
-                            }
-                        }
-                    }
-                }
-            }
-            $data_rows->save();
-        }
-        return $cem['id'];
-        $cfmt = Doctrine::getTable('MPContentMPFieldMeta');
-        foreach ($data as $type_id => $fm)
-        {
-            foreach ($fm as $key => $fd)
-            {
-                $meta = $cfmt->findByNameAndType($key, $type_id);
-                if (!eka($meta, 0, 'id'))
-                {
-                    continue;
-                }
-                $field_id = $meta[0]['id'];
-                foreach ($fd as $row)
-                {
-                    $field_data = new MPContentMPFieldMPData;
-                    $field_data->merge($row);
-                    $field_data->content_entry_meta_id = $entry_id;
-                    $field_data->content_field_meta_id = $field_id;
-                    $field_data->revision = $revision;
-                    $field_data->meta = (array)$field_data->meta;
-                    $field_data->save();
-                }
-            }
-        }
-        */
-        return array();
+        $mpentry_revision = MPDB::selectCollection('mpcontent_entry_revision');
+        $revisions = $mpentry_revision->find(array('entry._id' => $entry_data['_id']), array('revision'));
+        $num_revisions = $revisions->hasNext() ? $revisions->count() : 0;
+        $revision = array(
+            'entry' => $entry_data,
+            'revision' => ++$num_revisions,
+        );
+        $mpentry_revision->save($revision, array('safe' => TRUE));
+        return $entry_data;
     }
     //}}}
     //{{{ public function save_entry_type($entry_type)
@@ -1513,7 +1428,7 @@ class MPContent
                 $group['fields'][] = array(
                     'id' => $field['_id'],
                     'name' => $field['name'],
-                    'weight' => $data['weight'],
+                    'weight' => (int)$data['weight'],
                 );
                 break;
             }

@@ -361,7 +361,7 @@ class MPField
         }
     }
     //}}}
-    // {{{ public static function register_field($field)
+    // {{{ public static function register_field($data)
     /**
      * Registers a field to the database. Field schemas.
      * Field schema 

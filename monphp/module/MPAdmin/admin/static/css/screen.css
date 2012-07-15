@@ -150,6 +150,7 @@ small { font-size: 9px; }
 .ui-tabs-nav { width: 530px; }
 .ui-tabs-nav li { position: relative; float: left; bottom: -1px; margin: 0 0 0 10px; padding: 4px 10px 2px; }
 .ui-tabs-nav a { color: #444; }
+.ui-tabs-nav a:hover { text-decoration: none; }
 .ui-tabs-nav .ui-state-default { background-color: #CDCDCD; }
 .ui-tabs-nav .ui-state-active { background-color: #f0f0f0; }
 .ui-tabs-nav .ui-state-hover a { color: #000; }

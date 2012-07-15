@@ -395,7 +395,7 @@ class MPAdmin
         mp_enqueue_script(
             'mpadmin_field',
             '/admin/static/MPAdmin/js/field.js',
-            array('jquery', 'tiny_mce', 'jquery-ui-datepicker', 'jquery-ui-tabs'),
+            array('jquery', 'tiny_mce', 'jquery-ui-datepicker', 'jquery-ui-tabs', 'jquery-ui-sortable'),
             FALSE,
             TRUE
         );
@@ -622,6 +622,7 @@ class MPAdmin
     public function hook_mpadmin_tinymce()
     {
         $options = array(
+            'script_url' => '/admin/static/MPAdmin/js/tiny_mce/tiny_mce.js',
             'plugins' => 'inlinepopups,spellchecker',
             'theme' => 'advanced',
             'skin' => 'krate',
@@ -708,9 +709,12 @@ class MPAdmin
             {
                 list($base, $ext) = file_extension($base);
             }
-            if (array_key_exists($ext, $static_types))
+            $content_type = ake($ext, $static_types) ? $static_types[$ext] : mime_content_type($file);
+            header('Content-type: ' . $content_type);
+            if (strpos($content_type, 'image') === 0)
             {
-                header('Content-type: '.$static_types[$ext]);
+                readfile($file);
+                die;
             }
         }
     }

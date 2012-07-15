@@ -48,38 +48,42 @@ function array_clean($array, $deep = FALSE)
  */
 function array_drill($array)
 {
-    $keys = array_slice(func_get_args(), 1);
-    if (is_array($keys[0]))
+    if (is_array($array))
     {
-        $kc = count($keys[0]);
-        for ($i = 0; $i < $kc; ++$i)
+        $keys = array_slice(func_get_args(), 1);
+        if (is_array($keys[0]))
         {
-            $param = $keys[0][$i];
-            if (array_key_exists($param, $array))
+            $kc = count($keys[0]);
+            for ($i = 0; $i < $kc; ++$i)
             {
-                $array = $array[$param];
-            }
-            else
-            {
-                return NULL;
+                $param = $keys[0][$i];
+                if (ake($param, $array))
+                {
+                    $array = $array[$param];
+                }
+                else
+                {
+                    return NULL;
+                }
             }
         }
-    }
-    else
-    {
-        foreach ($keys as $key)
+        else
         {
-            if (array_key_exists($key, $array))
+            foreach ($keys as $key)
             {
-                $array = $array[$key];
-            }
-            else
-            {
-                return NULL;
+                if (is_array($array) && ake($key, $array))
+                {
+                    $array = $array[$key];
+                }
+                else
+                {
+                    return NULL;
+                }
             }
         }
+        return $array;
     }
-    return $array;
+    return NULL;
 }
 
 //}}}
@@ -149,12 +153,7 @@ function available_filename($filename)
  */
 function deka($default)
 {
-    $args = array_slice(func_get_args(), 1);
-    $data = NULL;
-    if (!empty($args) && call_user_func_array('eka', $args))
-    {
-        $data = array_drill($args);
-    }
+    $data = call_user_func_array('array_drill', array_slice(func_get_args(), 1));
     return is_null($data) ? $default : $data;
 }
 
@@ -228,45 +227,7 @@ function dir_copy($src, $dest, $inclusive = TRUE, $chmod = 0777)
  */
 function eka($array)
 {
-    if (is_array($array))
-    {
-        $params = array_slice(func_get_args(), 1);
-        if (is_array($params[0]))
-        {
-            $pc = count($params[0]);
-            for ($i = 0; $i < $pc; ++$i)
-            {
-                if (array_key_exists($params[0][$i], $array))
-                {
-                    $array = $array[$params[0][$i]];
-                }
-                else
-                {
-                    return FALSE;
-                }
-            }
-            return TRUE;
-        }
-        else
-        {
-            foreach ($params as $param)
-            {
-                if (array_key_exists($param, $array))
-                {
-                    $array = $array[$param];
-                }
-                else
-                {
-                    return FALSE;
-                }
-            }
-            return TRUE;
-        }
-    }
-    else
-    {
-        return FALSE;
-    }
+    return !is_null(call_user_func_array('array_drill', func_get_args()));
 }
 
 //}}}

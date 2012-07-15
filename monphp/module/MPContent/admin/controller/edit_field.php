@@ -44,7 +44,7 @@ MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_
 MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; &rarr; &ldquo;'.hsc($entry_field_group['nice_name']).'&rdquo; Fields');
 $entry_field_types = MPField::type_options();
 $entry_field_groups = &$entry_type['field_groups'];
-//{{{ layout
+// {{{ layout
 $layout = new MPField();
 $layout->add_layout(
     array(
@@ -152,6 +152,7 @@ $layout->add_layout(
         'type' => 'submit_reset',
     )
 );
+// {{{ build metas
 $meta_fields = array();
 foreach ($type_metas as &$meta)
 {
@@ -177,15 +178,16 @@ foreach ($type_metas as &$meta)
         );
     }
 }
-
-//}}}
-//{{{ form submission
-if (isset($_POST['form']))
+// }}}
+// }}}
+// {{{ form submission
+if (ake('form', $_POST))
 {
     try
     {
         $data = $layout->acts('post', $_POST['field']);
         $data['name'] = slugify($data['nice_name']);
+        $data['weight'] = !is_numeric($data['weight']) ? 0 : (int)$data['weight'];
         if (ake('type', $_POST))
         {
             $ftdata = array();
@@ -200,10 +202,8 @@ if (isset($_POST['form']))
         }
         $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         $data = array_merge($entry_field_data, $data);
-        $field_group_changed = FALSE;
         if ($entry_field_group['name'] !== $data['field_group_name'])
         {
-            $field_group_changed = TRUE;
             MPContent::save_entry_field($entry_field_groups, $data);
             $entry_field = array();
             foreach ($entry_field_group['fields'] as $k => &$v)
@@ -222,20 +222,16 @@ if (isset($_POST['form']))
         }
         MPContent::save_entry_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully updated');
-        if ($field_group_changed)
-        {
-            header('Location: /admin/module/MPContent/fields/' . $entry_type['name'] . '/');
-            exit;
-        }
+        header('Location: /admin/module/MPContent/fields/' . $entry_type['name'] . '/');
+        exit;
     }
     catch (Exception $e)
     {
         MPAdmin::notify(MPAdmin::TYPE_ERROR, 'Field unsuccessfully updated');
     }
 }
-
-//}}}
-//{{{ custom field form build
+// }}}
+// {{{ custom field form build
 $fform = new MPFormRows;
 $fform->attr = array(
     'action' => URI_PATH,
@@ -342,5 +338,4 @@ $fform->add_group(
     'form'
 );
 $cfh = $fform->build();
-
-//}}}
+// }}}

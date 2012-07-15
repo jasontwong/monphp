@@ -1,16 +1,17 @@
 <?php
 
-MPAdmin::set('title', 'Create New Entry');
-
 $entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
 if (is_null($entry_type))
 {
     header('Location: /admin/');
     exit;
 }
+
+MPAdmin::set('title', 'Create New Entry');
 MPAdmin::set('header', 'Add a new &ldquo;' . $entry_type['nice_name'] . '&rdquo;');
 $entry_field_groups = &$entry_type['field_groups'];
 
+// {{{ check user access
 if ($user_access = MPUser::has_perm('add content entries type', 'add content entries type-' . $entry_type['name']))
 {
     $user_access_level = MPContent::ACCESS_ALLOW;
@@ -30,18 +31,27 @@ if ($access_level < MPContent::ACCESS_ALLOW)
     $efh = '';
     return;
 }
+// }}}
 
-//{{{ layout
+mp_enqueue_script(
+    'mpcontent_field',
+    '/admin/static/MPContent/field.js',
+    array('jquery', 'tiny_mce'),
+    FALSE,
+    TRUE
+);
+
+// {{{ layout
 $layout = new MPField();
 $layout_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
 $esides = array();
-foreach ($layout_sidebar as $mod => $groups)
+foreach ($layout_sidebar as $mod => &$groups)
 {
     if (!is_array($groups))
     {
         continue;
     }
-    foreach ($groups as $group)
+    foreach ($groups as &$group)
     {
         $esides[] = $group;
         $glayout = $group['fields'];
@@ -55,16 +65,18 @@ $layout->add_layout(
         'type' => 'text'
     )
 );
+/*
 $layout->add_layout(
     array(
         'field' => MPField::layout('hidden'),
-        'name' => 'content_entry_type_id',
+        'name' => 'content_entry_type_name',
         'type' => 'hidden',
         'value' => array(
             'data' => URI_PART_4
         )
     )
 );
+*/
 $layout->add_layout(
     array(
         'field' => MPField::layout('text'),
@@ -110,7 +122,8 @@ foreach ($entry_field_groups as &$entry_field_group)
         $layout->add_layout(
             array(
                 'field' => MPField::layout($field['type'], $field['meta']),
-                'name' => $field['_id']->{'$id'},
+                // 'name' => $field['_id']->{'$id'},
+                'name' => $field['nice_name'],
                 'type' => $field['type'],
                 'required' => $field['required'],
                 'array' => $field['multiple'],
@@ -121,7 +134,7 @@ foreach ($entry_field_groups as &$entry_field_group)
         {
             $layout->merge($_POST['data']);
         }
-        $flayout = $layout->get_layout($field['_id']->{'$id'});
+        $flayout = $layout->get_layout($field['nice_name']);
         /*
         switch ($flayout['type'])
         {
@@ -133,7 +146,7 @@ foreach ($entry_field_groups as &$entry_field_group)
         }
         */
         $row['fields'] = $flayout;
-        $row['label']['text'] = $field['name'];
+        $row['label']['text'] = $field['nice_name'];
         if (strlen($field['description']))
         {
             $row['description']['text'] = $field['description'];
@@ -152,37 +165,41 @@ foreach ($entry_field_groups as &$entry_field_group)
                 'class' => 'clear tabbed'
             ),
             'label' => array(
-                'text' => $entry_field_group['name']
+                'text' => $entry_field_group['nice_name']
             ),
             'rows' => $rows
         );
     }
 }
 // }}}
-//}}}
-//{{{ form submission
-if (isset($_POST['entry']))
+// }}}
+// {{{ form submission
+if (ake('entry', $_POST))
 {
     try
     {
         $content['entry'] = $layout->acts('post', $_POST['entry']);
-        $content['meta'] = $layout->acts('post', $_POST['meta']);
+        // $content['meta'] = $layout->acts('post', $_POST['meta']);
         if (!isset($_POST['data']))
         {
             $_POST['data'] = array();
         }
-        $content['data'] = $layout->acts('save', $_POST['data'], $content['entry']);
+        // $content['data'] = $layout->acts('save', $_POST['data'], $content['entry']);
+        $content['data'] = $layout->acts('post', $_POST['data']);
         $layout->merge($_POST['entry']);
-        $layout->merge($_POST['meta']);
+        // $layout->merge($_POST['meta']);
         $layout->merge($_POST['data']);
-        $eid = MPContent::save_entry($content);
-        if ($eid !== FALSE)
+        var_dump($content, $entry_type);
+        die;
+        $entry_data = MPContent::save_entry($content, $entry_type);
+        if (ake('_id', $entry_data))
         {
             $content['meta']['content_entry_meta_id'] = $eid;
             MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, $layout, $content['meta'], $_POST['module']);
 
+            /*
             //{{{ MPCache: updating block
-            $content_type = MPContent::get_entry_type_details_by_id($content['meta']['content_entry_type_id']);
+            $content_type = MPContent::get_entry_type_details_by_id($content['meta']['content_entry_type_name']);
             $content_type_name = $content_type['type']['name'];
 
             // MPCache: update single entry
@@ -197,25 +214,22 @@ if (isset($_POST['entry']))
             $ids_slugs = MPContent::get_entries_slugs($content_type_name, FALSE);
             MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
             //}}}
+            */
 
             MPModule::h('mpcontent_entry_new_finish', MPModule::TARGET_ALL, $content['meta']);
-            header('Location: /admin/module/MPContent/edit_entry/'.$eid.'/');
+
+            MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'The entry was successfully created');
+            header('Location: /admin/module/MPContent/edit_entry/' . $eid->{'$id'} . '/');
             exit;
         }
     }
-    catch (Doctrine_Validator_Exception $e)
+    catch (Exception $e)
     {
-        $errors_array = $entry_title->getErrorStack()->toArray();
-        $errors = array();
-        foreach ($errors_array['validate'] as $error)
-        {
-            $errors[] = $error;
-        }
-        MPAdmin::notify(MPAdmin::TYPE_ERROR, $errors);
+        MPAdmin::notify(MPAdmin::TYPE_ERROR, 'The entry was unsuccessfully created');
     }
 }
-//}}}
-//{{{ form build
+// }}}
+// {{{ form build
 $eform = new MPFormRows;
 $eform->attr = array(
     'action' => URI_PATH,
@@ -225,7 +239,7 @@ $eform->attr = array(
 
 //$form_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
 
-foreach ($esides as $eside)
+foreach ($esides as &$eside)
 {
     $class = slugify($eside['label']['text']);
     $class .= $class === 'taxonomy'
@@ -277,11 +291,12 @@ $eform->add_group(
 );
 if (isset($cfgroups))
 {
-foreach ($cfgroups as $cfgroup)
-{
-    $eform->add_group($cfgroup, 'data');
+    foreach ($cfgroups as $cfgroup)
+    {
+        $eform->add_group($cfgroup, 'data');
+    }
 }
-}
+/*
 $eform->add_group(
     array(
         'attr' => array(
@@ -289,13 +304,12 @@ $eform->add_group(
         ),
         'rows' => array(
             array(
-                'fields' => $layout->get_layout('content_entry_type_id')
+                'fields' => $layout->get_layout('content_entry_type_name')
             )
         )
     ),
     'meta'
 );
-/*
 if ($entry_type->status || $entry_type->flagging)
 {
     $srows[] = array(
@@ -344,4 +358,4 @@ $eform->add_group(
 
 $efh = $eform->build();
 
-//}}}
+// }}}

@@ -13,9 +13,8 @@
 
 [entry_revision]
     - _id
-    - entry_id
+    - entry
     - revision
-    - data (array_diff_assoc?)
 
 [entry_type]
     - _id

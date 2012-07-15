@@ -58,8 +58,7 @@ class MPFieldBasic
     public static function field_fieldtype_checkbox($key, $data = array())
     {
         return array(
-            array(
-                'name' => 'data',
+            'data' => array(
                 'meta' => array(
                     'options' => array_combine($data['data'], $data['data'])
                 ),
@@ -73,8 +72,7 @@ class MPFieldBasic
     {
         $options = deka(array(), $data, 'data');
         return array(
-            array(
-                'name' => 'data',
+            'data' => array(
                 'meta' => array(
                     'options' => array_combine($options, $options),
                 ),
@@ -87,8 +85,7 @@ class MPFieldBasic
     public static function field_fieldtype_radio($key, $data = array())
     {
         return array(
-            array(
-                'name' => 'data',
+            'data' => array(
                 'meta' => array(
                     'options' => array_combine($data['data'], $data['data'])
                 ),
@@ -757,7 +754,7 @@ class MPFieldBasic
     //{{{ public static function field_post_textarea_array($key, $data = array())
     public static function field_post_textarea_array($key, $data = array())
     {
-        return ake('data', $data)
+        return ake('data', $data) && strlen($data['data'])
             ? preg_split("/[\n\r]+/", $data['data']) 
             : array();
     }

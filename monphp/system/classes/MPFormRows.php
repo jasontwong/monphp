@@ -271,13 +271,13 @@ abstract class MPForm
         $after = deka(array(), $field, 'html_after');
         $hidden = deka(array(), $field, 'hidden');
         $name = array_reverse((array)deka(array(), $field, 'name'));
-        if ($array)
+        $max = $array ? $this->max_values($value) : 1;
+        for ($i = 0; $i < $max; ++$i)
         {
-            $max = $this->max_values($value);
-            for ($i = 0; $i < $max; ++$i)
+            $groups = array();
+            foreach ($field['field'] as $sub_name => $sub_field)
             {
-                $groups = array();
-                foreach ($field['field'] as $sub_name => $sub_field)
+                if ($array)
                 {
                     $v = deka(NULL, $value, $sub_name, $i);
                     $o = deka(NULL, $option, $sub_name, $i);
@@ -285,98 +285,68 @@ abstract class MPForm
                     $b = deka('', $before, $sub_name, $i);
                     $a = deka('', $after, $sub_name, $i);
                     $h = deka(FALSE, $hidden, $sub_name, $i);
-                    if ($h)
-                    {
-                        continue;
-                    }
-                    $combine = deka(FALSE, $sub_field, 'hidden');
-                    if (!is_null($o))
-                    {
-                        $sub_field['options'] = $o;
-                    }
-                    if (!eka($sub_field, 'attr', 'name'))
-                    {
-                        $sub_field['attr']['name'] = $sub_name;
-                    }
-                    if ($name)
-                    {
-                        foreach ($name as &$n)
-                        {
-                            $sub_field['attr']['name'] = prepend_name($n, $sub_field['attr']['name']);
-                        }
-                    }
-                    if ($key)
-                    {
-                        $sub_field['attr']['name'] = prepend_name($key, $sub_field['attr']['name']);
-                    }
-                    $sub_field['attr']['name'] .= '['.$i.'][]';
-                    if ($combine)
-                    {
-                        if (!ake(0, $groups))
-                        {
-                            $groups[0] = '';
-                        }
-                        $groups[0] .= $b.$this->element($sub_field, $v, $e).$a;
-                    }
-                    else
-                    {
-                        $groups[] = $b.$this->element($sub_field, $v, $e).$a;
-                    }
                 }
-                $fields[] = $groups;
-            }
-        }
-        else
-        {
-            if ($field['field'])
-            {
-                foreach ($field['field'] as $sub_name => $sub_field)
+                else
                 {
-                    $v = deka(NULL, $value, $sub_name);
-                    $o = deka(NULL, $option, $sub_name);
-                    $e = deka(NULL, $error, $sub_name);
+                    $v = $o = $e = NULL;
                     $b = deka('', $before, $sub_name);
                     $a = deka('', $after, $sub_name);
                     $h = deka(FALSE, $hidden, $sub_name);
-                    if ($h)
+                }
+                if ($h)
+                {
+                    continue;
+                }
+                if (is_null($v))
+                {
+                    $v = deka(NULL, $value, $sub_name);
+                }
+                if (is_null($o))
+                {
+                    $o = deka(NULL, $option, $sub_name);
+                }
+                if (is_null($e))
+                {
+                    $e = deka(NULL, $error, $sub_name);
+                }
+                $combine = deka(FALSE, $sub_field, 'hidden');
+                if (!is_null($o))
+                {
+                    $sub_field['options'] = $o;
+                }
+                if (!eka($sub_field, 'attr', 'name'))
+                {
+                    $sub_field['attr']['name'] = $sub_name;
+                }
+                if ($name)
+                {
+                    foreach ($name as &$n)
                     {
-                        continue;
-                    }
-                    $combine = deka(FALSE, $sub_field, 'hidden');
-                    if (!is_null($o))
-                    {
-                        $sub_field['options'] = $o;
-                    }
-                    if (!eka($sub_field, 'attr', 'name'))
-                    {
-                        $sub_field['attr']['name'] = $sub_name;
-                    }
-                    if ($name)
-                    {
-                        foreach ($name as &$n)
-                        {
-                            $sub_field['attr']['name'] = prepend_name($n, $sub_field['attr']['name']);
-                        }
-                    }
-                    if ($key)
-                    {
-                        $sub_field['attr']['name'] = prepend_name($key, $sub_field['attr']['name']);
-                    }
-                    if ($combine)
-                    {
-                        if (!ake(0, $groups))
-                        {
-                            $groups[0] = '';
-                        }
-                        $groups[0] .= $b.$this->element($sub_field, $v, $e).$a;
-                    }
-                    else
-                    {
-                        $groups[] = $b.$this->element($sub_field, $v, $e).$a;
+                        $sub_field['attr']['name'] = prepend_name($n, $sub_field['attr']['name']);
                     }
                 }
+                if ($key)
+                {
+                    $sub_field['attr']['name'] = prepend_name($key, $sub_field['attr']['name']);
+                }
+                if ($array)
+                {
+                    $sub_field['attr']['name'] .= '['.$i.']';
+                }
+                if ($combine)
+                {
+                    if (!ake(0, $groups))
+                    {
+                        $groups[0] = '';
+                    }
+                    $groups[0] .= $b.$this->element($sub_field, $v, $e).$a;
+                }
+                else
+                {
+                    $groups[] = $b.$this->element($sub_field, $v, $e).$a;
+                }
             }
-            $fields = $groups;
+            $fields[] = $groups;
         }
         return $fields;
     }
@@ -529,24 +499,17 @@ class MPFormRows extends MPForm
                 $num_last_field = empty($keys_last_field) ? 0 : max($keys_last_field);
                 foreach ($fsets as $k => $fset)
                 {
-                    if ($rarray)
+                    foreach ($fset as $set)
                     {
-                        foreach ($fset as $set)
-                        {
-                            $rfhtml .= '<div class="field">'.$set.'</div>';
-                        }
-                        if ($num_last_field !== $k && $num_last_field !== 0)
-                        {
-                            $rfhtml .= '</div><div class="fields fields_'.$row['fields']['type'].' content_multiple_fields_additional">';
-                        }
+                        $rfhtml .= '<div class="field">'.$set.'</div>';
                     }
-                    else
+                    if ($rarray && $num_last_field !== $k && $num_last_field !== 0)
                     {
-                        $rfhtml .= '<div class="field">'.$fset.'</div>';
-                        if ($row['hidden'])
-                        {
-                            $hidden_html = $fset;
-                        }
+                        $rfhtml .= '</div><div class="fields fields_'.$row['fields']['type'].' content_multiple_fields_additional">';
+                    }
+                    if ($row['hidden'])
+                    {
+                        $hidden_html = $fset;
                     }
                 }
                 $rfhtml .= '</div>';

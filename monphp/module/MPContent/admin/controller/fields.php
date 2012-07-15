@@ -26,7 +26,7 @@ MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_
 MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Fields');
 $entry_field_types = MPField::type_options();
 $entry_field_groups = &$entry_type['field_groups'];
-//{{{ layout
+// {{{ layout
 $layout = new MPField();
 $layout->add_layout(
     array(
@@ -138,7 +138,7 @@ foreach ($type_metas as &$meta)
     }
 }
 
-//}}}
+// }}}
 //{{{ form submission
 if (isset($_POST['form']))
 {
@@ -146,10 +146,7 @@ if (isset($_POST['form']))
     {
         $data = $layout->acts('post', $_POST['field']);
         $data['name'] = slugify($data['nice_name']);
-        if (!is_numeric($data['weight']))
-        {
-            $data['weight'] = 0;
-        }
+        $data['weight'] = !is_numeric($data['weight']) ? 0 : (int)$data['weight'];
         $ftdata = array('data' => '');
         if (ake('type', $_POST))
         {
