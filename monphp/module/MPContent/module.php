@@ -358,7 +358,7 @@ class MPContent
             array(
                 'entry_type_name' => 1, 
                 'weight' => 1, 
-                'updated' => -1,
+                'modified' => -1,
             )
         );
         $db->mpcontent_entry->ensureIndex(
@@ -580,6 +580,27 @@ class MPContent
      * Caching is enabled with the $use_cache parameter, but this parameter 
      * only exists for methods that return results like those listed above.
      */
+    //{{{ public function get_entry($query = array, $fields = array())
+    /**
+     * Gets the row from the id/slug provided from self::get_entries_slugs()
+     */
+    public function get_entry($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry')->findOne($query, $fields);
+    }
+    //}}}
+    //{{{ public function get_entry_by_id($id, $fields = array())
+    /**
+     * Gets the row from the id/slug provided from self::get_entries_slugs()
+     */
+    public function get_entry_by_id($id, $fields = array())
+    {
+        $query = is_object($id) && get_class($id) === 'MongoId'
+            ? array('_id' => $id)
+            : array('_id' => new MongoId($id));
+        return self::get_entry($query, $fields);
+    }
+    //}}}
     //{{{ public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
     /**
      * Gets the row from the id/slug provided from self::get_entries_slugs()
@@ -595,6 +616,15 @@ class MPContent
             }
         }
         return NULL;
+    }
+    //}}}
+    //{{{ public function get_entries($query = array(), $fields = array())
+    /**
+     * This tries to be very minimal, getting as little info as needed.
+     */
+    public function get_entries($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry')->find($query, $fields);
     }
     //}}}
     //{{{ public function get_entries_slugs($type = NULL, $use_cache = TRUE, $expire = 0)
@@ -670,328 +700,6 @@ class MPContent
         return $entries;
     }
     //}}}
-    //{{{ public function get_entries_details_by_type_id($id, $fields = array(), $use_cache = TRUE, $expire = 0)
-    /**
-     * Returns multiple entries. MPData set format is like get_entry_details
-     */
-    public function get_entries_details_by_type_id($id, $fields = array(), $use_cache = TRUE, $expire = 0)
-    {
-        /*
-        $dt_dfields = array(
-            'select' => array(
-                'ety.id', 'ety.name'
-            ),
-            'from' => 'MPContentEntryType ety',
-            'where' => 'ety.id = ?'
-        );
-        $dt_fields = array_merge($dt_dfields, $fields);
-        $types = dql_exec($dt_fields, array($id));
-        $type = $types[0]['name'];
-        return self::get_entries_details_by_type_name($type, $use_cache, $expire);
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_entries_details_by_type_name($name, $use_cache = TRUE, $expire = 0)
-    public function get_entries_details_by_type_name($name, $use_cache = TRUE, $expire = 0)
-    {
-        if ($use_cache)
-        {
-            $entries = MPCache::get($name.' - entries', 'MPContent');
-            $has_cache = !is_null($entries);
-        }
-        if (!$use_cache || !$has_cache)
-        {
-            $entries = array();
-
-            /*
-            $type = Doctrine_Query::create()
-                    ->from('MPContentEntryType et')
-                    ->where('et.name = ?')
-                    ->fetchOne(array($name));
-                    //->fetchOne(array($name), Doctrine::HYDRATE_ARRAY);
-            $dt_dql = Doctrine_Query::create()
-                        ->select('
-                            em.id, em.created, em.revision, em.weight,
-                            eti.title as title, eti.slug as slug, 
-                            eti.modified as modified, em.content_entry_type_id as type_id
-                        ')
-                        ->from('MPContentEntryMeta em')
-                        ->leftJoin('em.MPContentEntryTitle eti')
-                        ->where('em.content_entry_type_id = ?')
-                        ->andWhere('eti.revision = em.revision')
-                        ->orderBy($type->ordering
-                                    ? 'em.weight ASC'
-                                    : 'eti.modified DESC');
-            $rows = $dt_dql->execute(array($type['id']), Doctrine::HYDRATE_ARRAY);
-            //$rows = $dt_dql->execute(array($type->id));
-            $entries_map = array();
-            $ei = 0;
-            foreach ($rows as $row)
-            {
-                $entries[$ei]['entry'] = $row;
-                $entries_map[$row['id']] = $ei;
-                //$entries_map[$row->id] = $ei;
-                ++$ei;
-            }
-
-            $data = array();
-            $df_dql = Doctrine_Query::create()
-                        ->select('
-                            fd.cdata, fd.bdata, fd.akey, fd.meta, 
-                            ft.name as name, ft.multiple as multiple,
-                            ft.id as type_id, ft.type as type_type,
-                            fm.id as meta_id, fm.name as meta_name,
-                            em.id as entry_meta_id
-                        ')
-                        ->from('MPContentMPFieldMPData fd')
-                        ->leftJoin('fd.MPContentEntryMeta em')
-                        ->leftJoin('em.MPContentEntryType ety')
-                        ->leftJoin('fd.MPContentMPFieldMeta fm')
-                        ->leftJoin('fm.MPContentMPFieldType ft')
-                        ->where('ety.name = ?')
-                        ->andWhere('em.revision = fd.revision');
-            $field_rows = $df_dql->execute(array($name), Doctrine::HYDRATE_ARRAY);
-            //$field_rows = $df_dql->execute(array($name));
-
-            $field_data_raw = array();
-            $field_types = array();
-            foreach ($field_rows as $row)
-            {
-                // $field_data_raw[$row->entry_meta_id][$row->type_id][$row->meta_name][$row->akey][] = $row;
-                // $field_types[$row->entry_meta_id][$row->type_id] = array(
-                    // 'type' => $row->type_type, 
-                    // 'multiple' => (bool)$row->multiple,
-                    // 'name' => $row->name,
-                // );
-                if (!is_null($row['type_id']))
-                {
-                    if (!is_null($row['type_id']))
-                    {
-                        $field_data_raw[$row['entry_meta_id']][$row['type_id']][$row['meta_name']][$row['akey']][] = $row;
-                        $field_types[$row['entry_meta_id']][$row['type_id']] = array(
-                            'type' => $row['type_type'], 
-                            'multiple' => (bool)$row['multiple'],
-                            'name' => $row['name'],
-                        );
-                    }
-                }
-            }
-
-            foreach ($field_types as $entry_meta_id => $field_type)
-            {
-                $data = array();
-                foreach ($field_type as $type_id => $type_info)
-                {
-                    $field_data = MPField::quick_act('read', $type_info['type'], $field_data_raw[$entry_meta_id][$type_id]);
-                    $temp = array();
-                    if ($type_info['multiple'])
-                    {
-                        foreach ($field_data as $mkey => $fd)
-                        {
-                            foreach ($fd as $akey => $cdata)
-                            {
-                                $temp[$akey][$mkey] = $cdata;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        foreach ($field_data as $mkey => $fd)
-                        {
-                            $temp[$mkey] = array_pop($fd);
-                        }
-                    }
-                    $data[$type_info['name']] = $temp;
-                }
-                $entries[$entries_map[$entry_meta_id]]['data'] = $data;
-            }
-            */
-        }
-        if ($use_cache && !$has_cache)
-        {
-            MPCache::set($name.' - entries', $entries, $expire, 'MPContent');
-        }
-
-        return $entries;
-    }
-    //}}}
-    //{{{ public function get_entries_details
-    /**
-     * This tries to be very minimal, getting as little info as needed.
-     */
-    public function get_entries_details($query = array(), $fields = array())
-    {
-        $entry = array();
-
-        /*
-        $dt_dfields = array(
-            'select' => array(
-                'em.id', 'em.created', 'em.revision',
-                'em.weight', 
-                'eti.title as title', 'eti.slug as slug', 
-                'eti.modified as modified'
-            ),
-            'from' => 'MPContentEntryMeta em',
-            'leftJoin' => 'em.MPContentEntryTitle eti',
-            'where' => 'em.id IN ?',
-            'andWhere' => 'eti.revision = em.revision'
-        );
-        $dt_query =& $query;
-        $dt_fields = array_merge($dt_dfields, $fields);
-        $entries = dql_exec($dt_fields, $dt_query);
-
-        $results = array();
-        foreach ($entries as &$entry)
-        {
-            $result = array(
-                'entry' => array(
-                    'id' => $entry['id'],
-                    'created' => $entry['created'],
-                    'revision' => $entry['revision'],
-                    'slug' => $entry['slug'],
-                    'title' => $entry['title'],
-                    'modified' => $entry['modified'],
-                    'weight' => $entry['weight']
-                ),
-                'data' => self::get_field_data_by_entry_id_and_revision(
-                    $entry['id'],
-                    $entry['revision']
-                )
-            );
-            $results[] = $result;
-        }
-        return $results;
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_entries_details_by_ids($ids, $use_cache = TRUE, $expire = 0)
-    public function get_entries_details_by_ids($ids, $use_cache = TRUE, $expire = 0)
-    {
-        if ($use_cache)
-        {
-            $entries = array();
-            foreach ($ids as $id)
-            {
-                $entries[] = self::get_entry_details_by_id($id, TRUE, $expire);
-            }
-        }
-        else
-        {
-            $entries = self::get_entries_details(array($ids), array('where' => 'em.id IN ?'));
-        }
-        return $entries;
-    }
-    //}}}
-    // {{{ public function get_entry_details($query = array(), $fields = array())
-    /**
-     * This tries to be very minimal, getting as little info as needed.
-     */
-    public function get_entry_details($query = array(), $fields = array())
-    {
-        $entry = array();
-
-        /*
-        $dt_dfields = array(
-            'select' => array(
-                'em.id', 'em.created', 'em.revision',
-                'eti.title as title', 'eti.slug as slug', 
-                'eti.modified as modified'
-            ),
-            'from' => 'MPContentEntryMeta em',
-            'leftJoin' => 'em.MPContentEntryTitle eti',
-            'where' => 'em.id = ?',
-            'andWhere' => 'eti.revision = em.revision'
-        );
-        $dt_query =& $query;
-        $dt_fields = array_merge($dt_dfields, $fields);
-        $entry['entry'] = array_pop(dql_exec($dt_fields, $dt_query));
-
-        $entry['data'] = self::get_field_data_by_entry_id_and_revision(
-            $entry['entry']['id'],
-            $entry['entry']['revision']
-        );
-        */ 
-        return $entry;
-    }
-    //}}}
-    //{{{ public function get_entry_details_by_id($id, $use_cache = TRUE, $expire = 0)
-    public function get_entry_details_by_id($id, $use_cache = TRUE, $expire = 0)
-    {
-        if ($use_cache)
-        {
-            $entry = MPCache::get('entry:'.$id, 'MPContent');
-            if (is_null($entry))
-            {
-                $entry = self::get_entry_details(array($id), array('where' => 'em.id = ?'));
-                MPCache::set('entry:'.$id, $entry, $expire, 'MPContent');
-            }
-        }
-        else
-        {
-            $entry = self::get_entry_details(array($id), array('where' => 'em.id = ?'));
-        }
-        return $entry;
-    }
-    //}}}
-    //{{{ public function get_entry_details_by_slug_and_type_id($slug, $type_id, $use_cache = TRUE, $expire = 0)
-    public function get_entry_details_by_slug_and_type_id($slug, $type_id, $use_cache = TRUE, $expire = 0)
-    {
-        /*
-        $dt_dfields = array(
-            'select' => array(
-                'ety.id', 'ety.name'
-            ),
-            'from' => 'MPContentEntryType ety',
-            'where' => 'ety.id = ?'
-        );
-        $types = dql_exec($dt_fields, array($id));
-        $type = $types[0]['name'];
-        return self::get_entry_details_by_slug_and_type_name($slug, $type, $use_cache, $expire);
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_entry_details_by_slug_and_type_name($slug, $type, $use_cache = TRUE, $expire = 0)
-    public function get_entry_details_by_slug_and_type_name($slug, $type, $use_cache = TRUE, $expire = 0)
-    {
-        if ($use_cache)
-        {
-            $entry_slug = self::get_entry_slug_id($type, $slug, TRUE);
-            $entry = MPCache::get('entry:'.$entry_slug['id'], 'MPContent');
-            $has_cache = !is_null($entry['entry']);
-        }
-        if (!$use_cache || !$has_cache)
-        {
-            /*
-            $dql = Doctrine_Query::create()
-                    ->select('
-                        em.id as id, em.created as created, em.revision as revision,
-                        eti.title, eti.slug, eti.modified
-                    ')
-                    ->from('MPContentEntryTitle eti')
-                    ->leftJoin('eti.MPContentEntryMeta em')
-                    ->leftJoin('em.MPContentEntryType ety')
-                    ->where('eti.slug = ?', $slug)
-                    ->andWhere('ety.name = ?', $type)
-                    ->andWhere('eti.revision = em.revision');
-
-            $entry['entry'] = array_pop($dql->execute(array(), Doctrine::HYDRATE_ARRAY));
-            $entry['data'] = self::get_field_data_by_entry_id_and_revision(
-                $entry['entry']['id'],
-                $entry['entry']['revision']
-            );
-            */
-        }
-        if ($use_cache && !$has_cache)
-        {
-            MPCache::set('entry:'.$entry_slug['id'], $entry, $expire, 'MPContent');
-        }
-
-        return $entry;
-    }
-    //}}}
     //{{{ public function get_entry_type($query = array(), $fields = array())
     public function get_entry_type($query = array(), $fields = array())
     {
@@ -1019,185 +727,47 @@ class MPContent
         return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
     }
     //}}}
-    //{{{ public function get_field_data_by_entry_id_and_revision($id, $revision)
-    public function get_field_data_by_entry_id_and_revision($id, $revision)
+    //{{{ public function get_revision($query = array(), $fields = array())
+    /**
+     * Gets entry types
+     */
+    public function get_revision($query = array(), $fields = array())
     {
-        $data = array();
-        /*
-        $df_dql = Doctrine_Query::create()
-                    ->select('
-                        fd.cdata, fd.bdata, fd.akey, fd.meta, 
-                        ft.name as name, ft.multiple as multiple,
-                        ft.id as type_id, ft.type as type_type,
-                        fm.id as meta_id, fm.name as meta_name
-                    ')
-                    ->from('MPContentMPFieldMPData fd')
-                    ->leftJoin('fd.MPContentMPFieldMeta fm')
-                    ->leftJoin('fm.MPContentMPFieldType ft')
-                    ->where('fd.content_entry_meta_id = ?', $id)
-                    ->andWhere('fd.revision = ?', $revision);
-        $field_rows = $df_dql->execute()->toArray();
-
-        $field_data_raw = array();
-        $field_types = array();
-        foreach ($field_rows as $row)
-        {
-            if (!is_null($row['type_id']))
-            {
-                $field_data_raw[$row['type_id']][$row['meta_name']][$row['akey']][] = $row;
-                $field_types[$row['type_id']] = array(
-                    'type' => $row['type_type'], 
-                    'multiple' => (bool)$row['multiple'],
-                    'name' => $row['name']
-                );
-            }
-        }
-
-        foreach ($field_types as $type_id => $type_info)
-        {
-            $field_data = MPField::quick_act('read', $type_info['type'], $field_data_raw[$type_id]);
-            $temp = array();
-            if ($type_info['multiple'])
-            {
-                foreach ($field_data as $mkey => $fd)
-                {
-                    foreach ($fd as $akey => $cdata)
-                    {
-                        $temp[$akey][$mkey] = $cdata;
-                    }
-                }
-            }
-            else
-            {
-                foreach ($field_data as $mkey => $fd)
-                {
-                    $temp[$mkey] = array_pop($fd);
-                }
-            }
-            $data[$type_info['name']] = $temp;
-        }
-        */
-
-        return $data;
+        return MPDB::selectCollection('mpcontent_entry_revision')->findOne($query, $fields);
     }
     //}}}
-    //{{{ public function get_field_details_by_id($id)
-    public function get_field_details_by_id($id)
+    //{{{ public function get_revision_by_entry_id_and_revision($id, $revision, $fields = array())
+    /**
+     * Gets entry types
+     */
+    public function get_revision_by_entry_id_and_revision($id, $revision, $fields = array())
     {
-        $field = array();
-        $field['type'] = self::get_field_type_by_id(
-            $id,
-            array(
-                'select' => array(
-                    'ft.id', 'ft.name', 'ft.type', 'ft.weight',
-                    'ft.multiple', 'ft.description',
-                    'fg.id as content_field_group_id', 
-                    'fg.content_entry_type_id as content_entry_type_id'
-                ),
-                'leftJoin' => 'ft.MPContentMPFieldGroup fg'
-            )
-        );
-        $field['meta'] = self::get_field_meta_by_type_id($id);
-        return $field;
+        $query = is_object($id) && get_class($id) === 'MongoId'
+            ? array('entry._id' => $id)
+            : array('entry._id' => new MongoId($id));
+        $query['revision'] = $revision;
+        return self::get_revision($query, $fields);
     }
     //}}}
-    //{{{ public function get_field_details_by_entry_type_name($name)
-    public function get_field_details_by_entry_type_name($name)
+    //{{{ public function get_revisions($query = array(), $fields = array())
+    /**
+     * Gets entry types
+     */
+    public function get_revisions($query = array(), $fields = array())
     {
-        $tree = array();
-        /*
-        $dql = Doctrine_Query::create()
-               ->from('MPContentMPFieldMeta fm')
-               ->leftJoin('fm.MPContentMPFieldType ft')
-               ->leftJoin('ft.MPContentMPFieldGroup fg')
-               ->leftJoin('fg.MPContentEntryType et')
-               ->where('et.name = ?');
-        $rows = $dql->execute(array($name), Doctrine::HYDRATE_ARRAY);
-        $details = array();
-        $groups = array();
-        $types = array();
-        foreach ($rows as $row)
-        {
-            $field_type = $row['MPContentMPFieldType'];
-            $field_group = $row['MPContentMPFieldType']['MPContentMPFieldGroup'];
-            $group_name = $field_group['name'];
-            if (!eka($tree, $group_name))
-            {
-                unset($field_group['MPContentEntryType']);
-                $tree[$group_name] = $field_group;
-                $tree[$group_name]['fields'] = array();
-            }
-            if (!eka($tree, $group_name, 'fields', $field_type['id']))
-            {
-                unset($field_type['MPContentMPFieldGroup']);
-                $tree[$group_name]['fields'][$field_type['id']] = $field_type;
-                $tree[$group_name]['fields'][$field_type['id']]['meta'] = array();
-            }
-            $tree[$group_name]['fields'][$field_type['id']]['meta'][$row['name']] = $row;
-            unset($tree[$group_name]['fields'][$field_type['id']]['meta'][$row['name']]['MPContentMPFieldType']);
-        }
-        */
-        return $tree;
+        return MPDB::selectCollection('mpcontent_entry_revision')->find($query, $fields);
     }
     //}}}
-    //{{{ public function get_field_meta($query = array(), $fields = array())
-    public function get_field_meta($query = array(), $fields = array())
+    //{{{ public function get_revisions_by_entry_id($id, $fields = array())
+    /**
+     * Gets entry types
+     */
+    public function get_revisions_by_entry_id($id, $fields = array())
     {
-        /*
-        $dfields = array(
-            'select' => array(
-                'fm.id', 'fm.name', 'fm.label', 'fm.required',
-                'fm.meta', 'fm.default_data'
-            ),
-            'from' => 'MPContentMPFieldMeta fm'
-        );
-        $nfields = array_merge($dfields, $fields);
-        $metas = dql_exec($nfields, $query);
-        return $metas;
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_field_meta_by_type_id($id, $fields = array())
-    public function get_field_meta_by_type_id($id, $fields = array())
-    {
-        $dfields = array('where' => 'fm.content_field_type_id = ?');
-        $nfields = array_merge($dfields, $fields);
-        $param = array($id);
-        $metas = array();
-        $rows = self::get_field_meta($param, $nfields);
-        foreach ($rows as $row)
-        {
-            $metas[$row['name']] = $row;
-        }
-        return $metas;
-    }
-    //}}}
-    //{{{ public function get_field_type($query = array(), $fields = array())
-    public function get_field_type($query = array(), $fields = array())
-    {
-        /*
-        $dfields = array(
-            'select' => array(
-                'ft.id', 'ft.name', 'ft.type', 'ft.weight',
-                'ft.multiple', 'ft.description'
-            ),
-            'from' => 'MPContentMPFieldType ft'
-        );
-        $s = array_merge($dfields, $fields);
-        return dql_exec($s, $query);
-        */
-        return array();
-    }
-    //}}}
-    //{{{ public function get_field_type_by_id($id, $fields = array())
-    public function get_field_type_by_id($id, $fields = array())
-    {
-        $dfields = array('where' => 'ft.id = ?');
-        $nfields = array_merge($dfields, $fields);
-        $param = array($id);
-        $type = array_pop(self::get_field_type($param, $nfields));
-        return $type;
+        $query = is_object($id) && get_class($id) === 'MongoId'
+            ? array('entry._id' => $id)
+            : array('entry._id' => new MongoId($id));
+        return self::get_revisions($query, $fields);
     }
     //}}}
     //{{{ public function get_latest_entries_created($query = array(), $fields = array())
@@ -1342,27 +912,31 @@ class MPContent
             array('_id', 'name', 'nice_name'),
             ''
         );
+        $entry_data_format = array_fill_keys(
+            array('_id', 'title', 'slug', 'weight', 'revision', 'entry_type', 'modified', 'data', 'status'),
+            ''
+        );
         $entry_type_data = array_join($entry_type_data_format, $entry_type);
-        $entry_data = $entry['entry'];
-        if (!ake('weight', $entry_data))
+        $entry_data = array_join($entry_data_format, $entry['entry']);
+        if (!is_numeric($entry_data['weight']))
         {
             $entry_data['weight'] = 0;
         }
+        $entry_data['revision'] = 0;
         $entry_data['entry_type'] = $entry_type_data;
-        $entry_data['updated'] = new MongoDate();
+        $entry_data['modified'] = new MongoDate();
         $entry_data['data'] = $entry['data'];
 
         $mpentry = MPDB::selectCollection('mpcontent_entry');
         $mpentry->save($entry_data, array('safe' => TRUE));
 
-        $mpentry_revision = MPDB::selectCollection('mpcontent_entry_revision');
-        $revisions = $mpentry_revision->find(array('entry._id' => $entry_data['_id']), array('revision'));
+        $revisions = self::get_revisions_by_entry_id($entry_data['_id'], array('_id' => 1));
         $num_revisions = $revisions->hasNext() ? $revisions->count() : 0;
         $revision = array(
             'entry' => $entry_data,
             'revision' => ++$num_revisions,
         );
-        $mpentry_revision->save($revision, array('safe' => TRUE));
+        MPDB::selectCollection('mpcontent_entry_revision')->save($revision, array('safe' => TRUE));
         return $entry_data;
     }
     //}}}

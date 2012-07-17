@@ -288,35 +288,17 @@ class MPField
     /**
      * Retrieves field schemas.
      *
-     * @param MongoId|string $id MongoId or string representation of MongoId
+     * @param MongoId|array $field MongoId or query array
      * @return array
      */
-    public static function get_field($id, $fields = array())
+    public static function get_field($field, $fields = array())
     {
-        $query['_id'] = is_string($id)
-            ? new MongoId($id)
-            : $id;
+        $query = is_object($field) && get_class($field) === 'MongoId'
+            ? array('_id' => $field)
+            : $field;
         $mpfield = MPDB::selectCollection('mpfield_field');
         $field = $mpfield->findOne($query, $fields);
         return $field;
-    }
-
-    //}}}
-    // {{{ public static function get_fields($ids, $fields = array())
-    /**
-     * Retrieves field schemas.
-     *
-     * @param array $ids MongoId or string representation of MongoId
-     * @return MongoCursor
-     */
-    public static function get_fields($ids, $fields = array())
-    {
-        $query['_id'] = array(
-            '$in' => $ids,
-        );
-        $mpfield = MPDB::selectCollection('mpfield_field');
-        $cursor = $mpfield->find($query, $fields);
-        return $cursor;
     }
 
     //}}}

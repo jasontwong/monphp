@@ -15,14 +15,14 @@ MPAdmin::set('title', 'Edit Entries');
 // {{{ data prep
 $ordering = FALSE;
 $limits = array(10,25,50,100);
-$limits = array_combine($limits, $limits);
-$limits += array(0 => 'all');
+$limits = array_combine($limits, $limits) + array(0 => 'all');
+
 
 $types = array('' => 'show all types');
-$entry_types = MPContent::get_entry_types(array(), array('select' => array('ety.id', 'ety.name')));
+$entry_types = MPContent::get_entry_types();
 foreach($entry_types as $type)
 {
-    $types[$type['id']] = $type['name'];
+    $types[$type['name']] = $type['nice_name'];
 }
 $order_opts = array('modified DESC', 'modified ASC', 'title DESC', 'title ASC');
 $keys = array('limit', 'type', 'order', 'query');
@@ -95,22 +95,12 @@ if (isset($_GET['filter']))
     $filter = array_merge($filter, $layout->acts('post', $_GET['filter']));
     $layout->merge($_GET['filter']);
 }
-$cemt = Doctrine::getTable('MPContentEntryMeta');
-if (!strlen($filter['order']))
+$query = array();
+if (strlen($filter['type']))
 {
-    $filter['order'] = 'modified DESC';
+    $query['entry_type.name'] = $filter['type'];
 }
-if (is_numeric($filter['type']))
-{
-    $type = MPContent::get_entry_type_by_id($filter['type']);
-    $ordering = $type['ordering'];
-    $entries_query = $cemt->queryTypeEntries($filter['type'], $ordering && $filter['limit'] == 0, $filter['order']);
-}
-else
-{
-    $ordering = FALSE;
-    $entries_query = $cemt->queryAllEntries($filter['order']);
-}
+/* search implementation
 if (strlen($filter['query']))
 {
     $spec = array(
@@ -128,7 +118,13 @@ if (strlen($filter['query']))
     }
     $entries_query->andWhereIn('em.id', $ids);
 }
-
+*/
+$entries = MPContent::get_entries($query);
+$entries->sort(array(
+    'modified' => -1, 
+    '_id' => -1, 
+    'title' => 1)
+);
 if ($filter['limit'] != 0)
 {
     $page = isset($filter['page'])
@@ -137,10 +133,8 @@ if ($filter['limit'] != 0)
     $limit = is_numeric($filter['limit'])
         ? $filter['limit']
         : 25;
-    $entries_query->offset(($page - 1) * $limit)->limit($limit);
+    $entries->skip(($page - 1) * $limit)->limit($limit);
 }
-$entries = $entries_query->fetchArray();
-
 // }}}
 // {{{ form build
 $form = new MPFormRows;
@@ -161,9 +155,11 @@ $form->add_group(
             array(
                 'fields' => $layout->get_layout('order'),
             ),
+            /*
             array(
                 'fields' => $layout->get_layout('query'),
             ),
+            */
             array(
                 'fields' => $layout->get_layout('submit'),
             ),
@@ -173,5 +169,3 @@ $form->add_group(
 );
 
 // }}}
-
-?>

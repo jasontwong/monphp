@@ -198,6 +198,18 @@
                         });
                 }
             })
+            .on({
+                mouseenter: function() {
+                    $(this)
+                        .removeClass('fields_mouseout')
+                        .addClass('fields_mouseover');
+                },
+                mouseleave: function() {
+                    $(this)
+                        .removeClass('fields_mouseover')
+                        .addClass('fields_mouseout');
+                }
+            }, '.content_multiple_fields_additional')
             .each(function() {
                 $('> div.label', this).append(content_multiple_add.clone('true'));
                 $('> .fields:gt(0)', this).addClass('content_multiple_fields_additional');
@@ -206,19 +218,6 @@
                     .append(content_multiple_move_down.clone(true))
                     .append(content_multiple_move_up.clone(true))
                     .append(content_multiple_remove.clone(true));
-            });
-        $('> .content_multiple_fields_additional', content_multiple)
-            .on({
-                mouseover: function() {
-                    $(this)
-                        .removeClass('fields_mouseout')
-                        .addClass('fields_mouseover');
-                },
-                mouseout: function() {
-                    $(this)
-                        .removeClass('fields_mouseover')
-                        .addClass('fields_mouseout');
-                }
             });
         //}}}
         // {{{ collapsible items

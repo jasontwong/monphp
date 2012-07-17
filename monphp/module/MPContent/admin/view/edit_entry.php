@@ -1,43 +1,39 @@
 <?php
 
-$revisions = (int)$entry['revisions'];
-$entry_revision = (int)$entry['revision'];
-$current_revision = URI_PARTS === 6 ? URI_PART_5 : $entry_revision;
-$modified = (int)$entry['modified'];
+// $revisions = (int)$entry['revisions'];
+$revisions = MPContent::get_revisions_by_entry_id(URI_PART_4, array('revision' => 1, '_id' => 1));
+$current_revision = URI_PARTS === 6 ? (int)URI_PART_5 : 0;
+$modified = $entry['modified']->sec;
 
 ?>
 
-<?php if ($revisions): ?>
+<?php if ($revisions->sort(array('_id' => -1))->hasNext()): ?>
 
-<?php $r_dates = Doctrine_Query::create()->select('modified')->from('MPContentEntryTitle')->where('content_entry_meta_id = ?', array($entry['id']))->fetchArray(); ?>
-<div id='sidebar'>
+<aside id="sidebar">
     <form name='content_revision_jump' method='post' action='<?php echo URI_PATH ?>'>
         <div class='revisions'>
             <h3>Revisions</h3>
             <select name='revision'>
-                <?php for ($i = 0; $i <= $revisions; ++$i): ?>
-                    <?php $selected = $i == $current_revision ? ' selected="selected"' : '' ?>
-                    <option value='<?php echo $i; ?>' <?php echo $selected ?>><?php echo $i ?> - <?php echo date('Y-m-d', $r_dates[$i]['modified']); ?></option>
-                <?php endfor ?>
+                <?php foreach ($revisions as $revision): ?>
+                    <?php $selected = $revision['revision'] === $current_revision ? ' selected="selected"' : '' ?>
+                    <option value='<?php echo $revision['revision']; ?>' <?php echo $selected ?>><?php echo $revision['revision'] ?> - <?php echo date('Y-m-d', $revision['_id']->getTimestamp()); ?></option>
+                <?php endforeach ?>
             </select>
             <button name='do' value='jump' type='submit'>
                 Go to revision
             </button>
-            <?php if ($entry_revision != $current_revision): ?>
+            <?php if ($current_revision !== 0): ?>
                 <button name='do' value='set' type='submit'>
                     Set revision #<?php echo urldecode($current_revision) ?> for use
                 </button>
-            <?php else: ?>
-                <?php if ($current_revision != $revisions): ?>
+                <?php if ($current_revision === $entry['revision']): ?>
                     <p>You are viewing the current revision that this entry is set to show</p>
-                <?php endif ?>
-            <?php endif ?>
-            <?php if ($current_revision != $revisions): ?>
+                <?php endif; ?>
                 <p>You are currently looking at revision #<?php echo urldecode($current_revision) ?>, made in <?php echo date('Y-m-d H:i:s', $modified); ?></p>
             <?php endif ?>
         </div>
     </form>
-</div>
+</aside>
 
 <?php endif ?>
 

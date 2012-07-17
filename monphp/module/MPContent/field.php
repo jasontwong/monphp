@@ -2,7 +2,7 @@
 
 class MPContentField
 {
-    //{{{ public static function field_fieldtype_mpcontent_relationship($key, $data = array())
+    // {{{ public static function field_fieldtype_mpcontent_relationship($key, $data = array())
     public static function field_fieldtype_mpcontent_relationship($key, $data = array())
     {
         return array(
@@ -15,8 +15,8 @@ class MPContentField
             ),
         );
     }
-    //}}}
-    //{{{ public static function field_layout_mpcontent_relationship($meta = array())
+    // }}}
+    // {{{ public static function field_layout_mpcontent_relationship($meta = array())
     public static function field_layout_mpcontent_relationship($meta = array())
     {
         $names = deka(array(), $meta, 'data', 'meta', 'content_type_name');
@@ -53,9 +53,8 @@ class MPContentField
             );
         }
     }
-
-    //}}}
-    //{{{ public static function field_meta_mpcontent_relationship($key, $data = array())
+    // }}}
+    // {{{ public static function field_meta_mpcontent_relationship($key, $data = array())
     public static function field_meta_mpcontent_relationship($key, $data = array())
     {
         $types = MPContent::get_entry_types(array(), array('name' => TRUE, 'nice_name' => TRUE));
@@ -97,9 +96,8 @@ class MPContentField
             ),
         );
     }
-
-    //}}}
-    //{{{ public static function field_public_mpcontent_relationship()
+    // }}}
+    // {{{ public static function field_public_mpcontent_relationship()
     public static function field_public_mpcontent_relationship()
     {
         return array(
@@ -108,6 +106,5 @@ class MPContentField
             'name' => 'Relationship',
         );
     }
-
-    //}}}
+    // }}}
 }

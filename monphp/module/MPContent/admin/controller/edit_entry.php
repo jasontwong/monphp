@@ -1,15 +1,20 @@
 <?php
 
-$mpentry = MPDB::selectCollection('mpcontent_entry');
-$entry_id = new MongoId(URI_PART_4);
-$entry = $mpentry->findOne(array('_id' => $entry_id));
-
+$entry = MPContent::get_entry_by_id(URI_PART_4);
 if (is_null($entry))
 {
     MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry does not exist');
     header('Location: /admin/');
     exit;
 }
+$entry_type = MPContent::get_entry_type_by_name($entry['entry_type']['name']);
+if (is_null($entry_type))
+{
+    MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry does not belong to the entry type: ' . $entry_type['nice_name']);
+    header('Location: /admin/');
+    exit;
+}
+$entry_field_groups = &$entry_type['field_groups'];
 // {{{ get revision
 $revision = NULL;
 if (eka($_GET, 'revision'))
@@ -27,11 +32,11 @@ if (!is_null($revision))
 }
 // }}}
 // {{{ check access
-if ($user_access = MPUser::has_perm('edit content entries type', 'edit content entries type-'.$entry_type['id']))
+if ($user_access = MPUser::has_perm('edit content entries type', 'edit content entries type-'.$entry_type['name']))
 {
     $user_access_level = MPContent::ACCESS_EDIT;
 }
-elseif ($user_access = MPUser::has_perm('view content entries type', 'view content entries type-'.$entry_type['id']))
+elseif ($user_access = MPUser::has_perm('view content entries type', 'view content entries type-'.$entry_type['name']))
 {
     $user_access_level = MPContent::ACCESS_VIEW;
 }
@@ -40,7 +45,7 @@ else
     $user_access_level = MPContent::ACCESS_DENY;
 }
 
-$module_access_level = MPModule::h('mpcontent_entry_edit_access', MPModule::TARGET_ALL, $entry_type['id'], URI_PART_4);
+$module_access_level = MPModule::h('mpcontent_entry_edit_access', MPModule::TARGET_ALL, $entry_type['name'], URI_PART_4);
 $access_level = max($module_access_level, $user_access_level);
 
 if ($access_level === MPContent::ACCESS_DENY)
@@ -63,6 +68,7 @@ mp_enqueue_script(
 );
 //{{{ layout
 $layout = new MPField();
+/*
 $entry_sidebar = MPModule::h('mpcontent_entry_sidebar_edit', MPModule::TARGET_ALL, &$entry);
 $esides = array();
 foreach ($entry_sidebar as $mod => $groups)
@@ -78,6 +84,7 @@ foreach ($entry_sidebar as $mod => $groups)
         $layout->add_layout($glayout, $glayout['name']);
     }
 }
+*/
 $layout->add_layout(
     array(
         'field' => MPField::layout('text'),
@@ -85,26 +92,6 @@ $layout->add_layout(
         'type' => 'text',
         'value' => array(
             'data' => $entry['title']
-        )
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('hidden'),
-        'name' => 'content_entry_meta_id',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => $entry['id']
-        )
-    )
-);
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('hidden'),
-        'name' => 'content_entry_type_id',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => $entry['content_entry_type_id']
         )
     )
 );
@@ -118,6 +105,27 @@ $layout->add_layout(
         )
     )
 );
+$layout->add_layout(
+    array(
+        'field' => MPField::layout(
+            'dropdown',
+            array(
+                'data' => array(
+                    'options' => array_combine(
+                        $entry_type['statuses'], 
+                        $entry_type['statuses']
+                    ),
+                ),
+            )
+        ),
+        'name' => 'status',
+        'type' => 'dropdown',
+        'value' => array(
+            'data' => $entry['status'],
+        ),
+    )
+);
+/*
 $layout->add_layout(
     array(
         'field' => MPField::layout('date'),
@@ -138,6 +146,7 @@ $layout->add_layout(
         )
     )
 );
+*/
 $layout->add_layout(
     array(
         'field' => MPField::layout('submit_reset'),
@@ -174,89 +183,37 @@ $layout->add_layout(
     )
 );
 // {{{ custom fields
-$cfmt = Doctrine::getTable('MPContentMPFieldMeta');
-foreach ($entry['field_groups'] as $field_group)
+foreach ($entry_field_groups as &$entry_field_group)
 {
     $rows = array();
-    foreach ($field_group['fields'] as $fid => $field)
+    foreach ($entry_field_group['fields'] as &$entry_field)
     {
-        $cfm = $cfmt->findByMPContentMPFieldTypeId($field['id'])->toArray();
+        $field = MPField::get_field($entry_field['id']);
         $fmeta = $fval = array();
-        foreach ($cfm as $fm)
+        foreach ($field['meta'] as $nm => &$fm)
         {
-            $fmeta[$fm['name']]['meta'] = $fm['meta'];
-            if (strlen($fm['label']))
-            {
-                $fmeta[$fm['name']]['label'] = $fm['label'];
-            }
-            /* This isn't doing anything...
-            $fmeta[$fm['name']]['class'] = $fm['required']
-                ? 'required_field'
-                : '';
-            */
-            $fval[$fm['name']] = $fm['default_data'];
+            $fval[$nm] = $fm['default_data'];
+            unset($fm['default_data']);
+            $fmeta[$nm] = $fm;
         }
+        $fval = array_merge($fval, deka(array(), $entry, 'data', $field['nice_name']));
         $layout->add_layout(
             array(
-                'field' => MPField::layout($field['type'], $fmeta),
-                'name' => $field['id'],
+                'field' => MPField::layout($field['type'], $field['meta']),
+                'name' => $field['nice_name'],
                 'type' => $field['type'],
-                'array' => (boolean)$field['multiple'],
-                'value' => array_merge($fval, $field['data'])
+                'required' => $field['required'],
+                'array' => $field['multiple'],
+                'value' => $fval,
             )
         );
         if (isset($_POST['data']))
         {
             $layout->merge($_POST['data']);
-            $_POST['data'][$field['id']]['_content_entry_meta_id'] = $entry['id'];
         }
-        $flayout = $layout->get_layout($field['id']);
-        switch ($flayout['type'])
-        {
-            case 'relationship':
-            case 'relationship_multiple':
-                if (!deka(FALSE, $fmeta, 'data', 'meta', 'ordering'))
-                {
-                    break;
-                }
-            case 'list_double_ordered':
-                $flayout['value']['data'] = deka(array(), $flayout, 'value', 'data');
-                if (is_array($flayout['value']['data']))
-                {
-                    $flvalues = array();
-                    foreach ($flayout['value']['data'] as $flid)
-                    {
-                        if (eka($flayout, 'field', 'data', 'options', $flid))
-                        {
-                            $flvalues[$flid] = $flayout['field']['data']['options'][$flid];
-                        }
-                    }
-                    $flayout['field']['data']['options'] = $flvalues + $flayout['field']['data']['options'];
-                }
-            break;
-            case 'file':
-                $fdata = deka(array(0 => ''), $flayout, 'value', 'data');
-                foreach ($fdata as $k => $v)
-                {
-                    if ($flayout['array'] && ake(0,$v) && strlen($v[0]))
-                    {
-                        $flayout['html_before']['data'][$k] = '<a href="/file/upload/'.$v[0].'" target="_blank">Open File</a><br />';
-                    }
-                    elseif (!$flayout['array'] && strlen($v))
-                    {
-                        $flayout['html_before']['data'] = '<a href="/file/upload/'.$v.'" target="_blank">Open File</a><br />';
-                    }
-                    else
-                    {
-                        $flayout['hidden']['delete'] = $flayout['array']
-                            ? array($k => TRUE)
-                            : TRUE;
-                    }
-                }
-            break;
-        }
+        $flayout = $layout->get_layout($field['nice_name']);
         $row['fields'] = $flayout;
-        $row['label']['text'] = $field['name'];
+        $row['label']['text'] = $field['nice_name'];
         if (strlen($field['description']))
         {
             $row['description']['text'] = $field['description'];
@@ -275,13 +232,12 @@ foreach ($entry['field_groups'] as $field_group)
                 'class' => 'clear tabbed'
             ),
             'label' => array(
-                'text' => $field_group['name']
+                'text' => $entry_field_group['nice_name']
             ),
             'rows' => $rows
         );
     }
 }
-
 // }}}
 // }}}
 //{{{ form submission
@@ -299,54 +255,17 @@ if (isset($_POST['form']))
             }
             elseif (ake('submit', $form))
             {
-                $entry_data = $layout->acts('post', $_POST['entry']);
-                $meta = $layout->acts('post', $_POST['meta']);
-                $data = $layout->acts('save', $_POST['data'], $entry_data);
-                $cemt->saveEntryRevision($entry_data, $data, $meta);
-
-                if (isset($_POST['module']))
+                $content['entry'] = array_merge($layout->acts('post', $_POST['entry']), $entry);;
+                if (!ake('data', $_POST))
                 {
-                    MPModule::h('mpcontent_entry_sidebar_edit_process', MPModule::TARGET_ALL, &$layout, $meta, $_POST['module']);
+                    $_POST['data'] = array();
                 }
-
-                //{{{ MPCache: updating block
-                $entry_meta_id = $meta['content_entry_meta_id'];
-                $entry_type_id = $meta['content_entry_type_id'];
-                $content_type = MPContent::get_entry_type_details_by_id($entry_type_id);
-                $content_type_name = $content_type['type']['name'];
-
-                // MPCache: update single entry
-                $entry = MPContent::get_entry_details_by_id($entry_meta_id, FALSE);
-                MPCache::set('entry:'.$entry_meta_id, $entry, 0, 'MPContent');
-
-                // MPCache: update all entries for content type
-                $entries = MPContent::get_entries_details_by_type_id($entry_type_id, array(), FALSE);
-                foreach ($entries as &$row)
-                {
-                    if ($row['entry']['id'] == $entry_meta_id)
-                    {
-                        $row = $entry;
-                        $row['entry']['type_id'] = $entry_type_id;
-                    }
-                }
-                MPCache::set($content_type_name.' - entries', $entries, 0, 'MPContent');
-
-                // MPCache: update ids slugs map for content type
-                $ids_slugs = MPContent::get_entries_slugs($content_type_name, FALSE);
-                foreach ($ids_slugs as &$id_slug)
-                {
-                    if ($id_slug['id'] == $entry['entry']['id'])
-                    {
-                        $id_slug['title'] = $entry['entry']['title'];
-                        $id_slug['slug'] = $entry['entry']['slug'];
-                    }
-                }
-                MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
-                //}}}
-
-                MPModule::h('mpcontent_entry_edit_finish', MPModule::TARGET_ALL, $meta);
-
-                header('Location: /admin/module/MPContent/edit_entry/'.URI_PART_4.'/');
+                $content['data'] = $_POST['data'];
+                $entry_data = MPContent::save_entry($content, $entry_type);
+                MPModule::h('mpcontent_entry_edit_finish', MPModule::TARGET_ALL, $entry_data);
+                MPModule::h('mpcontent_entry_edit_finish_' . $entry_type['name'], MPModule::TARGET_ALL, $entry_data);
+                MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Entry successfully saved');
+                header('Location: /admin/module/MPContent/edit_entry/' . URI_PART_4 . '/');
                 exit;
             }
             elseif (ake('duplicate', $form))
@@ -354,61 +273,26 @@ if (isset($_POST['form']))
                 $content['entry'] = $layout->acts('post', $_POST['entry']);
                 $content['entry']['title'] .= ' COPY';
                 $content['entry']['slug'] .= '-copy';
-                $content['meta'] = $layout->acts('post', $_POST['meta']);
-                $content['data'] = $layout->acts('save', $_POST['data'], $content['entry']);
-        
-                $entry_meta = new MPContentEntryMeta;
-                $entry_meta->merge($content['meta']);
-                if ($entry_meta->isValid())
+                if (!ake('data', $_POST))
                 {
-                    $entry_meta->save();
-                    $content['meta']['content_entry_meta_id'] = $eid = $entry_meta->id;
+                    $_POST['data'] = array();
+                }
+                $content['data'] = $_POST['data'];
         
-                    $entry_title = new MPContentEntryTitle;
-                    $entry_title->merge($content['entry']);
-                    $entry_title->content_entry_meta_id = $eid;
-                    $entry_title->save();
-        
-                    $fields = Doctrine::getTable('MPContentMPFieldMPData');
-                    $fields->saveEntryMPData($eid, $content['data'], 0);
-        
-                    MPModule::h('mpcontent_entry_sidebar_new_process', MPModule::TARGET_ALL, $layout, $content['meta'], $_POST['module']);
-        
-                    //{{{ MPCache: updating block
-                    $entry_meta_id = $eid;
-                    $entry_type_id = $content['meta']['content_entry_type_id'];
-                    $content_type = MPContent::get_entry_type_details_by_id($entry_type_id);
-                    $content_type_name = $content_type['type']['name'];
-
-                    // MPCache: update single entry
-                    $entry = MPContent::get_entry_details_by_id($entry_meta_id, FALSE);
-                    MPCache::set('entry:'.$entry_meta_id, $entry, 0, 'MPContent');
-
-                    // MPCache: update all entries for content type
-                    $entries = MPContent::get_entries_details_by_type_id($entry_type_id, array(), FALSE);
-                    MPCache::set($content_type_name.' - entries', $entries, 0, 'MPContent');
-
-                    // MPCache: update ids slugs map for content type
-                    $ids_slugs = MPContent::get_entries_slugs($content_type_name, FALSE);
-                    MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
-                    //}}}
-
-                    MPModule::h('mpcontent_entry_edit_finish', MPModule::TARGET_ALL, $content['meta']);
-                    header('Location: /admin/module/MPContent/edit_entry/'.$eid.'/');
+                $entry_data = MPContent::save_entry($content, $entry_type);
+                if (is_array($entry_data) && ake('_id', $entry_data))
+                {
+                    MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Entry successfully duplicated');
+                    MPModule::h('mpcontent_entry_new_finish', MPModule::TARGET_ALL, $entry_data);
+                    MPModule::h('mpcontent_entry_new_finish_' . $entry_type['name'], MPModule::TARGET_ALL, $entry_data);
+                    header('Location: /admin/module/MPContent/edit_entry/' . $entry_data['_id']->{'$id'} . '/');
                     exit;
                 }
             }
         }
-        catch (Doctrine_Validator_Exception $e)
+        catch (Exception $e)
         {
-            var_dump($e->getMessage());
-            $errors_array = $entry_title->getErrorStack()->toArray();
-            $errors = array();
-            foreach ($errors_array['validate'] as $error)
-            {
-                $errors[] = $error;
-            }
-            MPAdmin::notify(MPAdmin::TYPE_ERROR, $errors);
+            MPAdmin::notify(MPAdmin::TYPE_ERROR, 'There was an error editing your entry');
         }
     }
     else
@@ -462,6 +346,7 @@ $eform->attr = array(
     'enctype' => 'multipart/form-data',
     'method' => 'post'
 );
+/*
 foreach ($esides as $eside)
 {
     $class = slugify($eside['label']['text']);
@@ -480,6 +365,7 @@ foreach ($esides as $eside)
         'module'
     );
 }
+*/
 $eform->add_group(
     array(
         'attr' => array(
@@ -519,22 +405,6 @@ if (isset($cfgroups))
         $eform->add_group($cfgroup, 'data');
     }
 }
-$eform->add_group(
-    array(
-        'attr' => array(
-            'class' => 'hiddens'
-        ),
-        'rows' => array(
-            array(
-                'fields' => $layout->get_layout('content_entry_type_id')
-            ),
-            array(
-                'fields' => $layout->get_layout('content_entry_meta_id')
-            )
-        )
-    ),
-    'meta'
-);
 if ($access_level === MPContent::ACCESS_EDIT)
 {
     $eform->add_group(

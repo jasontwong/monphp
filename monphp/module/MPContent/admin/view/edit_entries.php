@@ -36,12 +36,9 @@ $thead_desc = array(
     'date this entry was last changed'
 );
 
-if (MPModule::is_active('Taxonomy'))
-{
-    $colgroup[] = 'content_status';
-    $thead[] = 'Status';
-    $thead_desc[] = '';
-}
+$colgroup[] = 'content_status';
+$thead[] = 'Status';
+$thead_desc[] = '';
 
 ?>
 
@@ -65,42 +62,33 @@ if (MPModule::is_active('Taxonomy'))
     </thead>
     <tbody>
         <?php if (count($entries)): ?>
-
             <?php foreach ($entries as $entry): ?>
-                
                 <?php
-                    $title = '<a href="/admin/module/MPContent/edit_entry/'.$entry['id'].'/">'.$entry['title'].'</a>';
-                    $type = '<a href="/admin/module/MPContent/edit_entries/'.$entry['MPContentEntryType']['id'].'/">'.$entry['MPContentEntryType']['name'].'</a>';
-                    $created = date('r', $entry['created']);
-                    $modified = date('m-d-Y h:i A', $entry['modified']);
+                    $title = '<a href="/admin/module/MPContent/edit_entry/' . $entry['_id']->{'$id'} . '/">' . $entry['title'] . '</a>';
+                    $type = '<a href="/admin/module/MPContent/edit_entries/' . $entry['entry_type']['name'] . '/">' . $entry['entry_type']['nice_name'] . '</a>';
+                    $created = date('r', $entry['_id']->getTimestamp());
+                    // $modified = date('m-d-Y h:i A', $entry['modified']);
+                    $modified = date('r', $entry['modified']->sec);
                     if ($modified === $created)
                     {
                         $modified = 'Never';
                     }
+                    $status = strlen($entry['status']) ? $entry['status'] : '&mdash;';
                     $data = array(
                         $title,
                         $type,
                         $modified,
+                        $status,
                     );
-                    if (MPModule::is_active('Taxonomy'))
-                    {
-                        $taxonomy = MPModule::h('mpcontent_get_entry_taxonomy', 'Taxonomy', $entry['MPContentEntryType']['id'], $entry['id'], 'status');
-                        $data[] = deka('-',$taxonomy,'Taxonomy','taxonomy_terms','status',0);
-                    }
                 ?>
                 <tr>
                     <?php foreach ($data as $td): ?>
                     <td><?php echo $td; ?></td>
                     <?php endforeach; ?>
                 </tr>
-
             <?php endforeach ?>
-
         <?php else: ?>
-
             <tr><td colspan='4'>There are no entries</td></tr>
-
         <?php endif ?>
     </tbody>
 </table>
-

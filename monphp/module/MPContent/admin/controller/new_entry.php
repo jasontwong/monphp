@@ -3,10 +3,10 @@
 $entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
 if (is_null($entry_type))
 {
+    MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry type does not exist');
     header('Location: /admin/');
     exit;
 }
-
 MPAdmin::set('title', 'Create New Entry');
 MPAdmin::set('header', 'Add a new &ldquo;' . $entry_type['nice_name'] . '&rdquo;');
 $entry_field_groups = &$entry_type['field_groups'];
@@ -170,7 +170,7 @@ if (ake('entry', $_POST))
         {
             $_POST['data'] = array();
         }
-        $content['data'] = $layout->acts('post', $_POST['data']);
+        $content['data'] = $_POST['data'];
         $layout->merge($_POST['entry']);
         $layout->merge($_POST['data']);
         $entry_data = MPContent::save_entry($content, $entry_type);
