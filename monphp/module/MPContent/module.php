@@ -9,7 +9,7 @@
  */
 class MPContent
 {
-    //{{{ constants
+    // {{{ constants
     const MODULE_DESCRIPTION = 'The workhorse for the CMS';
     const MODULE_AUTHOR = 'Glenn';
     const MODULE_DEPENDENCY = 'MPUser';
@@ -18,16 +18,16 @@ class MPContent
     const ACCESS_VIEW = 2;
     const ACCESS_EDIT = 3;
 
-    //}}}
-    //{{{ properties
+    // }}}
+    // {{{ properties
     /**
      * @staticvar mixed MPContent Types
      */
     public static $types = NULL;
 
-    //}}}
+    // }}}
 
-    //{{{ protected function _rpc_order_entries($json)
+    // {{{ protected function _rpc_order_entries($json)
     protected function _rpc_order_entries($json)
     {
         $data = (array)json_decode($json['data']);
@@ -66,9 +66,9 @@ class MPContent
         return json_encode($result);
     }
 
-    //}}}
+    // }}}
 
-    //{{{ public function cb_mpcontent_edit_type_other_links($links)
+    // {{{ public function cb_mpcontent_edit_type_other_links($links)
     public function cb_mpcontent_edit_type_other_links($links)
     {
         $result = array();
@@ -81,53 +81,53 @@ class MPContent
         }
         return $result;
     }
-    //}}}
-    //{{{ public function cb_mpcontent_edit_type_process()
+    // }}}
+    // {{{ public function cb_mpcontent_edit_type_process()
     public function cb_mpcontent_edit_type_process()
     {
     }
-    //}}}
-    //{{{ public function cb_mpcontent_entry_add_access($access)
+    // }}}
+    // {{{ public function cb_mpcontent_entry_add_access($access)
     public function cb_mpcontent_entry_add_access($access)
     {
         return $access ? max($access) : MPContent::ACCESS_DENY;
     }
-    //}}}
+    // }}}
     // {{{ public function cb_mpcontent_entry_add_finish($meta)
     public function cb_mpcontent_entry_add_finish($meta)
     {
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Successfully created');
     }
-    //}}}
-    //{{{ public function cb_mpcontent_entry_delete_finish($meta)
+    // }}}
+    // {{{ public function cb_mpcontent_entry_delete_finish($meta)
     public function cb_mpcontent_entry_delete_finish($meta)
     {
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Successfully deleted');
     }
-    //}}}
-    //{{{ public function cb_mpcontent_entry_edit_access($access)
+    // }}}
+    // {{{ public function cb_mpcontent_entry_edit_access($access)
     public function cb_mpcontent_entry_edit_access($access)
     {
         return $access ? max($access) : MPContent::ACCESS_DENY;
     }
-    //}}}
-    //{{{ public function cb_mpcontent_entry_sidebar_new_process()
+    // }}}
+    // {{{ public function cb_mpcontent_entry_sidebar_new_process()
     public function cb_mpcontent_entry_sidebar_new_process()
     {
     }
-    //}}}
-    //{{{ public function cb_mpcontent_entry_sidebar_edit_process()
+    // }}}
+    // {{{ public function cb_mpcontent_entry_sidebar_edit_process()
     public function cb_mpcontent_entry_sidebar_edit_process()
     {
     }
-    //}}}
-    //{{{ public function cb_mpcontent_new_type_process()
+    // }}}
+    // {{{ public function cb_mpcontent_new_type_process()
     public function cb_mpcontent_new_type_process()
     {
     }
-    //}}}
+    // }}}
 
-    //{{{ public function hook_mpadmin_enqueu_css()
+    // {{{ public function hook_mpadmin_enqueu_css()
     public function hook_mpadmin_enqueu_css()
     {
         if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
@@ -136,8 +136,8 @@ class MPContent
         }
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_dashboard()
+    // }}}
+    // {{{ public function hook_mpadmin_dashboard()
     public function hook_mpadmin_dashboard()
     {
         $dashboard_items = array();
@@ -246,8 +246,8 @@ class MPContent
         return $dashboard_items;
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_enqueue_js()
+    // }}}
+    // {{{ public function hook_mpadmin_enqueue_js()
     public function hook_mpadmin_enqueue_js()
     {
         if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
@@ -274,14 +274,14 @@ class MPContent
         */
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_module_page($page)
+    // }}}
+    // {{{ public function hook_mpadmin_module_page($page)
     public function hook_mpadmin_module_page($page)
     {
     }
     
-    //}}}
-    //{{{ public function hook_mpadmin_nav()
+    // }}}
+    // {{{ public function hook_mpadmin_nav()
     public function hook_mpadmin_nav()
     {
         $types = self::get_entry_types();
@@ -320,8 +320,8 @@ class MPContent
         return $links;
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_settings_fields()
+    // }}}
+    // {{{ public function hook_mpadmin_settings_fields()
     public function hook_mpadmin_settings_fields()
     {
         $autoslug = array(
@@ -343,14 +343,14 @@ class MPContent
         return array($autoslug);
     }
 
-    //}}}
-    //{{{ public function hook_mpsystem_active()
+    // }}}
+    // {{{ public function hook_mpsystem_active()
     public function hook_mpsystem_active()
     {
     }
 
-    //}}}
-    //{{{ public function hook_mpsystem_install()
+    // }}}
+    // {{{ public function hook_mpsystem_install()
     public function hook_mpsystem_install()
     {
         $db = new MPDB;
@@ -397,8 +397,8 @@ class MPContent
         );
     }
 
-    //}}}
-    //{{{ public function hook_mpuser_perm()
+    // }}}
+    // {{{ public function hook_mpuser_perm()
     public function hook_mpuser_perm()
     {
         $types = self::get_entry_types();
@@ -447,9 +447,9 @@ class MPContent
         return $perms;
     }
 
-    //}}}
+    // }}}
 
-    //{{{ public function prep_mpcontent_entry_sidebar_edit_process($mod, &$layout, &$entry, &$post)
+    // {{{ public function prep_mpcontent_entry_sidebar_edit_process($mod, &$layout, &$entry, &$post)
     public function prep_mpcontent_entry_sidebar_edit_process($mod, &$layout, &$entry, &$post)
     {
         $mpost = array();
@@ -471,8 +471,8 @@ class MPContent
             'use_method' => TRUE
         );
     }
-    //}}}
-    //{{{ public function prep_mpcontent_entry_sidebar_new_process($mod, &$layout, &$entry, &$post)
+    // }}}
+    // {{{ public function prep_mpcontent_entry_sidebar_new_process($mod, &$layout, &$entry, &$post)
     public function prep_mpcontent_entry_sidebar_new_process($mod, &$layout, &$entry, &$post)
     {
         $mpost = array();
@@ -495,8 +495,8 @@ class MPContent
             'use_method' => TRUE
         );
     }
-    //}}}
-    //{{{ public function prep_mpcontent_edit_type_process($mod, &$layout, &$type, $post)
+    // }}}
+    // {{{ public function prep_mpcontent_edit_type_process($mod, &$layout, &$type, $post)
     public function prep_mpcontent_edit_type_process($mod, &$layout, &$type, $post)
     {
         $mpost = array();
@@ -518,8 +518,8 @@ class MPContent
             'use_method' => TRUE
         );
     }
-    //}}}
-    //{{{ public function prep_mpcontent_new_type_process($mod, &$layout, $type, $post)
+    // }}}
+    // {{{ public function prep_mpcontent_new_type_process($mod, &$layout, $type, $post)
     public function prep_mpcontent_new_type_process($mod, &$layout, &$type, $post)
     {
         $mpost = array();
@@ -541,7 +541,7 @@ class MPContent
             'use_method' => TRUE
         );
     }
-    //}}}
+    // }}}
 
     // API
     /**
@@ -580,7 +580,7 @@ class MPContent
      * Caching is enabled with the $use_cache parameter, but this parameter 
      * only exists for methods that return results like those listed above.
      */
-    //{{{ public function get_entry($query = array, $fields = array())
+    // {{{ public function get_entry($query = array, $fields = array())
     /**
      * Gets the row from the id/slug provided from self::get_entries_slugs()
      */
@@ -588,8 +588,8 @@ class MPContent
     {
         return MPDB::selectCollection('mpcontent_entry')->findOne($query, $fields);
     }
-    //}}}
-    //{{{ public function get_entry_by_id($id, $fields = array())
+    // }}}
+    // {{{ public function get_entry_by_id($id, $fields = array())
     /**
      * Gets the row from the id/slug provided from self::get_entries_slugs()
      */
@@ -600,8 +600,8 @@ class MPContent
             : array('_id' => new MongoId($id));
         return self::get_entry($query, $fields);
     }
-    //}}}
-    //{{{ public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
+    // }}}
+    // {{{ public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
     /**
      * Gets the row from the id/slug provided from self::get_entries_slugs()
      */
@@ -617,8 +617,35 @@ class MPContent
         }
         return NULL;
     }
-    //}}}
-    //{{{ public function get_entries($query = array(), $fields = array())
+    // }}}
+    // {{{ public function get_entry_type($query = array(), $fields = array())
+    public function get_entry_type($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
+    }
+    // }}}
+    // {{{ public function get_entry_type_by_name($name, $fields = array())
+    public function get_entry_type_by_name($name, $fields = array())
+    {
+        $query = array(
+            '$or' => array(
+                array('name' => $name),
+                array('nice_name' => $name),
+            ),
+        );
+        return self::get_entry_type($query, $fields);
+    }
+    // }}}
+    // {{{ public function get_entry_types($query = array(), $fields = array())
+    /**
+     * Gets entry types
+     */
+    public function get_entry_types($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
+    }
+    // }}}
+    // {{{ public function get_entries($query = array(), $fields = array())
     /**
      * This tries to be very minimal, getting as little info as needed.
      */
@@ -626,8 +653,8 @@ class MPContent
     {
         return MPDB::selectCollection('mpcontent_entry')->find($query, $fields);
     }
-    //}}}
-    //{{{ public function get_entries_slugs($type = NULL, $use_cache = TRUE, $expire = 0)
+    // }}}
+    // {{{ public function get_entries_slugs($type = NULL, $use_cache = TRUE, $expire = 0)
     public function get_entries_slugs($type = NULL, $use_cache = TRUE, $expire = 0)
     {
         if (!is_null($type) && $use_cache)
@@ -663,8 +690,8 @@ class MPContent
         }
         return $mapping;
     }
-    //}}}
-    //{{{ public function get_entries_by_type_name($name)
+    // }}}
+    // {{{ public function get_entries_by_type_name($name)
     public function get_entries_by_type_name($name)
     {
         $entries = array();
@@ -699,35 +726,8 @@ class MPContent
 
         return $entries;
     }
-    //}}}
-    //{{{ public function get_entry_type($query = array(), $fields = array())
-    public function get_entry_type($query = array(), $fields = array())
-    {
-        return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
-    }
-    //}}}
-    //{{{ public function get_entry_type_by_name($name, $fields = array())
-    public function get_entry_type_by_name($name, $fields = array())
-    {
-        $query = array(
-            '$or' => array(
-                array('name' => $name),
-                array('nice_name' => $name),
-            ),
-        );
-        return self::get_entry_type($query, $fields);
-    }
-    //}}}
-    //{{{ public function get_entry_types($query = array(), $fields = array())
-    /**
-     * Gets entry types
-     */
-    public function get_entry_types($query = array(), $fields = array())
-    {
-        return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
-    }
-    //}}}
-    //{{{ public function get_revision($query = array(), $fields = array())
+    // }}}
+    // {{{ public function get_revision($query = array(), $fields = array())
     /**
      * Gets entry types
      */
@@ -735,8 +735,8 @@ class MPContent
     {
         return MPDB::selectCollection('mpcontent_entry_revision')->findOne($query, $fields);
     }
-    //}}}
-    //{{{ public function get_revision_by_entry_id_and_revision($id, $revision, $fields = array())
+    // }}}
+    // {{{ public function get_revision_by_entry_id_and_revision($id, $revision, $fields = array())
     /**
      * Gets entry types
      */
@@ -748,8 +748,8 @@ class MPContent
         $query['revision'] = $revision;
         return self::get_revision($query, $fields);
     }
-    //}}}
-    //{{{ public function get_revisions($query = array(), $fields = array())
+    // }}}
+    // {{{ public function get_revisions($query = array(), $fields = array())
     /**
      * Gets entry types
      */
@@ -757,8 +757,8 @@ class MPContent
     {
         return MPDB::selectCollection('mpcontent_entry_revision')->find($query, $fields);
     }
-    //}}}
-    //{{{ public function get_revisions_by_entry_id($id, $fields = array())
+    // }}}
+    // {{{ public function get_revisions_by_entry_id($id, $fields = array())
     /**
      * Gets entry types
      */
@@ -769,8 +769,8 @@ class MPContent
             : array('entry._id' => new MongoId($id));
         return self::get_revisions($query, $fields);
     }
-    //}}}
-    //{{{ public function get_latest_entries_created($query = array(), $fields = array())
+    // }}}
+    // {{{ public function get_latest_entries_created($query = array(), $fields = array())
     public function get_latest_entries_created($query = array(), $fields = array())
     {
         /*
@@ -791,8 +791,8 @@ class MPContent
         */
         return array();
     }
-    //}}}
-    //{{{ public function get_latest_entries_modified($query = array(), $fields = array())
+    // }}}
+    // {{{ public function get_latest_entries_modified($query = array(), $fields = array())
     public function get_latest_entries_modified($query = array(), $fields = array())
     {
         /*
@@ -813,8 +813,8 @@ class MPContent
         */
         return array();
     }
-    //}}}
-    //{{{ public function get_most_revised_entries($query = array(), $fields = array())
+    // }}}
+    // {{{ public function get_most_revised_entries($query = array(), $fields = array())
     public function get_most_revised_entries($query = array(), $fields = array())
     {
         /*
@@ -832,8 +832,8 @@ class MPContent
         */
         return array();
     }
-    //}}}
-    //{{{ public function get_entries_titles_by_type_and_field_name($type, $field_name, $field_search)
+    // }}}
+    // {{{ public function get_entries_titles_by_type_and_field_name($type, $field_name, $field_search)
     public function get_entries_titles_by_type_and_field_name($type, $field_name, $field_search)
     {
         /*
@@ -868,7 +868,7 @@ class MPContent
         return array();
     }
 
-    //}}}
+    // }}}
 
     /**
      * search_ API methods
@@ -876,7 +876,7 @@ class MPContent
      * Similar to get_ API methods, except the where clauses use the LIKE 
      * operator instead of =.
      */
-    //{{{ public function search_entry_title_by_title($title, $spec = array())
+    // {{{ public function search_entry_title_by_title($title, $spec = array())
     public function search_entry_title_by_title($title, $spec = array())
     {
         /*
@@ -895,7 +895,7 @@ class MPContent
         return array();
     }
 
-    //}}}
+    // }}}
 
     /**
      * save_ API methods
@@ -905,7 +905,7 @@ class MPContent
      * as well as data formatting specified in the model itself. If an id array
      * key exists then it is treated as an update.
      */
-    //{{{ public function save_entry($entry, $entry_type)
+    // {{{ public function save_entry($entry, $entry_type)
     public function save_entry($entry, $entry_type)
     {
         $entry_type_data_format = array_fill_keys(
@@ -939,8 +939,8 @@ class MPContent
         MPDB::selectCollection('mpcontent_entry_revision')->save($revision, array('safe' => TRUE));
         return $entry_data;
     }
-    //}}}
-    //{{{ public function save_entry_type($entry_type)
+    // }}}
+    // {{{ public function save_entry_type($entry_type)
     public function save_entry_type($entry_type)
     {
         $etc = MPDB::selectCollection('mpcontent_entry_type');
@@ -978,8 +978,8 @@ class MPContent
         $etc->save($entry_type, array('safe' => TRUE));
         return $entry_type;
     }
-    //}}}
-    //{{{ public function save_entry_field(&$fgs, $data)
+    // }}}
+    // {{{ public function save_entry_field(&$fgs, $data)
     /**
      * This function will register a field with the MPField class and record the
      * field into the proper entry type group
@@ -1004,7 +1004,7 @@ class MPContent
                 }
                 $field = MPField::register_field($data);
                 $group['fields'][] = array(
-                    'id' => $field['_id'],
+                    '_id' => $field['_id'],
                     'name' => $field['name'],
                     'weight' => (int)$data['weight'],
                 );
@@ -1022,62 +1022,57 @@ class MPContent
      * only used in where clauses. Some delete_ methods won't follow this
      * convention due to table relations and ondelete rules.
      */
-    //{{{ public function delete_entry_by_id($id)
+    // {{{ public function delete_entry($query = array())
+    public function delete_entry($query = array())
+    {
+        $options = array(
+            'safe' => TRUE,
+            'justOne' => TRUE,
+        );
+        return MPDB::selectCollection('mpcontent_entry_type')->remove($query, $options);
+    }
+    // }}}
+    // {{{ public function delete_entry_by_id($id)
     public function delete_entry_by_id($id)
     {
-        $dqls = array(
-            array(
-                'delete' => 'MPContentMPFieldMPData fd',
-                'where' => 'fd.content_entry_meta_id = ?'
-            ),
-            array(
-                'delete' => 'MPContentEntryTitle eti',
-                'where' => 'eti.content_entry_meta_id = ?'
-            ),
-            array(
-                'delete' => 'MPContentEntryMeta em',
-                'where' => 'em.id = ?'
-            )
-        );
-        foreach ($dqls as $dql)
-        {
-            $do = dql_build($dql);
-            $do->execute(array($id));
-        }
+        $query = is_object($id) && get_class($id) === 'MongoId'
+            ? array('_id' => $id)
+            : array('_id' => new MongoId($id));
+        return self::delete_entry($query);
     }
-    //}}}
-    //{{{ public function delete_entry_type_by_id($id)
-    public function delete_entry_type_by_id($id)
+    // }}}
+    // {{{ public function delete_entry_type($query = array())
+    public function delete_entry_type($query = array())
     {
-        /*
-        $dql = dql_build(array('delete' => 'MPContentMPFieldMPData fd'));
-        $sq = ' SELECT  em.id 
-                FROM    MPContentEntryMeta em
-                WHERE   em.content_entry_type_id = ?';
-        $dql->where('fd.content_entry_meta_id IN ('.$sq.')', $id);
-        $dql->execute();
+        $options = array(
+            'safe' => TRUE,
+            'justOne' => TRUE,
+        );
+        $mpentry_type = MPDB::selectCollection('mpcontent_entry_type');
+        $entry_type = $mpentry_type->findOne($query);
+        
+        if (!is_null($entry_type))
+        {
+            foreach ($entry_type['field_groups'] as &$field_groups)
+            {
+                foreach ($field_groups['fields'] as &$field)
+                {
+                    MPField::deregister($field['_id']);
+                }
+            }
+        }
 
-        $dql = dql_build(array('delete' => 'MPContentMPFieldMeta fm'));
-        $ssq = 'SELECT  fg.id
-                FROM    MPContentMPFieldGroup fg
-                WHERE   fg.content_entry_type_id = ?';
-        $sq = ' SELECT  ft.id 
-                FROM    MPContentMPFieldType ft
-                WHERE   ft.id in ('.$ssq.')';
-        $dql->where('fm.content_field_type_id IN ('.$sq.')', $id);
-        $dql->execute();
-
-        // incomplete, more deletes follow. but at this point the speed is the
-        // same or sometimes better
-
-        // tests show this is as fast or faster than tailored DQLs
-        $cett = Doctrine_Core::getTable('MPContentEntryType');
-        $type = $cett->findById($id);
-        $type->delete();
-        //*/
+        return $mpentry_type->remove($query, $options);
     }
-    //}}}
-    //{{{ public function delete_fields_by_type_name_and_ids($name, $ids)
+    // }}}
+    // {{{ public function delete_entry_type_by_name($name)
+    public function delete_entry_type_by_name($name)
+    {
+        $query['name'] = $name;
+        return self::delete_entry_type($query);
+    }
+    // }}}
+    // {{{ public function delete_fields_by_type_name_and_ids($name, $ids)
     public function delete_fields_by_type_name_and_ids($name, $ids)
     {
         $entry_type = self::get_entry_type_by_name($name);
@@ -1085,32 +1080,15 @@ class MPContent
         {
             foreach ($entry_field_group['fields'] as $k => &$entry_field)
             {
-                $id = $entry_field['id']->{'$id'};
+                $id = $entry_field['_id']->{'$id'};
                 if (in_array($id, $ids))
                 {
-                    MPField::deregister_field($entry_field['id']);
+                    MPField::deregister_field($entry_field['_id']);
                     unset($entry_field_group['fields'][$k]);
                 }
             }
         }
         self::save_entry_type($entry_type);
     }
-    //}}}
-
-    /**
-     * modify_ API methods
-     *
-     * Mostly for a content entries. If the rows are just being updated, the
-     * functionality should fall under the save_ API methods. These are for
-     * more specialized changes (ex. changing live revision # of an entry)
-     */
-    //{{{ public function modify_entry_revision($entry_meta_id, $revision)
-    public function modify_entry_revision($entry_meta_id, $revision)
-    {
-        $dql = dql_build(array('update' => 'MPContentEntryMeta em'));
-        $dql->set('em.revision', $revision)
-            ->where('em.id = ?', $entry_meta_id)
-            ->execute();
-    }
-    //}}}
+    // }}}
 }

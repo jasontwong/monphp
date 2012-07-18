@@ -1,7 +1,7 @@
 [entry]
     - _id
     - entry_type
-        - id
+        - _id
         - name
         - nice_name
     - title
