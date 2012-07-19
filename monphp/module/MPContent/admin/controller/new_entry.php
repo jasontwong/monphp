@@ -1,5 +1,5 @@
 <?php
-
+// {{{ prep
 $entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
 if (is_null($entry_type))
 {
@@ -10,7 +10,6 @@ if (is_null($entry_type))
 MPAdmin::set('title', 'Create New Entry');
 MPAdmin::set('header', 'Add a new &ldquo;' . $entry_type['nice_name'] . '&rdquo;');
 $entry_field_groups = &$entry_type['field_groups'];
-// {{{ check user access
 if ($user_access = MPUser::has_perm('add content entries type', 'add content entries type-' . $entry_type['name']))
 {
     $user_access_level = MPContent::ACCESS_ALLOW;
@@ -30,7 +29,6 @@ if ($access_level < MPContent::ACCESS_ALLOW)
     $efh = '';
     return;
 }
-// }}}
 mp_enqueue_script(
     'mpcontent_field',
     '/admin/static/MPContent/field.js',
@@ -38,6 +36,7 @@ mp_enqueue_script(
     FALSE,
     TRUE
 );
+// }}}
 // {{{ layout
 $layout = new MPField();
 $layout_sidebar = MPModule::h('mpcontent_entry_sidebar_new', MPModule::TARGET_ALL, URI_PART_4);
@@ -99,7 +98,7 @@ foreach ($entry_field_groups as &$entry_field_group)
     $rows = array();
     foreach ($entry_field_group['fields'] as &$entry_field)
     {
-        $field = MPField::get_field($entry_field['id']);
+        $field = MPField::get_field($entry_field['_id']);
         $fmeta = $fval = array();
         foreach ($field['meta'] as $nm => &$fm)
         {

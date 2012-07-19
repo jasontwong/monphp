@@ -66,9 +66,9 @@ $thead_desc[] = '';
                 <?php
                     $title = '<a href="/admin/module/MPContent/edit_entry/' . $entry['_id']->{'$id'} . '/">' . $entry['title'] . '</a>';
                     $type = '<a href="/admin/module/MPContent/edit_entries/' . $entry['entry_type']['name'] . '/">' . $entry['entry_type']['nice_name'] . '</a>';
-                    $created = date('r', $entry['_id']->getTimestamp());
+                    $created = date('m-d-Y h:i A', $entry['_id']->getTimestamp());
                     // $modified = date('m-d-Y h:i A', $entry['modified']);
-                    $modified = date('r', $entry['modified']->sec);
+                    $modified = date('m-d-Y h:i A', $entry['modified']->sec);
                     if ($modified === $created)
                     {
                         $modified = 'Never';

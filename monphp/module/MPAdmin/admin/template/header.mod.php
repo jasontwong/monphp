@@ -8,7 +8,7 @@ $header = MPAdmin::get('header');
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <link type="image/x-icon" href="/favicon.ico" rel="icon"/>
-    <title><?php echo is_null($title) ? '' : $title.' &mdash; ' ?>MPAdmin Interface (<?php echo MPData::query('_Site', 'title') ?>)</title>
+    <title><?php echo is_null($title) ? '' : $title.' &mdash; ' ?>Admin Interface (<?php echo MPData::query('_Site', 'title') ?>)</title>
     <?php MPModule::h('mpadmin_header') ?>
 </head>
 <body>

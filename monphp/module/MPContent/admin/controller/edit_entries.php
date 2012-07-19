@@ -100,7 +100,7 @@ if (strlen($filter['type']))
 {
     $query['entry_type.name'] = $filter['type'];
 }
-/* search implementation
+/* TODO search implementation
 if (strlen($filter['query']))
 {
     $spec = array(

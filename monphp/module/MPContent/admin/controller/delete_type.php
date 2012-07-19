@@ -1,5 +1,5 @@
 <?php
-
+// {{{ prep
 if (!MPUser::perm('edit content type'))
 {
     MPAdmin::set('title', 'Permission Denied');
@@ -7,21 +7,13 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-MPAdmin::set('title', 'Delete MPContent Type');
-MPAdmin::set('header', 'Delete MPContent Type');
+MPAdmin::set('title', 'Delete Content Type');
+MPAdmin::set('header', 'Delete Content Type');
 
+$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+// }}}
 // {{{ layout
 $layout = new MPField();
-$layout->add_layout(
-    array(
-        'field' => MPField::layout('hidden'),
-        'name' => 'id',
-        'type' => 'hidden',
-        'value' => array(
-            'data' => URI_PART_4
-        )
-    )
-);
 $layout->add_layout(
     array(
         'field' => MPField::layout('submit_confirm'),
@@ -31,39 +23,35 @@ $layout->add_layout(
 );
 
 // }}}
-//{{{ type form submission
+// {{{ form submission
 if (isset($_POST['confirm']))
 {
     $confirm = $layout->acts('post', $_POST['confirm']);
     if ($confirm['do'])
     {
-        /*
-        function microtime_float()
+        try
         {
-            list($usec, $sec) = explode(" ", microtime());
-            return ((float)$usec + (float)$sec);
+            $success = MPContent::delete_entry_type_by_name(URI_PART_4);
+            MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'The entry type was successfully deleted');
+            header('Location: /admin/module/MPContent/new_type/');
+            exit;
         }
-        */
-        //$s = microtime_float();
-        MPContent::delete_entry_type_by_id(URI_PART_4);
-        //$e = microtime_float();
-        //var_dump($s, $e, ($e - $s));
-        header('Location: /admin/module/MPContent/new_type/');
-        exit;
+        catch (Exception $e)
+        {
+            MPAdmin::notify(MPAdmin::TYPE_ERROR, 'There was a problem deleting the entry type');
+            header('Location: /admin/module/MPContent/edit_type/' . $entry_type['name'] . '/');
+            exit;
+        }
     }
     else
     {
-        header('Location: /admin/module/MPContent/edit_type/'.$confirm['id'].'/');
+        header('Location: /admin/module/MPContent/edit_type/' . $entry_type['name'] . '/');
         exit;
     }
 }
 
-//}}}
-$type = MPContent::get_entry_type_by_id(
-    URI_PART_4,
-    array('select' => 'ety.name')
-);
-//{{{ type form build
+// }}}
+// {{{ form build
 $cform = new MPFormRows;
 $cform->attr = array(
     'action' => URI_PATH,
@@ -73,21 +61,11 @@ $cform->add_group(
     array(
         'rows' => array(
             array(
-                'fields' => $layout->get_layout('id')
-            ),
-            array(
                 'fields' => $layout->get_layout('do')
-            )
-        )
+            ),
+        ),
     ),
     'confirm'
 );
 $cfh = $cform->build();
-
-//}}}
-
-?>
-
-<p class='warning'>Are you sure you want to delete the &ldquo;<?php echo htmlentities($type['name']) ?>&rdquo; type? This can not be undone.</p>
-
-<?php echo $cfh ?>
+// }}}

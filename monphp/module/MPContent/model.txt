@@ -28,6 +28,6 @@
         - display_name
         - weight
         - fields
-            - id
+            - _id
             - name
             - weight

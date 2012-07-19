@@ -1,5 +1,5 @@
 <?php
-
+// {{{ prep
 $entry = MPContent::get_entry_by_id(URI_PART_4);
 if (is_null($entry))
 {
@@ -15,7 +15,6 @@ if (is_null($entry_type))
     exit;
 }
 $entry_field_groups = &$entry_type['field_groups'];
-// {{{ get revision
 $revision = NULL;
 if (eka($_GET, 'revision'))
 {
@@ -30,8 +29,6 @@ if (!is_null($revision))
 {
     $entry = array_join($entry, $revision['entry']);
 }
-// }}}
-// {{{ check access
 if ($user_access = MPUser::has_perm('edit content entries type', 'edit content entries type-'.$entry_type['name']))
 {
     $user_access_level = MPContent::ACCESS_EDIT;
@@ -55,7 +52,6 @@ if ($access_level === MPContent::ACCESS_DENY)
     $efh = '';
     return;
 }
-// }}}
 MPAdmin::set('header', 'Edit ' . $entry['entry_type']['nice_name']);
 MPAdmin::set('title', 'Edit Entry');
 
@@ -66,6 +62,7 @@ mp_enqueue_script(
     FALSE,
     TRUE
 );
+// }}}
 //{{{ layout
 $layout = new MPField();
 /*
@@ -188,7 +185,7 @@ foreach ($entry_field_groups as &$entry_field_group)
     $rows = array();
     foreach ($entry_field_group['fields'] as &$entry_field)
     {
-        $field = MPField::get_field($entry_field['id']);
+        $field = MPField::get_field($entry_field['_id']);
         $fmeta = $fval = array();
         foreach ($field['meta'] as $nm => &$fm)
         {
@@ -250,7 +247,7 @@ if (isset($_POST['form']))
             $form = $layout->acts('post', $_POST['form']);
             if (ake('delete', $form))
             {
-                header('Location: /admin/module/MPContent/delete_entry/'.URI_PART_4.'/');
+                header('Location: /admin/module/MPContent/delete_entry/' . URI_PART_4 . '/');
                 exit;
             }
             elseif (ake('submit', $form))

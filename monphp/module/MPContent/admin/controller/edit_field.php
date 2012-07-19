@@ -1,5 +1,5 @@
 <?php
-
+// {{{ prep
 if (!MPUser::perm('edit content type'))
 {
     MPAdmin::set('title', 'Permission Denied');
@@ -10,26 +10,35 @@ if (!MPUser::perm('edit content type'))
 $entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
 if (is_null($entry_type))
 {
+    MPAdmin::notify(MPAdmin::TYPE_ERROR, 'Entry type does not exist');
     header('Location: /admin/');
     exit;
 }
 $entry_field_group = $entry_field = $entry_field_data = array();
+$entry_field_key = '';
 foreach ($entry_type['field_groups'] as &$fg)
 {
-    if (URI_PART_5 === $fg['name'])
+    if (!empty($entry_field_data))
     {
-        $entry_field_group = &$fg;
-        foreach ($entry_field_group['fields'] as &$fgf)
-        {
-            if (URI_PART_6 === $fgf['name'])
-            {
-                $entry_field = &$fgf;
-                $entry_field_data = array_merge($fgf, MPField::get_field($fgf['id']));
-                break;
-            }
-        }
         break;
     }
+    foreach ($fg['fields'] as $k => &$fgf)
+    {
+        if (URI_PART_5 === $fgf['_id']->{'$id'})
+        {
+            $entry_field_key = $k;
+            $entry_field_group = &$fg;
+            $entry_field = &$fgf;
+            $entry_field_data = array_merge($fgf, MPField::get_field($fgf['_id']));
+            break;
+        }
+    }
+}
+if (empty($entry_field_group) || empty($entry_field) || empty($entry_field_data))
+{
+    MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That field does not exist');
+    header('Location: /admin/module/MPContent/fields/' . URI_PART_4 . '/');
+    exit;
 }
 
 mp_enqueue_script(
@@ -44,6 +53,7 @@ MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_
 MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; &rarr; &ldquo;'.hsc($entry_field_group['nice_name']).'&rdquo; Fields');
 $entry_field_types = MPField::type_options();
 $entry_field_groups = &$entry_type['field_groups'];
+// }}}
 // {{{ layout
 $layout = new MPField();
 $layout->add_layout(
@@ -186,11 +196,12 @@ if (ake('form', $_POST))
     try
     {
         $data = $layout->acts('post', $_POST['field']);
+        $layout->merge($_POST['field']);
         $data['name'] = slugify($data['nice_name']);
         $data['weight'] = !is_numeric($data['weight']) ? 0 : (int)$data['weight'];
+        $ftdata = array();
         if (ake('type', $_POST))
         {
-            $ftdata = array();
             foreach ($_POST['type'] as &$type)
             {
                 foreach ($type as $k => &$pdata)
@@ -199,20 +210,14 @@ if (ake('form', $_POST))
                     $ftdata[$k] = array_shift($tmp);
                 }
             }
+            $layout->merge($_POST['type']);
         }
         $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
         $data = array_merge($entry_field_data, $data);
         if ($entry_field_group['name'] !== $data['field_group_name'])
         {
             MPContent::save_entry_field($entry_field_groups, $data);
-            $entry_field = array();
-            foreach ($entry_field_group['fields'] as $k => &$v)
-            {
-                if (empty($v))
-                {
-                    unset($entry_field_group['fields'][$k]);
-                }
-            }
+            unset($entry_field_group['fields'][$entry_field_key]);
         }
         else
         {
@@ -222,8 +227,6 @@ if (ake('form', $_POST))
         }
         MPContent::save_entry_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully updated');
-        header('Location: /admin/module/MPContent/fields/' . $entry_type['name'] . '/');
-        exit;
     }
     catch (Exception $e)
     {

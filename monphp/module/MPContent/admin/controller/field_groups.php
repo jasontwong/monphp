@@ -1,5 +1,5 @@
 <?php
-
+// {{{ prep
 if (!MPUser::perm('edit content type'))
 {
     MPAdmin::set('title', 'Permission Denied');
@@ -11,12 +11,16 @@ $entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
 
 if (!$entry_type)
 {
+    MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry type does not exist');
     header('Location: /admin/');
     exit;
 }
 
+$entry_field_groups = &$entry_type['field_groups'];
+
 MPAdmin::set('title', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Field Groups');
 MPAdmin::set('header', 'Edit &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo; Field Groups');
+// }}}
 // {{{ layout
 $layout = new MPField();
 $layout->add_layout(
@@ -45,12 +49,12 @@ $layout->add_layout(
 );
 
 // }}}
-//{{{ form submission
+// {{{ form submission
 if (isset($_POST['form']))
 {
-    $data = $layout->acts('post', $_POST['field_group']);
     try
     {
+        $data = $layout->acts('post', $_POST['field_group']);
         $data['name'] = slugify($data['nice_name']);
         $data['fields'] = array();
         if (!is_numeric($data['weight']))
@@ -77,8 +81,8 @@ if (isset($_POST['form']))
     }
 }
 
-//}}}
-//{{{ field group form build
+// }}}
+// {{{ field group form build
 $field_groups = $entry_type['field_groups'];
 $gform = new MPFormRows;
 $gform->attr = array(
@@ -86,7 +90,7 @@ $gform->attr = array(
     'method' => 'post'
 );
 $gform->label = array(
-    'text' => 'New MPField Group'
+    'text' => 'New Field Group'
 );
 $gform->add_group(
     array(
@@ -118,5 +122,4 @@ $gform->add_group(
     'form'
 );
 $gfh = $gform->build();
-
-//}}}
+// }}}

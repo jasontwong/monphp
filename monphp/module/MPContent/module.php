@@ -127,16 +127,6 @@ class MPContent
     }
     // }}}
 
-    // {{{ public function hook_mpadmin_enqueu_css()
-    public function hook_mpadmin_enqueu_css()
-    {
-        if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
-        {
-            mp_enqueue_style('mpcontent_content', '/admin/static/MPContent/content.css');
-        }
-    }
-
-    // }}}
     // {{{ public function hook_mpadmin_dashboard()
     public function hook_mpadmin_dashboard()
     {
@@ -244,6 +234,16 @@ class MPContent
         }
 
         return $dashboard_items;
+    }
+
+    // }}}
+    // {{{ public function hook_mpadmin_enqueue_css()
+    public function hook_mpadmin_enqueue_css()
+    {
+        if (strpos(URI_PATH, '/admin/module/MPContent/') !== FALSE)
+        {
+            mp_enqueue_style('mpcontent_content', '/admin/static/MPContent/content.css');
+        }
     }
 
     // }}}
@@ -580,71 +580,6 @@ class MPContent
      * Caching is enabled with the $use_cache parameter, but this parameter 
      * only exists for methods that return results like those listed above.
      */
-    // {{{ public function get_entry($query = array, $fields = array())
-    /**
-     * Gets the row from the id/slug provided from self::get_entries_slugs()
-     */
-    public function get_entry($query = array(), $fields = array())
-    {
-        return MPDB::selectCollection('mpcontent_entry')->findOne($query, $fields);
-    }
-    // }}}
-    // {{{ public function get_entry_by_id($id, $fields = array())
-    /**
-     * Gets the row from the id/slug provided from self::get_entries_slugs()
-     */
-    public function get_entry_by_id($id, $fields = array())
-    {
-        $query = is_object($id) && get_class($id) === 'MongoId'
-            ? array('_id' => $id)
-            : array('_id' => new MongoId($id));
-        return self::get_entry($query, $fields);
-    }
-    // }}}
-    // {{{ public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
-    /**
-     * Gets the row from the id/slug provided from self::get_entries_slugs()
-     */
-    public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
-    {
-        $ids_slugs = MPContent::get_entries_slugs($type);
-        foreach ($ids_slugs as $id_slug)
-        {
-            if ($id_slug['slug'] === $slug)
-            {
-                return $id_slug;
-            }
-        }
-        return NULL;
-    }
-    // }}}
-    // {{{ public function get_entry_type($query = array(), $fields = array())
-    public function get_entry_type($query = array(), $fields = array())
-    {
-        return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
-    }
-    // }}}
-    // {{{ public function get_entry_type_by_name($name, $fields = array())
-    public function get_entry_type_by_name($name, $fields = array())
-    {
-        $query = array(
-            '$or' => array(
-                array('name' => $name),
-                array('nice_name' => $name),
-            ),
-        );
-        return self::get_entry_type($query, $fields);
-    }
-    // }}}
-    // {{{ public function get_entry_types($query = array(), $fields = array())
-    /**
-     * Gets entry types
-     */
-    public function get_entry_types($query = array(), $fields = array())
-    {
-        return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
-    }
-    // }}}
     // {{{ public function get_entries($query = array(), $fields = array())
     /**
      * This tries to be very minimal, getting as little info as needed.
@@ -727,6 +662,71 @@ class MPContent
         return $entries;
     }
     // }}}
+    // {{{ public function get_entry($query = array, $fields = array())
+    /**
+     * Gets the row from the id/slug provided from self::get_entries_slugs()
+     */
+    public function get_entry($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry')->findOne($query, $fields);
+    }
+    // }}}
+    // {{{ public function get_entry_by_id($id, $fields = array())
+    /**
+     * Gets the row from the id/slug provided from self::get_entries_slugs()
+     */
+    public function get_entry_by_id($id, $fields = array())
+    {
+        $query = is_object($id) && get_class($id) === 'MongoId'
+            ? array('_id' => $id)
+            : array('_id' => new MongoId($id));
+        return self::get_entry($query, $fields);
+    }
+    // }}}
+    // {{{ public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
+    /**
+     * Gets the row from the id/slug provided from self::get_entries_slugs()
+     */
+    public function get_entry_slug_id($type, $slug, $use_cache = TRUE, $expire = 0)
+    {
+        $ids_slugs = MPContent::get_entries_slugs($type);
+        foreach ($ids_slugs as $id_slug)
+        {
+            if ($id_slug['slug'] === $slug)
+            {
+                return $id_slug;
+            }
+        }
+        return NULL;
+    }
+    // }}}
+    // {{{ public function get_entry_type($query = array(), $fields = array())
+    public function get_entry_type($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
+    }
+    // }}}
+    // {{{ public function get_entry_type_by_name($name, $fields = array())
+    public function get_entry_type_by_name($name, $fields = array())
+    {
+        $query = array(
+            '$or' => array(
+                array('name' => $name),
+                array('nice_name' => $name),
+            ),
+        );
+        return self::get_entry_type($query, $fields);
+    }
+    // }}}
+    // {{{ public function get_entry_types($query = array(), $fields = array())
+    /**
+     * Gets entry types
+     */
+    public function get_entry_types($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
+    }
+    // }}}
     // {{{ public function get_revision($query = array(), $fields = array())
     /**
      * Gets entry types
@@ -770,6 +770,7 @@ class MPContent
         return self::get_revisions($query, $fields);
     }
     // }}}
+    // {{{ not yet used or converted
     // {{{ public function get_latest_entries_created($query = array(), $fields = array())
     public function get_latest_entries_created($query = array(), $fields = array())
     {
@@ -868,6 +869,7 @@ class MPContent
         return array();
     }
 
+    // }}}
     // }}}
 
     /**
@@ -1022,6 +1024,35 @@ class MPContent
      * only used in where clauses. Some delete_ methods won't follow this
      * convention due to table relations and ondelete rules.
      */
+    // {{{ public function delete_entries($query = array())
+    public function delete_entries($query = array())
+    {
+        $options = array(
+            'safe' => TRUE,
+        );
+        $mpentry = MPDB::selectCollection('mpcontent_entry');
+        $entries = $mpentry->find($query, array('_id' => 1));
+        if ($entries->hasNext())
+        {
+            $ids = array();
+            foreach ($entries as $entry)
+            {
+                $ids[] = $entry['_id'];
+            }
+            $rquery = array(
+                'entry._id' => array(
+                    '$in' => $ids,
+                ),
+            );
+        }
+        $success = $mpentry->remove($query, $options);
+        if (isset($rquery))
+        {
+            MPDB::selectCollection('mpcontent_entry_revision')->remove($rquery);
+        }
+        return $success;
+    }
+    // }}}
     // {{{ public function delete_entry($query = array())
     public function delete_entry($query = array())
     {
@@ -1029,7 +1060,20 @@ class MPContent
             'safe' => TRUE,
             'justOne' => TRUE,
         );
-        return MPDB::selectCollection('mpcontent_entry_type')->remove($query, $options);
+        $mpentry = MPDB::selectCollection('mpcontent_entry');
+        $entry = $mpentry->findOne($query, array('_id' => 1));
+        if (!is_null($entry))
+        {
+            $rquery = array(
+                'entry._id' => $entry['_id'],
+            );
+        }
+        $success = $mpentry->remove($query, $options);
+        if (isset($rquery))
+        {
+            MPDB::selectCollection('mpcontent_entry_revision')->remove($rquery);
+        }
+        return $success;
     }
     // }}}
     // {{{ public function delete_entry_by_id($id)
@@ -1049,20 +1093,23 @@ class MPContent
             'justOne' => TRUE,
         );
         $mpentry_type = MPDB::selectCollection('mpcontent_entry_type');
-        $entry_type = $mpentry_type->findOne($query);
-        
+        $entry_type = $mpentry_type->findOne($query, array('field_groups' => 1));
+        $success = $mpentry_type->remove($query, $options);
         if (!is_null($entry_type))
         {
             foreach ($entry_type['field_groups'] as &$field_groups)
             {
                 foreach ($field_groups['fields'] as &$field)
                 {
-                    MPField::deregister($field['_id']);
+                    MPField::deregister_field($field['_id']);
                 }
             }
+            $equery = array(
+                'entry_type._id' => $entry_type['_id'],
+            );
+            self::delete_entries($equery);
         }
-
-        return $mpentry_type->remove($query, $options);
+        return $success;
     }
     // }}}
     // {{{ public function delete_entry_type_by_name($name)

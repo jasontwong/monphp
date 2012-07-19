@@ -1,5 +1,5 @@
 <?php
-
+// {{{ prep
 if (!MPUser::perm('edit content type'))
 {
     MPAdmin::set('title', 'Permission Denied');
@@ -10,6 +10,7 @@ if (!MPUser::perm('edit content type'))
 $entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
 if (!$entry_type)
 {
+    MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry type does not exist');
     header('Location: /admin/module/MPContent/edit_types/');
     exit;
 }
@@ -18,8 +19,8 @@ MPAdmin::set('title', 'Edit Content Type &ldquo;'.htmlentities($entry_type['nice
 MPAdmin::set('header', 'Edit Content Type &ldquo;'.htmlentities($entry_type['nice_name'], ENT_QUOTES).'&rdquo;');
 
 $other_links = MPModule::h('mpcontent_edit_type_other_links', MPModule::TARGET_ALL, URI_PART_4);
-
-//{{{ layout
+// }}}
+// {{{ layout
 $layout = new MPField();
 $layout->add_layout(
     array(
@@ -82,19 +83,28 @@ $layout->add_layout(
     )
 );
 
-//}}}
-//{{{ form submission
+// }}}
+// {{{ form submission
 if (isset($_POST['form']))
 {
-    $data = $layout->acts('post', $_POST['content_type']);
-    $layout->merge($_POST['content_type']);
-    $entry_type = array_merge($entry_type, $data);
-    MPContent::save_entry_type($entry_type);
-    MPModule::h('mpcontent_edit_type_process', MPModule::TARGET_ALL, $layout, $entry_type, $_POST);
+    try
+    {
+        $data = $layout->acts('post', $_POST['content_type']);
+        $layout->merge($_POST['content_type']);
+        $entry_type = array_merge($entry_type, $data);
+        MPContent::save_entry_type($entry_type);
+        MPModule::h('mpcontent_edit_type_process', MPModule::TARGET_ALL, $layout, $entry_type, $_POST);
+        MPModule::h('mpcontent_edit_type_process_' . $entry_type['name'], MPModule::TARGET_ALL, $layout, $entry_type, $_POST);
+        MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Entry type successfully updated');
+    }
+    catch (Exception $e)
+    {
+        MPAdmin::notify(MPAdmin::TYPE_ERROR, 'There was a problem updating the entry type');
+    }
 }
 
-//}}}
-//{{{ type form build
+// }}}
+// {{{ type form build
 $tform = new MPFormRows;
 $tform->attr = array(
     'action' => URI_PATH,
@@ -153,4 +163,4 @@ $tform->add_group(
 );
 $tfh = $tform->build();
 
-//}}}
+// }}}
