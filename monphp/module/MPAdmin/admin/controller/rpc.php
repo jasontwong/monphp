@@ -8,13 +8,7 @@
  */
 $module = URI_PART_2;
 $caller = array('MPModule', 'h');
-$params = array('rpc', $module);
-for ($i = 3; $i < URI_PARTS; ++$i)
-{
-    $params[] = constant('URI_PART_'.$i);
-}
-$params[] = array_merge($_POST, $_GET);
-
+$params = array('mpadmin_rpc', $module, URI_PART_3, array_merge($_POST, $_GET));
 $result = call_user_func_array($caller, $params);
 echo ake($module, $result) 
     ? $result[$module] 

@@ -81,7 +81,7 @@ $thead_desc[] = '';
                         $status,
                     );
                 ?>
-                <tr>
+                <tr data-id="<?php echo $entry['_id']->{'$id'}; ?>">
                     <?php foreach ($data as $td): ?>
                     <td><?php echo $td; ?></td>
                     <?php endforeach; ?>

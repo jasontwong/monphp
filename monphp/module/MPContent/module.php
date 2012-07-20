@@ -27,47 +27,6 @@ class MPContent
 
     // }}}
 
-    // {{{ protected function _rpc_order_entries($json)
-    protected function _rpc_order_entries($json)
-    {
-        $data = (array)json_decode($json['data']);
-        $ids = array_values($data);
-        $type = $json['type'];
-        $result['success'] = FALSE;
-        try
-        {
-            $cec = MPDB::selectCollection('mpcontent_entry');
-            foreach ($ids as $weight => &$id)
-            {
-                $query = array('_id' => new MongoID($id));
-                $cec->update(
-                    $query, 
-                    array(
-                        '$set' => array(
-                            'weight' => $weight,
-                        )
-                    ),
-                    array(
-                        'safe' => TRUE,
-                    )
-                );
-            }
-            $result['success'] = TRUE;
-            $meta['ids'] = $ids;
-            $meta['content_entry_type_name'] = $type;
-            MPModule::h('mpcontent_order_entries_success', MPModule::TARGET_ALL, $meta);
-            MPModule::h('mpcontent_order_entries_success_'.$type, MPModule::TARGET_ALL, $meta);
-        }
-        catch (Exception $e)
-        {
-            $result['success'] = FALSE;
-        }
-
-        return json_encode($result);
-    }
-
-    // }}}
-
     // {{{ public function cb_mpcontent_edit_type_other_links($links)
     public function cb_mpcontent_edit_type_other_links($links)
     {
@@ -263,13 +222,6 @@ class MPContent
         /*
         if (strpos(URI_PATH, '/admin/module/MPContent/edit_entries/') !== FALSE)
         {
-            mp_enqueue_script(
-                'mpcontent_entries',
-                '/admin/static/MPContent/entries.js',
-                array('jquery-ui-sortable'),
-                FALSE,
-                TRUE
-            );
         }
         */
     }
@@ -320,6 +272,52 @@ class MPContent
         return $links;
     }
 
+    // }}}
+    // {{{ public function hook_mpadmin_rpc($function, $data)
+    public function hook_mpadmin_rpc($function, $data)
+    {
+        $result = array();
+        switch ($function)
+        {
+            // {{{ case 'order_entries':
+            case 'order_entries':
+                $ids = $data['ids'];
+                $type = $data['type'];
+                try
+                {
+                    $mpentry = MPDB::selectCollection('mpcontent_entry');
+                    foreach ($ids as $weight => &$id)
+                    {
+                        $query = array('_id' => new MongoID($id));
+                        $mpentry->update(
+                            $query, 
+                            array(
+                                '$set' => array(
+                                    'weight' => $weight,
+                                )
+                            ),
+                            array(
+                                'safe' => TRUE,
+                            )
+                        );
+                    }
+                    $result['success'] = TRUE;
+                    $meta['ids'] = $ids;
+                    $meta['content_entry_type_name'] = $type;
+                    MPModule::h('mpcontent_order_entries_success', MPModule::TARGET_ALL, $meta);
+                    MPModule::h('mpcontent_order_entries_success_'.$type, MPModule::TARGET_ALL, $meta);
+                }
+                catch (Exception $e)
+                {
+                    $result['success'] = FALSE;
+                }
+            break;
+            // }}}
+            default:
+                $result['success'] = FALSE;
+        }
+        return json_encode($result);
+    }
     // }}}
     // {{{ public function hook_mpadmin_settings_fields()
     public function hook_mpadmin_settings_fields()
@@ -920,6 +918,10 @@ class MPContent
         );
         $entry_type_data = array_join($entry_type_data_format, $entry_type);
         $entry_data = array_join($entry_data_format, $entry['entry']);
+        if (is_string($entry_data['_id']))
+        {
+            unset($entry_data['_id']);
+        }
         if (!is_numeric($entry_data['weight']))
         {
             $entry_data['weight'] = 0;

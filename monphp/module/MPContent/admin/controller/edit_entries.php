@@ -1,18 +1,14 @@
 <?php
 
-/*
-if (!MPUser::perm('edit content'))
-{
-    MPAdmin::set('title', 'Permission Denied');
-    MPAdmin::set('header', 'Permission Denied');
-    return;
-}
-*/
-
+// {{{ prep
 MPAdmin::set('title', 'Edit Entries');
-// MPAdmin::set('header', 'Edit Entries');
-
-// {{{ data prep
+mp_enqueue_script(
+    'mpcontent_entries',
+    '/admin/static/MPContent/entries.js',
+    array('jquery-ui-sortable'),
+    FALSE,
+    TRUE
+);
 $ordering = FALSE;
 $limits = array(10,25,50,100);
 $limits = array_combine($limits, $limits) + array(0 => 'all');
@@ -27,7 +23,6 @@ foreach($entry_types as $type)
 $order_opts = array('modified DESC', 'modified ASC', 'title DESC', 'title ASC');
 $keys = array('limit', 'type', 'order', 'query');
 $filter = array_fill_keys($keys, '');
-
 // }}}
 // {{{ layout
 $layout = new MPField();
@@ -87,7 +82,6 @@ $layout->add_layout(
         'type' => 'submit_reset'
     )
 );
-
 // }}}
 // {{{ filter
 if (isset($_GET['filter']))
@@ -99,6 +93,11 @@ $query = array();
 if (strlen($filter['type']))
 {
     $query['entry_type.name'] = $filter['type'];
+    $entry_type = MPContent::get_entry_type_by_name($filter['type']);
+    if (!is_null($entry_type))
+    {
+        $ordering = $entry_type['ordering'];
+    }
 }
 /* TODO search implementation
 if (strlen($filter['query']))
@@ -121,10 +120,11 @@ if (strlen($filter['query']))
 */
 $entries = MPContent::get_entries($query);
 $entries->sort(array(
+    'weight' => 1,
     'modified' => -1, 
     '_id' => -1, 
-    'title' => 1)
-);
+    'title' => 1
+));
 if ($filter['limit'] != 0)
 {
     $page = isset($filter['page'])
@@ -167,5 +167,4 @@ $form->add_group(
     ),
     'filter'
 );
-
 // }}}

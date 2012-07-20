@@ -1,14 +1,54 @@
 (function($){
     "use strict";
     $(function() {
-        //{{{ entry ordering
-
-        var table = $('table#content_entries[class="manual_ordering"]');
-
+        var table = $('table#content_entries[class="manual_ordering"]'),
+            message = $('<p />'),
+            order_text = 'This entry type can be manually ordered. Drag and drop the rows to the order you would like. ',
+            save_order = $('<a href="javascript:;">Save New Order</a>');
+        // {{{ save_order
+        save_order
+            .on({
+                click: function() {
+                    var rows = [],
+                        name = $("select[name='filter[type][data]'] option:selected").val();
+                    $('> tbody > tr', table)
+                        .each(function() {
+                            rows.push($(this).data('id'));
+                        });
+                    $.post(
+                        '/admin/rpc/MPContent/order_entries/', 
+                        { 
+                            ids: rows,
+                            type: name
+                        }, 
+                        function(data)
+                        {
+                            if (data.success)
+                            {
+                                message
+                                    .empty()
+                                    .removeAttr('class')
+                                    .addClass('success')
+                                    .text('Ordered correctly');
+                                table.data('sorted', true);
+                            }
+                            else
+                            {
+                                message
+                                    .empty()
+                                    .removeAttr('class')
+                                    .addClass('error')
+                                    .text('Could not order');
+                            }
+                        },
+                        'json'
+                    );
+                }
+            });
+        // }}}
         table
-            .before('<p>This entry type can be manually ordered. Drag and drop the rows to the order you would like.</p>')
+            .before(message.text(order_text))
             .data('sorted', false);
-
         $('> tbody', table)
             .sortable({
                 axis: 'y',
@@ -18,44 +58,12 @@
                 {
                     if (!table.data('sorted'))
                     {
-                        var p = table.prev('p');
-                        p.append(' <a>Save new order</a>.');
-                        $('> a', p).click(function() {
-                            var rows = {},
-                                id = $("select[name='filter[type][data]'] option:selected").val();
-                                // id = location.pathname.match(/^\/admin\/module\/MPContent\/edit_entries\/$/)[1];
-                            $('> tbody > tr', table)
-                                .each(function(i) {
-                                    var href = $('> td:first > a', this).attr('href'),
-                                        id = href.match(/^.+\/(\d+)\/$/)[1];
-                                    rows[i] = id;
-                                });
-                            $.post(
-                                '/admin/rpc/MPContent/order_entries/', 
-                                { 
-                                    data: admin.JSON.make(rows),
-                                    type: id
-                                }, 
-                                function(data, tStatus)
-                                {
-                                    if (data.success)
-                                    {
-                                        admin.messenger.add('success', 'Ordered correctly');
-                                    }
-                                    else
-                                    {
-                                        admin.messenger.add('error', 'Could not order');
-                                    }
-                                },
-                                'json'
-                            );
-                        });
-                        table.data('sorted', true);
+                        message
+                            .text(order_text)
+                            .append(save_order);
                     }
 
                 }
             });
-
-        //}}}
     });
 }(jQuery));
