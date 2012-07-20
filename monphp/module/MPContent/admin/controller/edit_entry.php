@@ -63,7 +63,7 @@ mp_enqueue_script(
     TRUE
 );
 // }}}
-//{{{ layout
+// {{{ layout
 $layout = new MPField();
 /*
 $entry_sidebar = MPModule::h('mpcontent_entry_sidebar_edit', MPModule::TARGET_ALL, &$entry);
@@ -237,7 +237,7 @@ foreach ($entry_field_groups as &$entry_field_group)
 }
 // }}}
 // }}}
-//{{{ form submission
+// {{{ form submission
 if (isset($_POST['form']))
 {
     if ($access_level === MPContent::ACCESS_EDIT)
@@ -245,14 +245,17 @@ if (isset($_POST['form']))
         try
         {
             $form = $layout->acts('post', $_POST['form']);
+            // {{{ delete
             if (ake('delete', $form))
             {
                 header('Location: /admin/module/MPContent/delete_entry/' . URI_PART_4 . '/');
                 exit;
             }
+            // }}}
+            // {{{ save
             elseif (ake('submit', $form))
             {
-                $content['entry'] = array_merge($layout->acts('post', $_POST['entry']), $entry);;
+                $content['entry'] = array_merge($entry, $layout->acts('post', $_POST['entry']));
                 if (!ake('data', $_POST))
                 {
                     $_POST['data'] = array();
@@ -265,6 +268,8 @@ if (isset($_POST['form']))
                 header('Location: /admin/module/MPContent/edit_entry/' . URI_PART_4 . '/');
                 exit;
             }
+            // }}}
+            // {{{ duplicate
             elseif (ake('duplicate', $form))
             {
                 $content['entry'] = $layout->acts('post', $_POST['entry']);
@@ -275,7 +280,6 @@ if (isset($_POST['form']))
                     $_POST['data'] = array();
                 }
                 $content['data'] = $_POST['data'];
-        
                 $entry_data = MPContent::save_entry($content, $entry_type);
                 if (is_array($entry_data) && ake('_id', $entry_data))
                 {
@@ -286,6 +290,7 @@ if (isset($_POST['form']))
                     exit;
                 }
             }
+            // }}}
         }
         catch (Exception $e)
         {
@@ -297,19 +302,23 @@ if (isset($_POST['form']))
         MPAdmin::notify(MPAdmin::TYPE_ERROR, 'You do not have access to save');
     }
 }
+// {{{ revisions
 elseif (isset($_POST['do']))
 {
     switch ($_POST['do'])
     {
+        // {{{ case 'jump':
         case 'jump':
             header('Location: /admin/module/MPContent/edit_entry/'.URI_PART_4.'/'.$_POST['revision'].'/');
             exit;
         break;
+        // }}}
+        // {{{ case 'set':
         case 'set':
             if ($access_level === MPContent::ACCESS_EDIT)
             {
                 $cemt->setEntryRevision(URI_PART_4, $_POST['revision']);
-                //{{{ MPCache: updating block
+                // {{{ MPCache: updating block
                 $entry_meta_id = URI_PART_4;
                 $entry_type_info = MPContent::get_entry_type_by_entry_id($entry_meta_id);
                 $entry_type_id = $entry_type_info['entry_type_id'];
@@ -327,16 +336,17 @@ elseif (isset($_POST['do']))
                 // MPCache: update ids slugs map for content type
                 $ids_slugs = MPContent::get_entries_slugs($content_type_name, FALSE);
                 MPCache::set($content_type['type']['name'].' - ids slugs', $ids_slugs, 0, 'MPContent');
-                //}}}
+                // }}}
                 header('Location: /admin/module/MPContent/edit_entry/'.URI_PART_4.'/');
                 exit;
             }
         break;
+        // }}}
     }
 }
-
-//}}}
-//{{{ form build
+// }}}
+// }}}
+// {{{ form build
 $eform = new MPFormRows;
 $eform->attr = array(
     'action' => URI_PATH,
@@ -369,6 +379,17 @@ $eform->add_group(
             'class' => 'tsc'
         ),
         'rows' => array(
+            array(
+                'row' => array(
+                    'attr' => array(
+                        'class' => 'status'
+                    )
+                ),
+                'fields' => $layout->get_layout('status'),
+                'label' => array(
+                    'text' => 'Status'
+                )
+            ),
             array(
                 'row' => array(
                     'attr' => array(
@@ -437,4 +458,4 @@ if ($access_level === MPContent::ACCESS_EDIT)
 
 $efh = $eform->build();
 
-//}}}
+// }}}
