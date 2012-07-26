@@ -12,12 +12,10 @@ class MPAdmin
     const TYPE_SUCCESS = 2;
     const TYPE_ERROR = 3;
     const TYPE_IMPORTANT = 4;
-
     // }}}
     // {{{ properties
     protected static $v = array();
     protected static $theme = 'default';
-
     // }}}
     // {{{ constructor
     /**
@@ -26,7 +24,6 @@ class MPAdmin
     public function __construct()
     {
     }
-
     // }}}
 
     // {{{ public function cb_mpadmin_dashboard($modules)
@@ -126,21 +123,18 @@ class MPAdmin
         }
         return $boards;
     }
-
     // }}}
     // {{{ public function cb_mpadmin_header()
     public function cb_mpadmin_header()
     {
         MPModule::h('mpsystem_print_head', 'MPSystem');
     }
-
     // }}}
     // {{{ public function cb_mpadmin_footer()
     public function cb_mpadmin_footer()
     {
         MPModule::h('mpsystem_print_foot', 'MPSystem');
     }
-
     // }}}
     // {{{ public function cb_mpadmin_login_build($mods)
     public function cb_mpadmin_login_build($mods)
@@ -189,7 +183,6 @@ class MPAdmin
         );
         return array($layout, $form);
     }
-
     // }}}
     // {{{ public function cb_mpadmin_login_submit($results)
     /**
@@ -230,13 +223,6 @@ class MPAdmin
             'messages' => $messages
         );
     }
-
-    // }}}
-    // {{{ public function cb_mpadmin_logout()
-    public function cb_mpadmin_logout()
-    {
-    }
-
     // }}}
     // {{{ public function cb_mpadmin_module_page($page)
     /**
@@ -251,7 +237,6 @@ class MPAdmin
     {
         return array_pop($page);
     }
-
     // }}}
     // {{{ public function cb_mpadmin_nav($menu)
     /**
@@ -304,7 +289,6 @@ class MPAdmin
 
         return $nav;
     }
-
     // }}} 
     // {{{ public function cb_mpadmin_tinymce($modules)
     public function cb_mpadmin_tinymce($modules)
@@ -316,7 +300,6 @@ class MPAdmin
         }
         return json_encode($options);
     }
-
     // }}}
 
     // {{{ public function hook_mpadmin_enqueue_css()
@@ -341,7 +324,6 @@ class MPAdmin
             '/admin/static/MPAdmin/css/field.css'
         );
     }
-
     // }}}
     // {{{ public function hook_mpadmin_enqueue_js()
     public function hook_mpadmin_enqueue_js()
@@ -377,7 +359,6 @@ class MPAdmin
             );
         }
     }
-
     // }}}
     // {{{ public function hook_mpadmin_header()
     public function hook_mpadmin_header()
@@ -450,13 +431,11 @@ class MPAdmin
         MPModule::h('mpadmin_enqueue_css');
         MPModule::h('mpadmin_enqueue_js');
     }
-
     // }}}
     // {{{ public function hook_mpadmin_module_page($page)
     public function hook_mpadmin_module_page($page)
     {
     }
-
     // }}}
     // {{{ public function hook_mpadmin_rpc($function, $data)
     public function hook_mpadmin_rpc($function, $data)
@@ -502,7 +481,7 @@ class MPAdmin
         $hidden = is_file(MPData::query('MPAdmin', 'logo', 'name'))
             ? array('delete')
             : array();
-        /* switch to filemanager field and fallback should be inside the MPAdmin module
+        /* TODO switch to filemanager field and fallback should be inside the MPAdmin module
          * Maybe even merge the filemanager with the admin system?
         $logo = array(
             'field' => MPField::layout(
@@ -554,7 +533,6 @@ class MPAdmin
         // return array($logo, $bgcolor, $tinyMCE);
         return array($bgcolor, $tinyMCE);
     }
-
     // }}}
     // {{{ public function hook_mpadmin_settings_validate($name, $data)
     public function hook_mpadmin_settings_validate($name, $data)
@@ -621,7 +599,6 @@ class MPAdmin
             'data' => $data
         );
     }
-
     // }}}
     // {{{ public function hook_mpadmin_tinymce()
     public function hook_mpadmin_tinymce()
@@ -649,7 +626,6 @@ class MPAdmin
         }
         return $options;
     }
-
     // }}}
     // {{{ public function hook_mpsystem_active()
     public function hook_mpsystem_active()
@@ -714,7 +690,7 @@ class MPAdmin
             {
                 list($base, $ext) = file_extension($base);
             }
-            $content_type = ake($ext, $static_types) ? $static_types[$ext] : mime_content_type($file);
+            $content_type = ake($ext, $static_types) ? $static_types[$ext] : finfo::file($file, FILEINFO_MIME_TYPE);
             header('Content-type: ' . $content_type);
             if (strpos($content_type, 'image') === 0)
             {
@@ -723,7 +699,6 @@ class MPAdmin
             }
         }
     }
-
     // }}}
     // {{{ public function hook_mpsystem_start()
     public function hook_mpsystem_start()
@@ -741,7 +716,6 @@ class MPAdmin
             }
         }
     }
-
     // }}}
     // {{{ public function hook_mpuser_perm()
     public function hook_mpuser_perm()
@@ -759,7 +733,6 @@ class MPAdmin
             'Admin' => $perms
         );
     }
-
     // }}}
 
     // {{{ public function prep_mpadmin_login_submit($mod, $data)
@@ -776,7 +749,6 @@ class MPAdmin
             );
         }
     }
-
     // }}}
     // {{{ public function prep_mpadmin_module_page($mod)
     /**
@@ -815,7 +787,6 @@ class MPAdmin
             'data' => $data
         );
     }
-
     // }}}
 
     // {{{ public function row_module($mod)
@@ -852,7 +823,6 @@ class MPAdmin
             : '';
         return $name.$description.$byline.$dependency;
     }
-
     // }}}
 
     // {{{ public static function append($name, $value)
@@ -867,7 +837,6 @@ class MPAdmin
     {
         self::$v[$name][] = $value;
     }
-
     // }}}
     // {{{ public static function bounce($permission)
     /**
@@ -892,7 +861,6 @@ class MPAdmin
     {
         return isset(self::$v[$name]) ? self::$v[$name] : $default;
     }
-
     // }}}
     // {{{ public static function is_logged_in()
     /**
@@ -904,7 +872,6 @@ class MPAdmin
     {
         return MPUser::perm('admin access') && deka(FALSE, $_SESSION, 'admin', 'logged_in');
     }
-
     // }}}
     // {{{ public static function log($type, $messages)
     public static function log($type, $messages)
@@ -925,7 +892,6 @@ class MPAdmin
             $alc->insert($log);
         }
     }
-    
     // }}}
     // {{{ public static function notify($type, $messages)
     public static function notify($type, $messages)
@@ -950,7 +916,6 @@ class MPAdmin
             break;
         }
     }
-    
     // }}}
     // {{{ public static function quick_form($form)
     /**
@@ -1018,7 +983,6 @@ class MPAdmin
         }
         // return form builder html?
     }
-
     // }}}
     // {{{ public static function set($name, $value)
     /**
@@ -1032,6 +996,5 @@ class MPAdmin
     {
         self::$v[$name] = $value;
     }
-
     // }}}
 }

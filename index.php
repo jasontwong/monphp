@@ -119,6 +119,5 @@ else
     }
 }
 MPModule::h('mpsystem_end');
-
 MPData::save();
 // }}}

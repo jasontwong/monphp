@@ -2,7 +2,136 @@
 
 class MPFile
 {
-    // {{{ public static function save_file($file, $name, $meta = array(), $sizes = array())
+    // {{{ public static function get_file($query = array(), $fields = array())
+    /**
+     * This funciton should be used to get files from the GridFS coillection
+     * 
+     * @param array $query
+     * @param array $fields fields to return
+     * @return MongoGridFSFile 
+     */
+    public static function get_file($query = array(), $fields = array())
+    {
+        return MPDB::getGridFS('mp')->findOne($query, $fields);
+    }
+    // }}}
+    // {{{ public static function get_files($query = array(), $fields = array())
+    /**
+     * This funciton should be used to get a file from the GridFS coillection
+     * 
+     * @param array $query
+     * @param array $fields fields to return
+     * @return MongoGridFSCursor
+     */
+    public static function get_files($query = array(), $fields = array())
+    {
+        return MPDB::getGridFS('mp')->find($query, $fields);
+    }
+    // }}}
+    // {{{ public static function get_image($query = array(), $fields = array())
+    /**
+     * This funciton should be used to get an image from the GridFS coillection
+     * 
+     * @param array $query
+     * @param array $fields fields to return
+     * @return array
+     */
+    public static function get_image($query = array(), $fields = array())
+    {
+        $images = array();
+        $grid_fs = MPDB::getGridFS('mp');
+        $image = $grid_fs->findOne($query, $fields);
+        if (!is_null($image))
+        {
+            $images[$image['metadata']['size']] = $image;
+            $query = array(
+                'metadata.reference' => $image['_id'],
+            );
+            $sizes = $grid_fs->find($query);
+            foreach ($sizes as $size)
+            {
+                $images[$size['metadata']['size']] = $size;
+            }
+        }
+        return $images;
+    }
+    // }}}
+    // {{{ public static function get_images($query = array(), $fields = array())
+    /**
+     * This funciton should be used to get images from the GridFS coillection
+     * 
+     * @param array $query
+     * @param array $fields fields to return
+     * @return array
+     */
+    public static function get_images($query = array(), $fields = array())
+    {
+        $all_images = array();
+        $grid_fs = MPDB::getGridFS('mp');
+        $images = $grid_fs->find($query, $fields);
+        foreach ($images as $image)
+        {
+            $data = array();
+            $data[$image['metadata']['size']] = $image;
+            $query = array(
+                'metadata.reference' => $image['_id'],
+            );
+            $sizes = $grid_fs->find($query);
+            foreach ($sizes as $size)
+            {
+                $data[$size['metadata']['size']] = $size;
+            }
+            $all_images[] = $data;
+        }
+        return $all_images;
+    }
+    // }}}
+
+    // {{{ public static function remove_files($query = array())
+    /**
+     * This funciton should be used to remove files from the GridFS coillection
+     * 
+     * @param array $query
+     * @return bool
+     */
+    public static function remove_files($query = array())
+    {
+        return MPDB::getGridFS('mp')->remove($query, array('safe' => TRUE));
+    }
+    // }}}
+    // {{{ public static function remove_images($query = array())
+    /**
+     * This funciton should be used to remove images from the GridFS coillection
+     * 
+     * @param array $query
+     * @return bool
+     */
+    public static function remove_images($query = array())
+    {
+        $grid_fs = MPDB::getGridFS('mp');
+        $images = $grid_fs->find($query, $fields);
+        $ids = array()
+        foreach ($images as $image)
+        {
+            $ids[] = $image['_id'];
+        }
+        $success = $grid_fs->remove($query, array('safe' => TRUE));
+        if (!empty($ids))
+        {
+            $grid_fs->remove(
+                array(
+                    'metadata.reference' => array(
+                        '$in' => $ids,
+                    ),
+                ), 
+                array('safe' => TRUE)
+            );
+        }
+        return $success;
+    }
+    // }}}
+
+    // {{{ public static function save_file($file, $filename, $meta = array())
     /**
      * This function should save the file to a GridFS, create multiple sizes if needed,
      * and add the proper metadata to the files.
@@ -10,14 +139,11 @@ class MPFile
      * @param string $file full path of the file on the server to save
      * @param string $name the name of the file to use
      * @param array $meta additional metadata that needs to be added to the file
-     * @param array $sizes an array of sizes to create besides the original
-     * @return array the array of ids returned from GridFS
+     * @return mixed MongoId if successful, else NULL
      */
-    public static function save_file($file, $name, $meta = array(), $sizes = array())
+    public static function save_file($file, $filename, $meta = array())
     {
-        $filename = '/tmp/' . $name;
         $success = move_uploaded_file($file, $filename);
-        $file_ids = array();
         if ($success)
         {
             $grid = MPDB::getGridFS('mp');
@@ -30,29 +156,59 @@ class MPFile
                     'unique' => 1, 
                 )
             );
-            list($width, $height, $mime_type) = getimagesize($filename);
+            $name = basename($filename);
+            $mime_type = finfo::file($filename, FILEINFO_MIME_TYPE);
             $meta = array(
                 'metadata' => array_merge(
                     $meta,
                     array(
                         'filename' => $name,
-                        'width' => $width,
-                        'height' => $height,
                         'mime' => $mime_type,
-                        'size' => 'original',
+                        'location' => $filename,
                     )
                 ),
             );
-            $file_ids['original'] = $grid->storeFile($filename, $meta);
+            return $grid->storeFile($filename, $meta, array('safe' => TRUE));
+        }
+        return NULL;
+    }
+    // }}}
+    // {{{ public static function save_image($file, $filename, $meta = array(), $sizes = array())
+    /**
+     * This function should save the file to a GridFS, create multiple sizes if needed,
+     * and add the proper metadata to the files.
+     * 
+     * @param string $file full path of the file on the server to save
+     * @param string $name the name of the file to use
+     * @param array $meta additional metadata that needs to be added to the file
+     * @param array $sizes an array of sizes to create besides the original
+     * @return array the array of ids returned from GridFS
+     */
+    public static function save_image($file, $filename, $meta = array(), $sizes = array())
+    {
+        list($width, $height, $mime_type) = getimagesize($file);
+        $meta = array_merge(
+            $meta,
+            array(
+                'width' => $width,
+                'height' => $height,
+                'size' => 'original',
+            )
+        );
+        $id = self::save_file($file, $filename, $meta);
+        $file_ids = array();
+        if (!is_null($id))
+        {
+            $file_ids['original'] = $id;
 
             $quality = 90;
             $basename = file_extension($name);
+            $resized_path = dirname($filename);
             foreach ($sizes as $label => $size)
             {
                 if ($size['width'] > 0 && $size['height'] > 0 && ($width > $size['width'] || $height > $size['height']))
                 {
                     $ratio_orig = $width / $height;
-
                     if (($size['width'] / $size['height']) > $ratio_orig)
                     {
                        $size['width'] = $size['height'] * $ratio_orig;
@@ -61,9 +217,10 @@ class MPFile
                     {
                        $size['height'] = $size['width'] / $ratio_orig;
                     }
-                    
                     $image = imagecreatetruecolor($size['width'], $size['height']);
-                    $resized_file = $resized_path.'/'.$basename[0].'-'.$label.$basename[1];
+                    $resized_filename = $basename[0] . '-' . $label.$basename[1];
+                    $resized_file = $resized_path . '/' . $resized_filename;
+                    $orig_image = NULL;
                     switch ($mime_type)
                     {
                         case IMAGETYPE_GIF:
@@ -100,83 +257,26 @@ class MPFile
                             imagexbm($image, $resized_file);
                         break;
                     }
-
-                    if (isset($orig_image))
+                    if (!is_null($orig_image))
                     {
                         $meta['width'] = $size['width'];
                         $meta['height'] = $size['height'];
                         $meta['size'] = $label;
-                        $file_ids[$label] = $grid->storeFile($resized_file, $meta);
+                        $meta['reference'] = $id;
+                        $meta['filename'] = $resized_filename;
+                        $meta['location'] = $resized_file;
+                        $file_ids[$label] = $grid->storeFile(
+                            $resized_file, 
+                            array('metadata' => $meta), 
+                            array('safe' => TRUE)
+                        );
                         imagedestroy($orig_image);
                     }
                     imagedestroy($image);
                 }
             }
         }
-
         return $file_ids;
-    }
-    // }}}
-    // {{{ public static function get_files($ids = array(), $sizes = 'original', $meta = array())
-    /**
-     * This funciton should be used to get files from the GridFS coillection
-     * 
-     * @param array|string|MongoID $ids a query for a single id or multiple ids
-     * @param array|string $sizes a query for a single size or multiple sizes
-     * @param array $meta metadata to query for
-     * @return MongoCursor|NULL a set of MongoGridFSFiles that were queried or NULL
-     */
-    public static function get_files($ids = array(), $sizes = 'original', $meta = array())
-    {
-        $query = array();
-        if ($ids)
-        {
-            if (is_string($ids))
-            {
-                $query['_id'] = new MongoID($ids);
-            }
-            else 
-            {
-                if (is_array($ids))
-                {
-                    foreach ($ids as &$id)
-                    {
-                        if (is_string($id))
-                        {
-                            $id = new MongoID($id);
-                        }
-                    }
-                }
-                $query['_id'] = $ids;
-            }
-        }
-        if ($sizes)
-        {
-            if (is_array($sizes))
-            {
-                $query['size'] = array(
-                    '$in' => $sizes,
-                );
-            }
-            else
-            {
-                $query['size'] = $sizes;
-            }
-        }
-        if ($meta)
-        {
-            foreach ($meta as $k => &$v)
-            {
-                $query['metadata.' . $k] = is_array($v)
-                    ? array('$in' => $v)
-                    : $v;
-            }
-        }
-        if ($query)
-        {
-            return MonDB::getGridFS('mp')->find($query);
-        }
-        return NULL;
     }
     // }}}
 }
