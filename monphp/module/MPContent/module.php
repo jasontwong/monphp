@@ -981,8 +981,8 @@ class MPContent
     // }}}
 
     // {{{ not yet used or converted
-    // {{{ public function get_latest_entries_created($query = array() = array(), $fields = array())
-    public function get_latest_entries_created($query = array() = array(), $fields = array())
+    // {{{ public function get_latest_entries_created($query = array(), $fields = array())
+    public function get_latest_entries_created($query = array(), $fields = array())
     {
         /*
         $dfields = array(
@@ -1003,8 +1003,8 @@ class MPContent
         return array();
     }
     // }}}
-    // {{{ public function get_latest_entries_modified($query = array() = array(), $fields = array())
-    public function get_latest_entries_modified($query = array() = array(), $fields = array())
+    // {{{ public function get_latest_entries_modified($query = array(), $fields = array())
+    public function get_latest_entries_modified($query = array(), $fields = array())
     {
         /*
         $dfields = array(
@@ -1025,8 +1025,8 @@ class MPContent
         return array();
     }
     // }}}
-    // {{{ public function get_most_revised_entries($query = array() = array(), $fields = array())
-    public function get_most_revised_entries($query = array() = array(), $fields = array())
+    // {{{ public function get_most_revised_entries($query = array(), $fields = array())
+    public function get_most_revised_entries($query = array(), $fields = array())
     {
         /*
         $dfields = array(
