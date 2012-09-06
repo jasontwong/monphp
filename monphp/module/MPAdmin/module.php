@@ -423,8 +423,22 @@ class MPAdmin
         );
         mp_register_script(
             'tiny_mce',
+            '/admin/static/MPAdmin/js/tiny_mce/tiny_mce.js',
+            array(),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'tiny_mce_popup',
+            '/admin/static/MPAdmin/js/tiny_mce/tiny_mce_popup.js',
+            array('tiny_mce'),
+            FALSE,
+            TRUE
+        );
+        mp_register_script(
+            'jquery-tinymce',
             '/admin/static/MPAdmin/js/tiny_mce/jquery.tinymce.js',
-            array('jquery'),
+            array('jquery', 'tiny_mce'),
             FALSE,
             TRUE
         );
@@ -604,7 +618,7 @@ class MPAdmin
     public function hook_mpadmin_tinymce()
     {
         $options = array(
-            'script_url' => '/admin/static/MPAdmin/js/tiny_mce/tiny_mce.js',
+            // 'script_url' => '/admin/static/MPAdmin/js/tiny_mce/tiny_mce.js',
             'plugins' => 'inlinepopups,spellchecker',
             'theme' => 'advanced',
             'skin' => 'krate',
