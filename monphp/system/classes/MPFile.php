@@ -156,8 +156,11 @@ class MPFile
                     'unique' => 1, 
                 )
             );
-            $name = basename($filename);
+            $stat = stat($filename);
+            $stat['nice_mtime'] = date('Y-m-d H:i:s', $stat['mtime']);
+            $stat['nice_size'] = size_readable($stat['size']);
             $mime_type = finfo::file($filename, FILEINFO_MIME_TYPE);
+            $name = basename($filename);
             $meta = array(
                 'metadata' => array_merge(
                     $meta,
@@ -165,6 +168,7 @@ class MPFile
                         'filename' => $name,
                         'mime' => $mime_type,
                         'location' => $filename,
+                        'stat' => $stat,
                     )
                 ),
             );
