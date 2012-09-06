@@ -110,22 +110,30 @@ class MPFile
     {
         $grid_fs = MPDB::getGridFS('mp');
         $images = $grid_fs->find($query, $fields);
-        $ids = array()
+        $filenames = $ids = array()
         foreach ($images as $image)
         {
             $ids[] = $image['_id'];
+            $filenames[] = $image['metadata']['location'];
         }
         $success = $grid_fs->remove($query, array('safe' => TRUE));
         if (!empty($ids))
         {
-            $grid_fs->remove(
-                array(
-                    'metadata.reference' => array(
-                        '$in' => $ids,
-                    ),
-                ), 
-                array('safe' => TRUE)
-            );
+            $query = array(
+                'metadata.reference' => array(
+                    '$in' => $ids,
+                ),
+            ); 
+            $images = $grid_fs->find($query, $fields);
+            foreach ($images as $image)
+            {
+                $filenames[] = $image['metadata']['location'];
+            }
+            $grid_fs->remove($query, array('safe' => TRUE));
+        }
+        foreach ($filenames as &$file)
+        {
+            unlink($file);
         }
         return $success;
     }
