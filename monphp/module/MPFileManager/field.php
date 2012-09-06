@@ -1,6 +1,6 @@
 <?php
 
-class MPFileManagerMPField
+class MPFileManagerField
 {
     //{{{ public static function field_fieldtype_filemanager_image($data)
     public static function field_fieldtype_filemanager_image($data)

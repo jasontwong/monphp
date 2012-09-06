@@ -2,19 +2,19 @@
 
 class MPFileManager
 {
-    //{{{ properties
+    // {{{ properties
     protected static $file_path = '';
     protected static $web_path = '';
     protected static $sizes = array();
-    //}}}
-    //{{{ constants 
+    // }}}
+    // {{{ constants 
     const MODULE_AUTHOR = 'Jason T. Wong';
-    const MODULE_DESCRIPTION = 'MPFileManager MPModule';
-    const MODULE_WEBSITE = '';
+    const MODULE_DESCRIPTION = 'MPFileManager Module';
+    const MODULE_WEBSITE = 'www.jasontwong.com';
     const MODULE_DEPENDENCY = '';
 
-    //}}}
-    //{{{ constructor
+    // }}}
+    // {{{ constructor
     /**
      * @param int $state current state of module manager
      */
@@ -22,318 +22,93 @@ class MPFileManager
     {
     }
 
-    //}}}
-    //{{{ protected function _rpc_browser($data)
-    protected function _rpc_browser($data)
-    {
-        $success = FALSE;
-        $action = $data['action'];
-        $view = $data['view'];
-        $dir = $data['dir'];
-        $files = json_decode($data['files'], TRUE);
-        $web = self::$web_path.str_replace(self::$file_path, '', $dir);
-        $info = array();
-        switch ($action)
-        {
-            // {{{ case 'add'
-            case 'add':
-                if (count($files) === 1)
-                {
-                    $new_dir = $dir.'/'.$files[0];
-                    $success = mkdir($new_dir);
-                    if ($success)
-                    {
-                        mkdir($new_dir.'/_resized');
-                        chmod($new_dir);
-                        $action = 'refresh';
-                    }
-                }
-            break;
-            // }}}
-            // {{{ case 'copy'
-            case 'copy':
-                $old_dir = array_pop($files);
-                if (is_dir($old_dir) && is_dir($dir))
-                {
-                    foreach ($files as $v)
-                    {
-                        $old_file = $old_dir.'/'.$v;
-                        $new_file = $dir.'/'.$v;
-                        if (is_file($old_file))
-                        {
-                            $success = copy($old_file, $new_file);
-                            if (!$success)
-                            {
-                                break;
-                            }
-                            mkdir($dir.'/_resized');
-                            list($name, $ext) = file_extension($v);
-                            foreach (array_keys(self::$sizes) as $label)
-                            {
-                                $fname = '/_resized/'.$name.'-'.$label.$ext;
-                                if (is_file($old_dir.$fname))
-                                {
-                                    copy($old_dir.$fname, $dir.$fname);
-                                }
-                            }
-                        }
-                        elseif (is_dir($old_file))
-                        {
-                            $success = dir_copy($old_file, $new_file);
-                            if (!$success)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                    $action = 'refresh';
-                }
-            break;
-            // }}}
-            // {{{ case 'delete'
-            case 'delete':
-                foreach ($files as $v)
-                {
-                    $file = $dir.'/'.$v;
-                    if (is_file($file))
-                    {
-                        $success = unlink($file);
-                        if ($success && is_dir($dir.'/_resized'))
-                        {
-                            list($name, $ext) = file_extension($v);
-                            foreach (array_keys(self::$sizes) as $label)
-                            {
-                                $fname = '/_resized/'.$name.'-'.$label.$ext;
-                                if (is_file($dir.$fname))
-                                {
-                                    unlink($dir.$fname);
-                                }
-                            }
-                        }
-                    }
-                    elseif (is_dir($file))
-                    {
-                        $success = rm_resource_dir($file);
-                    }
-                }
-                $action = 'refresh';
-            break;
-            // }}}
-            // {{{ case 'list'
-            case 'list':
-                $dir_files = scandir($dir);
-                $tmp_sort_dirs = $tmp_sort_files = $tmp_files = $tmp_dirs = array();
-                $tmp_size = 0;
-                foreach ($dir_files as $v)
-                {
-                    if (strpos($v,'.') === 0 || $v === '_resized')
-                    {
-                        continue;
-                    }
-                    $mime = explode('/', file_mime_type($dir.'/'.$v));
-                    $stat = stat($dir.'/'.$v);
-                    $stat['nice_mtime'] = date('Y-m-d H:i:s', $stat['mtime']);
-                    $stat['nice_size'] = size_readable($stat['size']);
-                    if (is_dir($dir.'/'.$v))
-                    {
-                        $tmp_dirs[] = array(
-                            'name' => $v,
-                            'stat' => $stat,
-                            'mime' => array('folder'),
-                            'ext' => '',
-                            'resized_path' => '',
-                        );
-                        $tmp_sort_dirs[] = $v;
-                    }
-                    else
-                    {
-                        $filename = file_extension($v);
-                        if ($mime[0] === 'image')
-                        {
-                            $tmp_files[] = array(
-                                'name' => $v,
-                                'stat' => $stat,
-                                'mime' => $mime,
-                                'ext' => $filename[1],
-                                'resized_path' => self::get_resized_image($web.'/'.$v, 'browse'),
-                            );
-                            $tmp_sort_files[] = $v;
-                        }
-                        elseif ($view !== 'image')
-                        {
-                            $tmp_files[] = array(
-                                'name' => $v,
-                                'stat' => $stat,
-                                'mime' => $mime,
-                                'ext' => $filename[1],
-                                'resized_path' => '',
-                            );
-                            $tmp_sort_files[] = $v;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-                    $tmp_size += $stat['size'];
-                }
-                $files = array_merge($tmp_dirs, $tmp_files);
-                $success = TRUE;
-                $info['total_size'] = size_readable($tmp_size);
-                $info['total_dirs'] = count($tmp_dirs);
-                $info['total_files'] = count($tmp_files);
-            break;
-            // }}}
-            // {{{ case 'move'
-            case 'move':
-                $old_dir = array_pop($files);
-                if (is_dir($old_dir) && is_dir($dir))
-                {
-                    foreach ($files as $v)
-                    {
-                        $old_file = $old_dir.'/'.$v;
-                        $new_file = $dir.'/'.$v;
-                        if (file_exists($old_file))
-                        {
-                            $success = rename($old_file, $new_file);
-                            if (!$success)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                    $action = 'refresh';
-                }
-            break;
-            // }}}
-            // {{{ case 'rename'
-            case 'rename':
-                if (count($files) == 2)
-                {
-                    $old_file = $dir.'/'.$files[0];
-                    list($name, $ext) = file_extension($files[0]);
-                    $new_file = $dir.'/'.$files[1].$ext;
-                    if (file_exists($old_file) && !file_exists($new_file))
-                    {
-                        $success = rename($old_file, $new_file);
-                        if ($success && is_dir($dir.'/_resized'))
-                        {
-                            foreach (array_keys(self::$sizes) as $label)
-                            {
-                                $fname = '/_resized/'.$name.'-'.$label.$ext;
-                                $new_fname = '/_resized/'.$files[1].'-'.$label.$ext;
-                                if (is_file($dir.$fname))
-                                {
-                                    rename($dir.$fname, $dir.$new_fname);
-                                }
-                            }
-                        }
-                    }
-                    $action = 'refresh';
-                }
-            break;
-            // }}}
-        }
-        echo json_encode(
-            array(
-                'success' => $success,
-                'action' => $action,
-                'view' => $view,
-                'dir' => $dir,
-                'files' => $files,
-                'web' => $web,
-                'info' => $info,
-            )
-        );
-    }
+    // }}}
 
-    //}}}
-    //{{{ public function hook_mpsystem_active()
-    public function hook_mpsystem_active()
+    // {{{ public function hook_mpadmin_enqueue_css()
+    public function hook_mpadmin_enqueue_css()
     {
-        self::$sizes = self::get_image_sizes();
-        self::$sizes['browse'] = array(
-            'width' => '90',
-            'height' => '90',
-        );
-        self::$file_path = !is_null(MPData::query('MPFileManager', 'file_path'))
-            ? MPData::query('MPFileManager', 'file_path')
-            : DIR_FILE.'/upload';
-        self::$web_path = !is_null(MPData::query('MPFileManager', 'web_path'))
-            ? MPData::query('MPFileManager', 'web_path')
-            : '/file/upload';
-        if (!is_dir(self::$file_path))
-        {
-            mkdir(self::$file_path, 0777, TRUE);
-        }
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_css()
-    public function hook_mpadmin_css()
-    {
-        $screen = array();
         if (strpos(URI_PATH, '/admin/mod/MPFileManager/') === 0)
         {
-            $screen[] = '/admin/static/MPAdmin/screen.css/';
-            $screen[] = '/admin/static/MPFileManager/browse.css/';
+            mp_enqueue_style('mpadmin_screen', '/admin/static/MPAdmin/screen.css');
+            mp_enqueue_style('mpfilemanager_browse', '/admin/static/MPFileManager/browse.css');
         }
         else
         {
-            $screen[] = '/admin/static/MPFileManager/field.css/';
+            mp_enqueue_style('mpfilemanager_field', '/admin/static/MPFileManager/field.css');
         }
-
-        $css['screen'] = $screen;
-
-        return $css;
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_js()
-    public function hook_mpadmin_js()
+    // }}}
+    // {{{ public function hook_mpadmin_enqueue_js()
+    public function hook_mpadmin_enqueue_js()
     {
-        $js[] = '/admin/static/MPFileManager/jquery.windowmsg-1.0.js/';
-        if (strpos(URI_PATH, '/mod/MPFileManager/browse/') !== FALSE)
-        {
-            $js[] = '/admin/static/MPFileManager/filemanager.js/';
-        }
-        else
-        {
-            $js[] = '/admin/static/MPFileManager/admin_nav.js/';
-            $js[] = '/admin/static/MPFileManager/field.js/';
-            $js[] = '/admin/static/MPFileManager/tinymce.js/';
-        }
-        return $js;
-    }
-
-    //}}}
-    //{{{ public function hook_mpadmin_js_header()
-    public function hook_mpadmin_js_header()
-    {
-        $js = array();
+        mp_enqueue_script(
+            'mpfilemanager_windowmsg',
+            '/admin/static/MPFileManager/jquery.windowmsg-1.0.js',
+            array('jquery'),
+            FALSE,
+            TRUE
+        );
         if (strpos(URI_PATH, '/mod/MPFileManager/') !== FALSE)
         {
-            $js[] = '/admin/static/MPFileManager/jquery.js/';
-            $js[] = '/admin/static/MPAdmin/admin.js/';
+            mp_enqueue_script(
+                'mpadmin_admin',
+                '/admin/static/MPAdmin/admin.js',
+                array('jquery')
+            );
         }
         if (strpos(URI_PATH, '/admin/mod/MPFileManager/browse/tinymce/') !== FALSE)
         {
-            $js[] = '/file/module/MPAdmin/js/tiny_mce/tiny_mce.js';
-            $js[] = '/file/module/MPAdmin/js/tiny_mce/jquery.tinymce.js';
-            $js[] = '/file/module/MPAdmin/js/tiny_mce/tiny_mce_popup.js';
-            $js[] = '/admin/static/MPFileManager/tinymce_browse.js/';
+            mp_enqueue_script(
+                'mpfilemanager_tinymce_browse',
+                '/admin/static/MPFileManager/tinymce_browse.js',
+                array('jquery-tinymce', 'tiny_mce_popup')
+            );
         }
-        return $js;
+        if (strpos(URI_PATH, '/mod/MPFileManager/browse/') !== FALSE)
+        {
+            mp_enqueue_script(
+                'mpfilemanager_filemanager',
+                '/admin/static/MPFileManager/filemanager.js',
+                array('jquery', 'mpfilemanager_windowmsg'),
+                FALSE,
+                TRUE
+            );
+        }
+        else
+        {
+            mp_enqueue_script(
+                'mpfilemanager_admin_nav',
+                '/admin/static/MPFileManager/admin_nav.js',
+                array('jquery'),
+                FALSE,
+                TRUE
+            );
+            mp_enqueue_script(
+                'mpfilemanager_field',
+                '/admin/static/MPFileManager/field.js',
+                array('jquery'),
+                FALSE,
+                TRUE
+            );
+            mp_enqueue_script(
+                'mpfilemanager_tinymce',
+                '/admin/static/MPFileManager/tinymce.js',
+                array('jquery'),
+                FALSE,
+                TRUE
+            );
+        }
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_module_page($page)
+    // }}}
+    // {{{ public function hook_mpadmin_module_page($page)
     public function hook_mpadmin_module_page($page)
     {
     }
     
-    //}}}
-    //{{{ public function hook_mpadmin_tinymce()
+    // }}}
+    // {{{ public function hook_mpadmin_tinymce()
     public function hook_mpadmin_tinymce()
     {
         return array(
@@ -341,8 +116,240 @@ class MPFileManager
         );
     }
     
-    //}}}
-    //{{{ public function hook_mpadmin_settings_fields()
+    // }}}
+    // {{{ public function hook_mpadmin_rpc($function, $data)
+    public function hook_mpadmin_rpc($function, $data)
+    {
+        switch ($function)
+        {
+            // {{{ case 'browser'
+            case 'browser':
+                $success = FALSE;
+                $action = $data['action'];
+                $view = $data['view'];
+                $dir = $data['dir'];
+                $files = json_decode($data['files'], TRUE);
+                $web = self::$web_path . str_replace(self::$file_path, '', $dir);
+                $info = array();
+                switch ($action)
+                {
+                    // {{{ case 'add'
+                    case 'add':
+                        if (count($files) === 1)
+                        {
+                            $new_dir = $dir.'/'.$files[0];
+                            $success = mkdir($new_dir);
+                            if ($success)
+                            {
+                                mkdir($new_dir.'/_resized');
+                                chmod($new_dir);
+                                $action = 'refresh';
+                            }
+                        }
+                    break;
+                    // }}}
+                    // {{{ case 'copy'
+                    case 'copy':
+                        $old_dir = array_pop($files);
+                        if (is_dir($old_dir) && is_dir($dir))
+                        {
+                            foreach ($files as $v)
+                            {
+                                $old_file = $old_dir.'/'.$v;
+                                $new_file = $dir.'/'.$v;
+                                if (is_file($old_file))
+                                {
+                                    $success = copy($old_file, $new_file);
+                                    if (!$success)
+                                    {
+                                        break;
+                                    }
+                                    mkdir($dir.'/_resized');
+                                    list($name, $ext) = file_extension($v);
+                                    foreach (array_keys(self::$sizes) as $label)
+                                    {
+                                        $fname = '/_resized/'.$name.'-'.$label.$ext;
+                                        if (is_file($old_dir.$fname))
+                                        {
+                                            copy($old_dir.$fname, $dir.$fname);
+                                        }
+                                    }
+                                }
+                                elseif (is_dir($old_file))
+                                {
+                                    $success = dir_copy($old_file, $new_file);
+                                    if (!$success)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            $action = 'refresh';
+                        }
+                    break;
+                    // }}}
+                    // {{{ case 'delete'
+                    case 'delete':
+                        foreach ($files as $v)
+                        {
+                            $file = $dir.'/'.$v;
+                            if (is_file($file))
+                            {
+                                $success = unlink($file);
+                                if ($success && is_dir($dir.'/_resized'))
+                                {
+                                    list($name, $ext) = file_extension($v);
+                                    foreach (array_keys(self::$sizes) as $label)
+                                    {
+                                        $fname = '/_resized/'.$name.'-'.$label.$ext;
+                                        if (is_file($dir.$fname))
+                                        {
+                                            unlink($dir.$fname);
+                                        }
+                                    }
+                                }
+                            }
+                            elseif (is_dir($file))
+                            {
+                                $success = rm_resource_dir($file);
+                            }
+                        }
+                        $action = 'refresh';
+                    break;
+                    // }}}
+                    // {{{ case 'list'
+                    case 'list':
+                        $dir_files = scandir($dir);
+                        $tmp_sort_dirs = $tmp_sort_files = $tmp_files = $tmp_dirs = array();
+                        $tmp_size = 0;
+                        foreach ($dir_files as $v)
+                        {
+                            if (strpos($v,'.') === 0 || $v === '_resized')
+                            {
+                                continue;
+                            }
+                            $mime = explode('/', file_mime_type($dir.'/'.$v));
+                            $stat = stat($dir.'/'.$v);
+                            $stat['nice_mtime'] = date('Y-m-d H:i:s', $stat['mtime']);
+                            $stat['nice_size'] = size_readable($stat['size']);
+                            if (is_dir($dir.'/'.$v))
+                            {
+                                $tmp_dirs[] = array(
+                                    'name' => $v,
+                                    'stat' => $stat,
+                                    'mime' => array('folder'),
+                                    'ext' => '',
+                                    'resized_path' => '',
+                                );
+                                $tmp_sort_dirs[] = $v;
+                            }
+                            else
+                            {
+                                $filename = file_extension($v);
+                                if ($mime[0] === 'image')
+                                {
+                                    $tmp_files[] = array(
+                                        'name' => $v,
+                                        'stat' => $stat,
+                                        'mime' => $mime,
+                                        'ext' => $filename[1],
+                                        'resized_path' => self::get_resized_image($web.'/'.$v, 'browse'),
+                                    );
+                                    $tmp_sort_files[] = $v;
+                                }
+                                elseif ($view !== 'image')
+                                {
+                                    $tmp_files[] = array(
+                                        'name' => $v,
+                                        'stat' => $stat,
+                                        'mime' => $mime,
+                                        'ext' => $filename[1],
+                                        'resized_path' => '',
+                                    );
+                                    $tmp_sort_files[] = $v;
+                                }
+                                else
+                                {
+                                    continue;
+                                }
+                            }
+                            $tmp_size += $stat['size'];
+                        }
+                        $files = array_merge($tmp_dirs, $tmp_files);
+                        $success = TRUE;
+                        $info['total_size'] = size_readable($tmp_size);
+                        $info['total_dirs'] = count($tmp_dirs);
+                        $info['total_files'] = count($tmp_files);
+                    break;
+                    // }}}
+                    // {{{ case 'move'
+                    case 'move':
+                        $old_dir = array_pop($files);
+                        if (is_dir($old_dir) && is_dir($dir))
+                        {
+                            foreach ($files as $v)
+                            {
+                                $old_file = $old_dir.'/'.$v;
+                                $new_file = $dir.'/'.$v;
+                                if (file_exists($old_file))
+                                {
+                                    $success = rename($old_file, $new_file);
+                                    if (!$success)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            $action = 'refresh';
+                        }
+                    break;
+                    // }}}
+                    // {{{ case 'rename'
+                    case 'rename':
+                        if (count($files) == 2)
+                        {
+                            $old_file = $dir.'/'.$files[0];
+                            list($name, $ext) = file_extension($files[0]);
+                            $new_file = $dir.'/'.$files[1].$ext;
+                            if (file_exists($old_file) && !file_exists($new_file))
+                            {
+                                $success = rename($old_file, $new_file);
+                                if ($success && is_dir($dir.'/_resized'))
+                                {
+                                    foreach (array_keys(self::$sizes) as $label)
+                                    {
+                                        $fname = '/_resized/'.$name.'-'.$label.$ext;
+                                        $new_fname = '/_resized/'.$files[1].'-'.$label.$ext;
+                                        if (is_file($dir.$fname))
+                                        {
+                                            rename($dir.$fname, $dir.$new_fname);
+                                        }
+                                    }
+                                }
+                            }
+                            $action = 'refresh';
+                        }
+                    break;
+                    // }}}
+                }
+                echo json_encode(
+                    array(
+                        'success' => $success,
+                        'action' => $action,
+                        'view' => $view,
+                        'dir' => $dir,
+                        'files' => $files,
+                        'web' => $web,
+                        'info' => $info,
+                    )
+                );
+            break;
+            // }}}
+        }
+    }
+
+    // }}}
+    // {{{ public function hook_mpadmin_settings_fields()
     public function hook_mpadmin_settings_fields()
     {
         $fields = array();
@@ -427,8 +434,8 @@ class MPFileManager
         return $fields;
     }
 
-    //}}}
-    //{{{ public function hook_mpadmin_settings_validate($name, $data)
+    // }}}
+    // {{{ public function hook_mpadmin_settings_validate($name, $data)
     public function hook_mpadmin_settings_validate($name, $data)
     {
         $success = TRUE;
@@ -449,40 +456,29 @@ class MPFileManager
         );
     }
 
-    //}}}
-    //{{{ public function hook_mpsystem_routes()
-    public function hook_mpsystem_routes()
+    // }}}
+    // {{{ public function hook_mpsystem_active()
+    public function hook_mpsystem_active()
     {
-        $ctrl = dirname(__FILE__).'/admin/controller';
-        $routes = array(
-            array('#^/admin/mod/MPFileManager/rpc/([^/]+/)+$#', $ctrl.'/rpc.php', MPRouter::ROUTE_PCRE),
+        self::$sizes = self::get_image_sizes();
+        self::$sizes['browse'] = array(
+            'width' => '90',
+            'height' => '90',
         );
-        return $routes;
+        self::$file_path = !is_null(MPData::query('MPFileManager', 'file_path'))
+            ? MPData::query('MPFileManager', 'file_path')
+            : DIR_FILE.'/upload';
+        self::$web_path = !is_null(MPData::query('MPFileManager', 'web_path'))
+            ? MPData::query('MPFileManager', 'web_path')
+            : '/file/upload';
+        if (!is_dir(self::$file_path))
+        {
+            mkdir(self::$file_path, 0777, TRUE);
+        }
     }
 
-    //}}}
-    //{{{ public function hook_rpc($action, $params = NULL)
-    /**
-     * Implementation of hook_rpc
-     *
-     * This looks at the action and checks for the method _rpc_<action> and
-     * passes the parameters to that. There is no limit on parameters.
-     *
-     * @param string $action action name
-     * @return string
-     */
-    public function hook_rpc($action)
-    {
-        $method = '_rpc_'.$action;
-        $caller = array($this, $method);
-        $args = array_slice(func_get_args(), 1);
-        return method_exists($this, $method) 
-            ? call_user_func_array($caller, $args)
-            : '';
-    }
-
-    //}}}
-    //{{{ public function hook_mpuser_perm()
+    // }}}
+    // {{{ public function hook_mpuser_perm()
     public function hook_mpuser_perm()
     {
         return array(
@@ -493,7 +489,7 @@ class MPFileManager
             'edit file' => 'Edit File'
         );
     }
-    //}}}
+    // }}}
     // {{{ public function save_file($path, $name, $tmp_file)
     public function save_file($path, $name, $tmp_file)
     {
@@ -573,48 +569,49 @@ class MPFileManager
 
         return $success;
     }
-    //}}}
-    //{{{ public static function web_path()
+    // }}}
+
+    // {{{ public static function web_path()
     public static function web_path()
     {
         return self::get_web_path();
     }
-    //}}}
-    //{{{ public static function get_web_path()
+    // }}}
+    // {{{ public static function get_web_path()
     public static function get_web_path()
     {
         return self::$web_path;
     }
-    //}}}
-    //{{{ public static function set_web_path($path)
+    // }}}
+    // {{{ public static function set_web_path($path)
     public static function set_web_path($path)
     {
         MPData::update('MPFileManager', 'web_path', $path);
         self::$web_path = $path;
         return self::$web_path;
     }
-    //}}}
-    //{{{ public static function file_path()
+    // }}}
+    // {{{ public static function file_path()
     public static function file_path()
     {
         return self::get_file_path();
     }
-    //}}}
-    //{{{ public static function get_file_path()
+    // }}}
+    // {{{ public static function get_file_path()
     public static function get_file_path()
     {
         return self::$file_path;
     }
-    //}}}
-    //{{{ public static function set_file_path($path)
+    // }}}
+    // {{{ public static function set_file_path($path)
     public static function set_file_path($path)
     {
         MPData::update('MPFileManager', 'file_path', $path);
         self::$file_path = $path;
         return self::$file_path;
     }
-    //}}}
-    //{{{ public static function scan($dir)
+    // }}}
+    // {{{ public static function scan($dir)
     public static function scan($dir)
     {
         if (is_dir($dir))
@@ -665,8 +662,8 @@ class MPFileManager
             throw new MPFileManagerNotExistException($dir.' does not exist');
         }
     }
-    //}}}
-    //{{{ public static function dir_scan($dir)
+    // }}}
+    // {{{ public static function dir_scan($dir)
     /**
      * Like scan, but just for directories
      * @param string $dir full path to scan
@@ -699,7 +696,7 @@ class MPFileManager
         }
         return $dirs;
     }
-    //}}}
+    // }}}
     // {{{ public static function get_image_sizes()
     public static function get_image_sizes()
     {
@@ -718,7 +715,7 @@ class MPFileManager
             : $default_size;
         return $sizes;
     }
-    //}}}
+    // }}}
     // {{{ public static function get_resized_image($file, $size)
     public static function get_resized_image($web_file, $size)
     {
@@ -739,7 +736,7 @@ class MPFileManager
 
         return $web_file;
     }
-    //}}}
+    // }}}
 }
 
 class MPFileManagerNotExistException extends Exception {}
