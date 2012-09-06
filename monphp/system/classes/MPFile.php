@@ -137,7 +137,7 @@ class MPFile
      * and add the proper metadata to the files.
      * 
      * @param string $file full path of the file on the server to save
-     * @param string $name the name of the file to use
+     * @param string $filename the location of the file to be moved to
      * @param array $meta additional metadata that needs to be added to the file
      * @return mixed MongoId if successful, else NULL
      */
@@ -179,7 +179,7 @@ class MPFile
      * and add the proper metadata to the files.
      * 
      * @param string $file full path of the file on the server to save
-     * @param string $name the name of the file to use
+     * @param string $filename the location of the file to be moved to
      * @param array $meta additional metadata that needs to be added to the file
      * @param array $sizes an array of sizes to create besides the original
      * @return array the array of ids returned from GridFS
@@ -259,6 +259,8 @@ class MPFile
                     }
                     if (!is_null($orig_image))
                     {
+                        // this is manually saved because the save_file function
+                        // includes move_uploaded_file
                         $meta['width'] = $size['width'];
                         $meta['height'] = $size['height'];
                         $meta['size'] = $label;
