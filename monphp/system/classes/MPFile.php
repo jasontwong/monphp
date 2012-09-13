@@ -198,15 +198,18 @@ class MPFile
      */
     public static function save_image($file, $filename, $meta = array(), $sizes = array())
     {
-        list($width, $height, $mime_type) = getimagesize($file);
-        $meta = array_merge(
-            $meta,
-            array(
-                'width' => $width,
-                'height' => $height,
-                'size' => 'original',
-            )
-        );
+        if (is_file($file))
+        {
+            list($width, $height, $mime_type) = getimagesize($file);
+            $meta = array_merge(
+                $meta,
+                array(
+                    'width' => $width,
+                    'height' => $height,
+                    'size' => 'original',
+                )
+            );
+        }
         $id = self::save_file($file, $filename, $meta);
         $file_ids = array();
         if (!is_null($id))
@@ -279,6 +282,13 @@ class MPFile
                         $meta['reference'] = $id;
                         $meta['filename'] = $resized_filename;
                         $meta['location'] = $resized_file;
+                        $meta['mime'] = finfo::file($resized_filename, FILEINFO_MIME_TYPE);
+
+                        $stat = stat($resized_filename);
+                        $stat['nice_mtime'] = date('Y-m-d H:i:s', $stat['mtime']);
+                        $stat['nice_size'] = size_readable($stat['size']);
+                        $meta['stat'] = $stat;
+
                         $file_ids[$label] = $grid->storeFile(
                             $resized_file, 
                             array('metadata' => $meta), 
