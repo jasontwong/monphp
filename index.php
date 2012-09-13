@@ -17,6 +17,7 @@ define('DIR_MODULE', DIR_MP . '/module');
 define('DIR_TMPL', DIR_MP . '/template');
 define('DIR_VIEW', DIR_MP . '/view');
 define('MP_VERSION', '0.0.1');
+define('MP_SITE_VERSION', '0.0.1');
 // }}}
 // {{{ disecting the URI
 $ru = &$_SERVER['REQUEST_URI'];

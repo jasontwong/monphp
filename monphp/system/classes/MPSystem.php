@@ -81,7 +81,7 @@ class MPSystem
                 $js[] = sprintf(
                     '<script src="%s?ver=%s"></script>', 
                     $script['src'],
-                    $script['ver'] !== FALSE ? $script['ver'] : MP_VERSION
+                    $script['ver'] !== FALSE ? $script['ver'] : MP_SITE_VERSION
                 );
             }
         }
