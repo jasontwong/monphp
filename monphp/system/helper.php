@@ -1,6 +1,6 @@
 <?php
 
-//{{{ function ake($key, $array)
+// {{{ function ake($key, $array)
 /**
  * Shortcut for array_key_exists()
  *
@@ -12,8 +12,9 @@ function ake($key, $array)
 {
     return is_array($array) && array_key_exists($key, $array);
 }
-//}}}
-//{{{ function array_clean($array, $deep = FALSE)
+
+// }}}
+// {{{ function array_clean($array, $deep = FALSE)
 /**
  * Goes into array and removes empty elements
  *
@@ -37,8 +38,8 @@ function array_clean($array, $deep = FALSE)
     return $array;
 }
 
-//}}}
-//{{{ function array_drill($array, $keys)
+// }}}
+// {{{ function array_drill($array, $keys)
 /**
  * Drills down the array into the keys provided
  *
@@ -86,8 +87,8 @@ function array_drill($array)
     return NULL;
 }
 
-//}}}
-//{{{ function array_join($master)
+// }}}
+// {{{ function array_join($master)
 /**
  * This is similar to array_merge with the exception that
  * only the keys of the master array will be returned
@@ -101,15 +102,15 @@ function array_join($master)
     return array_intersect_key(call_user_func_array('array_merge', func_get_args()), $master);
 }
 
-//}}}
-//{{{ function available_filename($filename)
+// }}}
+// {{{ function available_filename($filename)
 /**
  * Get an available filename
  * If the filename is taken, it appends a _n before the extension, with n
  * being the index starting at 0.
  *
  * @param string $filename full path to the file to check
- * @return string filename including path
+ * @return string|bool filename including path if available else false
  */
 function available_filename($filename)
 {
@@ -137,8 +138,8 @@ function available_filename($filename)
     return FALSE;
 }
 
-//}}}
-//{{{ function deka($default = NULL)
+// }}}
+// {{{ function deka($default = NULL)
 /**
  * Works like eka() but with default value set as first parameter
  * Use this as a shortcut of a ternary. Example:
@@ -157,8 +158,8 @@ function deka($default)
     return is_null($data) ? $default : $data;
 }
 
-//}}}
-//{{{ function dir_copy($src, $dest, $inclusive = TRUE, $chmod = 0777)
+// }}}
+// {{{ function dir_copy($src, $dest, $inclusive = TRUE, $chmod = 0777)
 /**
  * If the parameter $inclusive = TRUE, the folder specified in $src will be 
  * copied to the directory. So if source is /usr and dest is /home, you will
@@ -215,8 +216,8 @@ function dir_copy($src, $dest, $inclusive = TRUE, $chmod = 0777)
     return TRUE;
 }
 
-//}}}
-//{{{ function eka($array)
+// }}}
+// {{{ function eka($array)
 /**
  * Works like array_key_exists() but with array name first then multiple keys
  * Letters reversed because the parameters are sort of reversed to ake()
@@ -230,8 +231,8 @@ function eka($array)
     return !is_null(call_user_func_array('array_drill', func_get_args()));
 }
 
-//}}}
-//{{{ function extension($string, $ext)
+// }}}
+// {{{ function extension($string, $ext)
 /**
  * Adds or removes extension to string
  * Mainly used for filename handling
@@ -246,8 +247,8 @@ function extension($string, $ext)
     return substr($string, $c) === $ext ? substr($string, 0, $c) : $string.$ext;
 }
 
-//}}}
-//{{{ function file_extension($filename)
+// }}}
+// {{{ function file_extension($filename)
 /**
  * Get the bare name and extension of a filename
  *
@@ -263,8 +264,8 @@ function file_extension($filename)
         : array(substr($filename, 0, $pos), substr($filename, $pos));
 }
 
-//}}}
-//{{{ function file_mime_type($filename)
+// }}}
+// {{{ function file_mime_type($filename)
 /**
  * Get the mime_type of the file
  *
@@ -273,20 +274,12 @@ function file_extension($filename)
  */
 function file_mime_type($filename)
 {
-    if (version_compare(PHP_VERSION, '5.3.0', '>='))
-    {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE); // return mime type ala mimetype extension
-        $mime = finfo_file($finfo, $filename);
-        finfo_close($finfo);
-    }
-    else
-    {
-        $mime = mime_content_type($filename);
-    }
-    return $mime;
+    return version_compare(PHP_VERSION, '5.3.0', '>=')
+        ? $mime = finfo::file($filename, FILEINFO_MIME_TYPE)
+        : $mime = mime_content_type($filename);
 }
 
-//}}}
+// }}}
 // {{{ function get_device_type($desktops = array(), $override = '')
 /**
  * This function should return the device type of client. It's based off of Brett Jankord's
@@ -310,7 +303,7 @@ function get_device_type($desktops = array(), $override = '')
             $_SESSION[$category] = $override;
         } 
     }
-    if (!isset($_SESSION[$category]))
+    if(!isset($_SESSION[$category]))
     {
         // Check if user agent is a smart TV - http://goo.gl/FocDk
         if ((preg_match('/GoogleTV|SmartTV|Internet.TV|NetCast|NETTV|AppleTV|boxee|Kylo|Roku|DLNADOC|CE\-HTML/i', $ua)))
@@ -381,7 +374,6 @@ function get_device_type($desktops = array(), $override = '')
         else {
             $_SESSION[$category] = "mobile";
         }
-        
     }// End if session not set
 
     if (in_array($_SESSION[$category], $desktops))
@@ -391,51 +383,9 @@ function get_device_type($desktops = array(), $override = '')
 
     return $_SESSION[$category];
 }
-// }}}
-// {{{ function hex_to_rgb($color)
-/**
- * Converts hex color value to rgb color value
- *
- * @param string $color the hex value for the color
- * @return array
- */
-function hex_to_rgb($color)
-{
-    if ($color[0] == '#')
-    {
-        $color = substr($color, 1);
-    }
-
-    if (strlen($color) == 6)
-    {
-        list($r, $g, $b) = array(
-            $color[0].$color[1],
-            $color[2].$color[3],
-            $color[4].$color[5],
-        );
-    }
-    elseif (strlen($color) == 3)
-    {
-        list($r, $g, $b) = array(
-            $color[0].$color[0], 
-            $color[1].$color[1], 
-            $color[2].$color[2],
-        );
-    }
-    else
-    {
-        return false;
-    }
-
-    $r = hexdec($r); 
-    $g = hexdec($g); 
-    $b = hexdec($b);
-
-    return array($r, $g, $b);
-}
 
 // }}}
-//{{{ function hsc($string, $ent = ENT_QUOTES, $enc = 'UTF-8')
+// {{{ function hsc($string, $ent = ENT_QUOTES, $enc = 'UTF-8')
 /**
  * shortcut for htmlspecialchars()
  */
@@ -443,8 +393,9 @@ function hsc($string, $ent = ENT_QUOTES, $enc = 'UTF-8')
 {
     return htmlspecialchars($string, $ent, $enc);
 }
-//}}}
-//{{{ function is_email($email)
+
+// }}}
+// {{{ function is_email($email)
 /**
  * follows ~99.99% of RFC 2822 according to http://www.regular-expressions.info/email.html
  *
@@ -457,8 +408,9 @@ function is_email($email)
     $result = preg_match($regex, $email);
     return (bool)$result;
 }
-//}}}
-//{{{ function prepend_name($key, $name)
+
+// }}}
+// {{{ function prepend_name($key, $name)
 /**
  * Prepends $name with $key while keeping it in array notation
  *
@@ -481,8 +433,8 @@ function prepend_name($key, $name)
     }
 }
 
-//}}}
-//{{{ function random_string($length = 10, $base = 62)
+// }}}
+// {{{ function random_string($length = 10, $base = 62)
 /**
  * Create a random using only numbers and letters
  *
@@ -502,63 +454,8 @@ function random_string($length = 10, $base = 62)
     return $o;
 }
 
-//}}}
-// {{{ function rgb_to_hex($r, $g = -1, $b = -1)
-/**
- * Converts rgb color value to hex color value
- *
- * @param int $r the read numeric value (1-255)
- * @param int $g the read numeric value (1-255)
- * @param int $b the read numeric value (1-255)
- * @return string
- */
-function rgb_to_hex($r, $g=-1, $b=-1)
-{
-    if (is_array($r) && sizeof($r) == 3)
-    {
-        list($r, $g, $b) = $r;
-    }
-
-    $r = intval($r);
-    $g = intval($g);
-    $b = intval($b);
-
-    $r = dechex($r<0?0:($r>255?255:$r));
-    $g = dechex($g<0?0:($g>255?255:$g));
-    $b = dechex($b<0?0:($b>255?255:$b));
-
-    $color = (strlen($r) < 2?'0':'').$r;
-    $color .= (strlen($g) < 2?'0':'').$g;
-    $color .= (strlen($b) < 2?'0':'').$b;
-    return '#'.$color;
-}
-
 // }}}
-// {{{ function rgb_to_yuv($r, $g=-1, $b=-1)
-/**
- * Converts rgb color value to yuv color value
- *
- * @param int $r the read numeric value (1-255)
- * @param int $g the read numeric value (1-255)
- * @param int $b the read numeric value (1-255)
- * @return array
- */
-function rgb_to_yuv($r, $g=-1, $b=-1)
-{
-    if (is_array($r) && sizeof($r) == 3)
-    {
-        list($r, $g, $b) = $r;
-    }
-
-    $y = 0.299*$r + 0.587*$g + 0.114*$b;
-    $u = 0.713*($r-$y);
-    $v = ($b-$y)*0.565;
-
-    return array($y, $u, $v);
-}
-
-// }}}
-//{{{ function rm_resource_dir($path, $rm_path = TRUE)
+// {{{ function rm_resource_dir($path, $rm_path = TRUE)
 /**
  * Recursively remove files and directories
  *
@@ -593,7 +490,7 @@ function rm_resource_dir($path, $rm_path = TRUE)
     return FALSE;
 }
 
-//}}}
+// }}}
 // {{{ function size_readable($size, $max = null, $system = 'si', $retstring = '%01.2f %s')
 /**
  * Return human readable sizes
@@ -630,8 +527,9 @@ function size_readable($size, $max = null, $system = 'si', $retstring = '%01.2f 
 
     return sprintf($retstring, $size, $sys['prefix'][$i]);
 }
+
 // }}}
-//{{{ function slugify($name, $replacement = '-')
+// {{{ function slugify($name, $replacement = '-')
 function slugify($name, $replacement = '-')
 {
     // Characters to process. All other characters will be dropped
@@ -664,8 +562,8 @@ function slugify($name, $replacement = '-')
     return strtolower($o);
 }
 
-//}}}
-//{{{ function test_db_settings($db)
+// }}}
+// {{{ function test_db_settings($db)
 function test_db_settings($db)
 {
     try
@@ -681,8 +579,8 @@ function test_db_settings($db)
     }
 }
 
-//}}}
-//{{{ function time_zones()
+// }}}
+// {{{ function time_zones()
 /**
  * Returns an array of country named time zones
  */
@@ -706,7 +604,7 @@ function time_zones()
     return $locations;
 }
 
-//}}}
+// }}}
 // {{{ function word_split($str, $words = 15, $random = FALSE)
 /**
  *
