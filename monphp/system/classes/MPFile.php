@@ -2,9 +2,52 @@
 
 class MPFile
 {
+    // {{{ public static function download_file($query = array(), $fields = array())
+    /**
+     * This function should send the file to the browser
+     * 
+     * @param array $query
+     * @param array $fields fields to return
+     * @return MongoGridFSFile 
+     */
+    public static function download_file($query = array(), $fields = array())
+    {
+        $file = MPDB::getGridFS('mp')->findOne($query, $fields);
+        /*
+        header('Content-type: '.$v['mime']);
+        header('Content-Length: '.$v['length']);
+        echo $file->getBytes();
+        */
+        var_dump($file);
+        return $file;
+    }
+    // }}}
+
+    // {{{ public static function force_download_file($query = array(), $fields = array())
+    /**
+     * This function should send the file with content type attachment so
+     * it forces the browser to send file as a download.
+     * 
+     * @param array $query
+     * @param array $fields fields to return
+     * @return MongoGridFSFile 
+     */
+    public static function force_download_file($query = array(), $fields = array())
+    {
+        $file = MPDB::getGridFS('mp')->findOne($query, $fields);
+        /*
+        header('Content-type: '.$v['mime']);
+        header('Content-Length: '.$v['length']);
+        echo $file->getBytes();
+        */
+        var_dump($file);
+        return $file;
+    }
+    // }}}
+
     // {{{ public static function get_file($query = array(), $fields = array())
     /**
-     * This funciton should be used to get files from the GridFS coillection
+     * This function should be used to get files from the GridFS coillection
      * 
      * @param array $query
      * @param array $fields fields to return
@@ -17,7 +60,7 @@ class MPFile
     // }}}
     // {{{ public static function get_files($query = array(), $fields = array())
     /**
-     * This funciton should be used to get a file from the GridFS coillection
+     * This function should be used to get a file from the GridFS coillection
      * 
      * @param array $query
      * @param array $fields fields to return
@@ -30,7 +73,7 @@ class MPFile
     // }}}
     // {{{ public static function get_image($query = array(), $fields = array())
     /**
-     * This funciton should be used to get an image from the GridFS coillection
+     * This function should be used to get an image from the GridFS coillection
      * 
      * @param array $query
      * @param array $fields fields to return
@@ -58,7 +101,7 @@ class MPFile
     // }}}
     // {{{ public static function get_images($query = array(), $fields = array())
     /**
-     * This funciton should be used to get images from the GridFS coillection
+     * This function should be used to get images from the GridFS coillection
      * 
      * @param array $query
      * @param array $fields fields to return
@@ -89,7 +132,7 @@ class MPFile
 
     // {{{ public static function remove_files($query = array())
     /**
-     * This funciton should be used to remove files from the GridFS coillection
+     * This function should be used to remove files from the GridFS coillection
      * 
      * @param array $query
      * @return bool
@@ -101,7 +144,7 @@ class MPFile
     // }}}
     // {{{ public static function remove_images($query = array())
     /**
-     * This funciton should be used to remove images from the GridFS coillection
+     * This function should be used to remove images from the GridFS coillection
      * 
      * @param array $query
      * @return bool
