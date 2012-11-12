@@ -344,17 +344,31 @@ class MPContent
     public function hook_mpsystem_install()
     {
         $db = new MPDB;
+        // {{{ mpcontent_entry indexes
         $db->mpcontent_entry->ensureIndex(
             array(
-                'entry_type_name' => 1, 
                 'weight' => 1, 
                 'modified' => -1,
+                'entry_type.name' => 1, 
             )
         );
         $db->mpcontent_entry->ensureIndex(
             array(
+                'modified' => -1,
+                'weight' => 1, 
+                'entry_type.nice_name' => 1, 
+            )
+        );
+        $db->mpcontent_entry->ensureIndex(
+            array(
+                'entry_type.name' => 1, 
                 'slug' => 1, 
-                'entry_type_name' => 1, 
+            )
+        );
+        $db->mpcontent_entry->ensureIndex(
+            array(
+                'entry_type.nice_name' => 1, 
+                'slug' => 1, 
             )
         );
         $db->mpcontent_entry->ensureIndex(
@@ -363,12 +377,16 @@ class MPContent
                 'slug' => 1, 
             )
         );
+        // }}}
+        // {{{ mpcontent_entry_revision indexes
         $db->mpcontent_entry_revision->ensureIndex(
             array(
                 'entry_id' => 1, 
                 'revision' => -1,
             )
         );
+        // }}}
+        // {{{ mpcontent_entry_type indexes
         $db->mpcontent_entry_type->ensureIndex(
             array(
                 'name' => 1,
@@ -378,13 +396,7 @@ class MPContent
                 'dropDups' => 1,
             )
         );
-        $db->mpcontent_entry_type->ensureIndex(
-            array(
-                'name' => 1, 
-                'field_groups.weight' => 1, 
-                'field_groups.fields.weight' => 1,
-            )
-        );
+        // }}}
     }
 
     // }}}
@@ -677,7 +689,7 @@ class MPContent
             if (!is_null($type))
             {
                 $cet = $db->content_entry_type->findOne(array('name' => $type), array('_id'));
-                $query['entry_type_id'] = $cet['_id'];
+                $query['entry_type._id'] = $cet['_id'];
             }
             else
             {
@@ -687,7 +699,7 @@ class MPContent
                 {
                     $ids[] = $et['_id'];
                 }
-                $query['entry_type_id'] = array('$in' => $ids);
+                $query['entry_type._id'] = array('$in' => $ids);
             }
             $entries = $db->content_entry->find($query, array('_id', 'title', 'slug'));
             $mapping = iterator_to_array($entries);
@@ -919,27 +931,9 @@ class MPContent
                 array(
                     'name' => $entry_type['name'],
                     'nice_name' => $entry_type['nice_name'],
-                    'weight' => 0,
                     'fields' => array(),
                 ),
             );
-        }
-        else
-        {
-            $fgns = $fgs = array();
-            foreach ($entry_type['field_groups'] as &$fg)
-            {
-                $fgs[] = $fg['weight'];
-                $fgns[] = $fg['name'];
-                $fns = $fs = array();
-                foreach ($fg['fields'] as &$f)
-                {
-                    $fs[] = $f['weight'];
-                    $fns[] = $f['name'];
-                }
-                array_multisort($fs, SORT_NUMERIC, SORT_ASC, $fns, SORT_ASC, $fg['fields']);
-            }
-            array_multisort($fgs, SORT_NUMERIC, SORT_ASC, $fgns, SORT_ASC, $entry_type['field_groups']);
         }
         $etc->save($entry_type, array('safe' => TRUE));
         return $entry_type;

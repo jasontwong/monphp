@@ -26,8 +26,6 @@
     - statuses
     - field_groups
         - display_name
-        - weight
         - fields
             - _id
             - name
-            - weight
