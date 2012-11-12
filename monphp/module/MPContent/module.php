@@ -5,6 +5,7 @@
  * This module handles most of a CMS' needs. It allows for customizing the
  * fields a certain content type should have, which field group it belongs in,
  * categories, and much more.
+ *
  * @package MPContent
  */
 class MPContent
@@ -363,6 +364,10 @@ class MPContent
             array(
                 'entry_type.name' => 1, 
                 'slug' => 1, 
+            ),
+            array(
+                'unique' => 1,
+                'dropDups' => 1,
             )
         );
         $db->mpcontent_entry->ensureIndex(
@@ -383,6 +388,10 @@ class MPContent
             array(
                 'entry_id' => 1, 
                 'revision' => -1,
+            ),
+            array(
+                'unique' => 1,
+                'dropDups' => 1,
             )
         );
         // }}}
