@@ -5,6 +5,9 @@ class MPDB
     // {{{ properties
     private $conn;
     private $db;
+
+    static const ASC = MongoCollection::ASCENDING;
+    static const DESC = MongoCollection::DESCENDING;
     // }}}
     // {{{ function __construct($set = 'default', $db_file = '')
     function __construct($set = 'default', $db_file = '')
