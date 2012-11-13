@@ -47,6 +47,16 @@ class MPDB
         throw new MPDBException('That method does not exist');
     }
     // }}}
+    // {{{ public static function is_success($response)
+    public static function is_success($response)
+    {
+        if (ake('err', $response) && !is_null($response['err']))
+        {
+            return false;
+        }
+        return true;
+    }
+    // }}}
 }
 
 class MPDBException extends Exception
