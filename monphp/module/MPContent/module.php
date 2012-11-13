@@ -209,7 +209,7 @@ class MPContent
                 '/admin/static/MPContent/content.js',
                 array(),
                 FALSE,
-                TRUE
+                true
             );
         }
         /*
@@ -290,11 +290,11 @@ class MPContent
                                 )
                             ),
                             array(
-                                'safe' => TRUE,
+                                'safe' => true,
                             )
                         );
                     }
-                    $result['success'] = TRUE;
+                    $result['success'] = true;
                     $meta['ids'] = $ids;
                     $meta['content_entry_type_name'] = $type;
                     MPModule::h('mpcontent_order_entries_success', MPModule::TARGET_ALL, $meta);
@@ -386,8 +386,8 @@ class MPContent
         );
         $db->mpcontent_entry->ensureIndex(
             array(
-                'slug' => MPDB::ASC, 
                 'entry_type._id' => MPDB::ASC, 
+                'slug' => MPDB::ASC, 
             )
         );
         // }}}
@@ -487,7 +487,7 @@ class MPContent
         }
         return array(
             'data' => array(&$layout, &$entry, $mdata),
-            'use_method' => TRUE
+            'use_method' => true
         );
     }
     // }}}
@@ -511,7 +511,7 @@ class MPContent
         $layout->merge($mdata);
         return array(
             'data' => array(&$layout, &$entry, $mdata),
-            'use_method' => TRUE
+            'use_method' => true
         );
     }
     // }}}
@@ -534,7 +534,7 @@ class MPContent
 
         return array(
             'data' => array(&$layout, &$type, $mdata),
-            'use_method' => TRUE
+            'use_method' => true
         );
     }
     // }}}
@@ -557,22 +557,33 @@ class MPContent
 
         return array(
             'data' => array(&$layout, &$type, $mdata),
-            'use_method' => TRUE
+            'use_method' => true
         );
     }
     // }}}
 
     // API methods
     // delete methods
-    // {{{ public static function delete_entries($query = array())
-    public static function delete_entries($query = array())
+    // {{{ public static function delete_entries($query = array(), $options = array())
+    /**
+     * Deletes entries and the corresponding revisions
+     *
+     * @param array $query
+     * @param array $options
+     * @return bool
+     */
+    public static function delete_entries($query = array(), $options = array())
     {
-        $options = array(
-            'safe' => TRUE,
+        $success = false;
+        $options = array_merge(
+            array(
+                'safe' => true,
+            ), 
+            $options
         );
         $mpentry = MPDB::selectCollection('mpcontent_entry');
         $entries = $mpentry->find($query, array('_id' => 1));
-        if ($entries->hasNext())
+        if ($entries->count() > 0)
         {
             $ids = array();
             foreach ($entries as $entry)
@@ -584,21 +595,33 @@ class MPContent
                     '$in' => $ids,
                 ),
             );
-        }
-        $success = $mpentry->remove($query, $options);
-        if (isset($rquery) && ake('err', $success) && !is_null($success['err']))
-        {
-            MPDB::selectCollection('mpcontent_entry_revision')->remove($rquery);
+            $response = $mpentry->remove($query, $options);
+            $success = MPDB::is_success($response);
+            if ($success)
+            {
+                MPDB::selectCollection('mpcontent_entry_revision')->remove($rquery);
+            }
         }
         return $success;
     }
     // }}}
-    // {{{ public static function delete_entry($query = array())
-    public static function delete_entry($query = array())
+    // {{{ public static function delete_entry($query = array(), $options = array())
+    /**
+     * Deletes an entry and the corresponding revisions
+     *
+     * @param array $query
+     * @param array $options
+     * @return bool
+     */
+    public static function delete_entry($query = array(), $options = array())
     {
-        $options = array(
-            'safe' => TRUE,
-            'justOne' => TRUE,
+        $success = false;
+        $options = array_merge(
+            array(
+                'safe' => true,
+                'justOne' => true,
+            ),
+            $options
         );
         $mpentry = MPDB::selectCollection('mpcontent_entry');
         $entry = $mpentry->findOne($query, array('_id' => 1));
@@ -607,34 +630,58 @@ class MPContent
             $rquery = array(
                 'entry._id' => $entry['_id'],
             );
-        }
-        $success = $mpentry->remove($query, $options);
-        if (isset($rquery) && ake('err', $success) && !is_null($success['err']))
-        {
-            MPDB::selectCollection('mpcontent_entry_revision')->remove($rquery);
+            $response = $mpentry->remove($query, $options);
+            $success = MPDB::is_success($response);
+            if ($success)
+            {
+                MPDB::selectCollection('mpcontent_entry_revision')->remove($rquery);
+            }
         }
         return $success;
     }
     // }}}
-    // {{{ public static function delete_entry_by_id($id)
-    public static function delete_entry_by_id($id)
+    // {{{ public static function delete_entry_by_id($id, $options = array())
+    /**
+     * Deletes an entry by its id
+     *
+     * @param string|object $id
+     * @param array $options
+     * @return bool
+     */
+    public static function delete_entry_by_id($id, $options = array())
     {
         $query = is_object($id) && get_class($id) === 'MongoId'
             ? array('_id' => $id)
             : array('_id' => new MongoId($id));
-        return self::delete_entry($query);
+        return self::delete_entry($query, $options);
     }
     // }}}
-    // {{{ public static function delete_type($query = array())
-    public static function delete_type($query = array())
+    // {{{ public static function delete_type($query = array(), $options = array())
+    /**
+     * Deletes an entry type
+     *
+     * @param array $query
+     * @param array $options
+     * @return bool
+     */
+    public static function delete_type($query = array(), $options = array())
     {
-        $options = array(
-            'safe' => TRUE,
-            'justOne' => TRUE,
+        $options = array_merge(
+            array(
+                'safe' => true,
+                'justOne' => true,
+            ),
+            $options
         );
-        $mpentry_type = MPDB::selectCollection('mpcontent_entry_type');
-        $entry_type = $mpentry_type->findOne($query, array('field_groups' => 1));
-        $success = $mpentry_type->remove($query, $options);
+        $db = new MPDB();
+        $entry_type = $db->command(
+            array(
+                'findAndModify' => 'mpcontent_entry_type',
+                'query' => $query,
+                'fields' => array('field_groups' => 1),
+                'remove' => true,
+            )
+        );
         if (!is_null($entry_type))
         {
             foreach ($entry_type['field_groups'] as &$field_groups)
@@ -648,18 +695,32 @@ class MPContent
                 'entry_type._id' => $entry_type['_id'],
             );
             self::delete_entries($equery);
+            return true;
         }
-        return $success;
+        return false;
     }
     // }}}
-    // {{{ public static function delete_type_by_name($name)
-    public static function delete_type_by_name($name)
+    // {{{ public static function delete_type_by_name($name, $options = array())
+    /**
+     * Deletes an entry type by name
+     *
+     * @param string $name
+     * @param array $options
+     * @return bool
+     */
+    public static function delete_type_by_name($name, $options = array())
     {
         $query['name'] = $name;
-        return self::delete_type($query);
+        return self::delete_type($query, $options);
     }
     // }}}
     // {{{ public static function delete_fields_by_type_name_and_ids($name, $ids)
+    /**
+     * Deletes the fields based on the type name and field ids
+     *
+     * @param string $name
+     * @param array $ids - array of field ids
+     */
     public static function delete_fields_by_type_name_and_ids($name, $ids)
     {
         $entry_type = self::get_type_by_name($name);
@@ -667,8 +728,7 @@ class MPContent
         {
             foreach ($entry_field_group['fields'] as $k => &$entry_field)
             {
-                $id = $entry_field['_id']->{'$id'};
-                if (in_array($id, $ids))
+                if (in_array($entry_field['_id']->{'$id'}, $ids))
                 {
                     MPField::deregister_field($entry_field['_id']);
                     unset($entry_field_group['fields'][$k]);
@@ -887,7 +947,8 @@ class MPContent
         );
         $entry_type_data = array_join($entry_type_data_format, $entry_type);
         $entry_data = array_join($entry_data_format, $entry['entry']);
-        if (is_string($entry_data['_id']))
+        $id = $entry_data['_id'];
+        if (!(is_object($id) && get_class($id) === 'MongoId'))
         {
             unset($entry_data['_id']);
         }
@@ -900,16 +961,15 @@ class MPContent
         $entry_data['modified'] = new MongoDate();
         $entry_data['data'] = $entry['data'];
 
-        $mpentry = MPDB::selectCollection('mpcontent_entry');
-        $mpentry->save($entry_data, array('safe' => TRUE));
+        $success = MPDB::selectCollection('mpcontent_entry')->save($entry_data, array('safe' => true));
 
-        $revisions = self::get_revisions_by_entry_id($entry_data['_id'], array('_id' => 1));
+        $revisions = self::get_revisions_by_entry_id($entry_data['_id'], array('_id' => true));
         $num_revisions = $revisions->hasNext() ? $revisions->count() : 0;
         $revision = array(
             'entry' => $entry_data,
             'revision' => ++$num_revisions,
         );
-        MPDB::selectCollection('mpcontent_entry_revision')->save($revision, array('safe' => TRUE));
+        MPDB::selectCollection('mpcontent_entry_revision')->save($revision, array('safe' => true));
         return $entry_data;
     }
     // }}}
@@ -930,7 +990,7 @@ class MPContent
                 ),
             );
         }
-        $etc->save($entry_type, array('safe' => TRUE));
+        $etc->save($entry_type, array('safe' => true));
         return $entry_type;
     }
     // }}}
