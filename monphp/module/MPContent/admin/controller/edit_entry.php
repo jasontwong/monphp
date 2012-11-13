@@ -7,7 +7,7 @@ if (is_null($entry))
     header('Location: /admin/');
     exit;
 }
-$entry_type = MPContent::get_entry_type_by_name($entry['entry_type']['name']);
+$entry_type = MPContent::get_type_by_name($entry['entry_type']['name']);
 if (is_null($entry_type))
 {
     MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry does not belong to the entry type: ' . $entry_type['nice_name']);
@@ -320,9 +320,9 @@ elseif (isset($_POST['do']))
                 $cemt->setEntryRevision(URI_PART_4, $_POST['revision']);
                 // {{{ MPCache: updating block
                 $entry_meta_id = URI_PART_4;
-                $entry_type_info = MPContent::get_entry_type_by_entry_id($entry_meta_id);
+                $entry_type_info = MPContent::get_type_by_entry_id($entry_meta_id);
                 $entry_type_id = $entry_type_info['entry_type_id'];
-                $content_type = MPContent::get_entry_type_details_by_id($entry_type_id);
+                $content_type = MPContent::get_type_details_by_id($entry_type_id);
                 $content_type_name = $content_type['type']['name'];
 
                 // MPCache: update single entry

@@ -7,7 +7,7 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 if (!$entry_type)
 {
     MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry type does not exist');
@@ -92,7 +92,7 @@ if (isset($_POST['form']))
         $data = $layout->acts('post', $_POST['content_type']);
         $layout->merge($_POST['content_type']);
         $entry_type = array_merge($entry_type, $data);
-        MPContent::save_entry_type($entry_type);
+        MPContent::save_type($entry_type);
         MPModule::h('mpcontent_edit_type_process', MPModule::TARGET_ALL, $layout, $entry_type, $_POST);
         MPModule::h('mpcontent_edit_type_process_' . $entry_type['name'], MPModule::TARGET_ALL, $layout, $entry_type, $_POST);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Entry type successfully updated');

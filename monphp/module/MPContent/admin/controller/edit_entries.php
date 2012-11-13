@@ -15,7 +15,7 @@ $limits = array_combine($limits, $limits) + array(0 => 'all');
 
 
 $types = array('' => 'show all types');
-$entry_types = MPContent::get_entry_types();
+$entry_types = MPContent::get_types();
 foreach($entry_types as $type)
 {
     $types[$type['name']] = $type['nice_name'];
@@ -93,7 +93,7 @@ $query = array();
 if (strlen($filter['type']))
 {
     $query['entry_type.name'] = $filter['type'];
-    $entry_type = MPContent::get_entry_type_by_name($filter['type']);
+    $entry_type = MPContent::get_type_by_name($filter['type']);
     if (!is_null($entry_type))
     {
         $ordering = $entry_type['ordering'];

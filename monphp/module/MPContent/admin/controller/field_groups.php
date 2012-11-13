@@ -7,7 +7,7 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 
 if (!$entry_type)
 {
@@ -69,7 +69,7 @@ if (isset($_POST['form']))
             }
         }
         $entry_type['field_groups'][] = $data;
-        MPContent::save_entry_type($entry_type);
+        MPContent::save_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Group successfully created.');
         header('Location: /admin/module/MPContent/edit_type/' . $entry_type['name'] . '/');
         exit;

@@ -10,7 +10,7 @@ if (!MPUser::perm('edit content type'))
 MPAdmin::set('title', 'Delete Content Type');
 MPAdmin::set('header', 'Delete Content Type');
 
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 // }}}
 // {{{ layout
 $layout = new MPField();
@@ -31,7 +31,7 @@ if (isset($_POST['confirm']))
     {
         try
         {
-            $success = MPContent::delete_entry_type_by_name(URI_PART_4);
+            $success = MPContent::delete_type_by_name(URI_PART_4);
             MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'The entry type was successfully deleted');
             header('Location: /admin/module/MPContent/new_type/');
             exit;

@@ -9,7 +9,7 @@ if (is_null($entry))
     header('Location: /admin/');
     exit;
 }
-$entry_type = MPContent::get_entry_type_by_name($entry['entry_type']['name']);
+$entry_type = MPContent::get_type_by_name($entry['entry_type']['name']);
 if (is_null($entry_type))
 {
     MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry does not belong to the entry type: ' . $entry_type['nice_name']);

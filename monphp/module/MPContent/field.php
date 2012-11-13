@@ -57,7 +57,7 @@ class MPContentField
     // {{{ public static function field_meta_mpcontent_relationship($key, $data = array())
     public static function field_meta_mpcontent_relationship($key, $data = array())
     {
-        $types = MPContent::get_entry_types(array(), array('name' => TRUE, 'nice_name' => TRUE));
+        $types = MPContent::get_types(array(), array('name' => TRUE, 'nice_name' => TRUE));
         $options = array();
         foreach ($types as $type)
         {

@@ -7,7 +7,7 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 
 if (is_null($entry_type))
 {
@@ -59,7 +59,7 @@ if (isset($_POST['confirm']))
         try
         {
             unset($entry_type['field_groups'][$entry_field_group_key]);
-            MPContent::save_entry_type($entry_type);
+            MPContent::save_type($entry_type);
             foreach ($entry_field_group['fields'] as &$field)
             {
                 MPField::deregister_field($field['_id']);

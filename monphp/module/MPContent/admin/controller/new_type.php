@@ -69,7 +69,7 @@ if (isset($_POST['content_type']))
     {
         $ptype = $layout->acts('post', $_POST['content_type']);
         $layout->merge($_POST['content_type']);
-        $type = MPContent::save_entry_type($ptype);
+        $type = MPContent::save_type($ptype);
         MPModule::h('mpcontent_new_type_process', MPModule::TARGET_ALL, $layout, $type, $_POST);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Successfully created');
         header('Location: /admin/module/MPContent/edit_type/'.$type['name'].'/');

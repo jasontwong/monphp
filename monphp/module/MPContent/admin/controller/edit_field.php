@@ -7,7 +7,7 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 if (is_null($entry_type))
 {
     MPAdmin::notify(MPAdmin::TYPE_ERROR, 'Entry type does not exist');
@@ -216,7 +216,7 @@ if (ake('form', $_POST))
         $data = array_merge($entry_field_data, $data);
         if ($entry_field_group['name'] !== $data['field_group_name'])
         {
-            MPContent::save_entry_field($entry_field_groups, $data);
+            MPContent::save_field($entry_field_groups, $data);
             unset($entry_field_group['fields'][$entry_field_key]);
         }
         else
@@ -225,7 +225,7 @@ if (ake('form', $_POST))
             $entry_field['name'] = $data['name'];
             $entry_field['weight'] = $data['weight'];
         }
-        MPContent::save_entry_type($entry_type);
+        MPContent::save_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully updated');
     }
     catch (Exception $e)

@@ -10,7 +10,7 @@ if (!MPUser::perm('edit content type'))
 MPAdmin::set('title', 'Edit Field Group');
 MPAdmin::set('header', 'Edit Field Group');
 
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 $field_group = array();
 foreach ($entry_type['field_groups'] as &$group)
 {
@@ -80,7 +80,7 @@ if (isset($_POST['field_group']))
     }
     if ($save)
     {
-        MPContent::save_entry_type($entry_type);
+        MPContent::save_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Group successfully edited.');
         header('Location: /admin/module/MPContent/field_groups/' . $entry_type['name'] . '/');
         exit;

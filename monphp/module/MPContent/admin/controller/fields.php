@@ -7,7 +7,7 @@ if (!MPUser::perm('edit content type'))
     return;
 }
 
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 if (is_null($entry_type))
 {
     header('Location: /admin/');
@@ -161,8 +161,8 @@ if (isset($_POST['form']))
             }
         }
         $data['meta'] = MPField::quick_act('fieldtype', $data['type'], $ftdata);
-        MPContent::save_entry_field($entry_field_groups, $data);
-        MPContent::save_entry_type($entry_type);
+        MPContent::save_field($entry_field_groups, $data);
+        MPContent::save_type($entry_type);
         MPAdmin::notify(MPAdmin::TYPE_SUCCESS, 'Field successfully added');
         header('Location: ' . URI_PATH);
         exit;

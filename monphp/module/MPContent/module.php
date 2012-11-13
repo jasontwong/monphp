@@ -129,7 +129,7 @@ class MPContent
 
         if ($can_add || $can_edit)
         {
-            $types = self::get_entry_types(
+            $types = self::get_types(
                 array(), 
                 array('name', 'nice_name')
             );
@@ -229,7 +229,7 @@ class MPContent
     // {{{ public function hook_mpadmin_nav()
     public function hook_mpadmin_nav()
     {
-        $types = self::get_entry_types();
+        $types = self::get_types();
         $uri = '/admin/module/MPContent';
         $links = array(
             'Add' => array(),
@@ -420,7 +420,7 @@ class MPContent
     // {{{ public function hook_mpuser_perm()
     public function hook_mpuser_perm()
     {
-        $types = self::get_entry_types();
+        $types = self::get_types();
         $perms_array = array_fill_keys(
             array('type', 'entry_add', 'entry_edit', 'entry_view'),
             array()
@@ -563,6 +563,7 @@ class MPContent
     // }}}
 
     // API methods
+    // delete methods
     // {{{ public static function delete_entries($query = array())
     public static function delete_entries($query = array())
     {
@@ -624,8 +625,8 @@ class MPContent
         return self::delete_entry($query);
     }
     // }}}
-    // {{{ public static function delete_entry_type($query = array())
-    public static function delete_entry_type($query = array())
+    // {{{ public static function delete_type($query = array())
+    public static function delete_type($query = array())
     {
         $options = array(
             'safe' => TRUE,
@@ -651,17 +652,17 @@ class MPContent
         return $success;
     }
     // }}}
-    // {{{ public static function delete_entry_type_by_name($name)
-    public static function delete_entry_type_by_name($name)
+    // {{{ public static function delete_type_by_name($name)
+    public static function delete_type_by_name($name)
     {
         $query['name'] = $name;
-        return self::delete_entry_type($query);
+        return self::delete_type($query);
     }
     // }}}
     // {{{ public static function delete_fields_by_type_name_and_ids($name, $ids)
     public static function delete_fields_by_type_name_and_ids($name, $ids)
     {
-        $entry_type = self::get_entry_type_by_name($name);
+        $entry_type = self::get_type_by_name($name);
         foreach ($entry_type['field_groups'] as &$entry_field_group)
         {
             foreach ($entry_field_group['fields'] as $k => &$entry_field)
@@ -674,10 +675,11 @@ class MPContent
                 }
             }
         }
-        self::save_entry_type($entry_type);
+        self::save_type($entry_type);
     }
     // }}}
 
+    // get methods
     // {{{ public static function get_entries($query = array(), $fields = array())
     /**
      * Gets the entries
@@ -781,44 +783,6 @@ class MPContent
         return self::get_entry($query, $fields);
     }
     // }}}
-    // {{{ public static function get_entry_type($query = array(), $fields = array())
-    /**
-     * Get an entry type
-     *
-     * @param array $query
-     * @param array $fields fields to return
-     * @return array|NULL
-     */
-    public static function get_entry_type($query = array(), $fields = array())
-    {
-        return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
-    }
-    // }}}
-    // {{{ public static function get_entry_type_by_name($name, $fields = array())
-    public static function get_entry_type_by_name($name, $fields = array())
-    {
-        $query = array(
-            '$or' => array(
-                array('name' => $name),
-                array('nice_name' => $name),
-            ),
-        );
-        return self::get_entry_type($query, $fields);
-    }
-    // }}}
-    // {{{ public static function get_entry_types($query = array(), $fields = array())
-    /**
-     * Gets entry types
-     *
-     * @param array $query
-     * @param array $fields fields to return
-     * @return MongoCursor
-     */
-    public static function get_entry_types($query = array(), $fields = array())
-    {
-        return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
-    }
-    // }}}
     // {{{ public static function get_revision($query = array(), $fields = array())
     /**
      * Get a revision
@@ -870,7 +834,46 @@ class MPContent
         return self::get_revisions($query, $fields);
     }
     // }}}
+    // {{{ public static function get_type($query = array(), $fields = array())
+    /**
+     * Get an entry type
+     *
+     * @param array $query
+     * @param array $fields fields to return
+     * @return array|NULL
+     */
+    public static function get_type($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry_type')->findOne($query, $fields);
+    }
+    // }}}
+    // {{{ public static function get_type_by_name($name, $fields = array())
+    public static function get_type_by_name($name, $fields = array())
+    {
+        $query = array(
+            '$or' => array(
+                array('name' => $name),
+                array('nice_name' => $name),
+            ),
+        );
+        return self::get_type($query, $fields);
+    }
+    // }}}
+    // {{{ public static function get_types($query = array(), $fields = array())
+    /**
+     * Gets entry types
+     *
+     * @param array $query
+     * @param array $fields fields to return
+     * @return MongoCursor
+     */
+    public static function get_types($query = array(), $fields = array())
+    {
+        return MPDB::selectCollection('mpcontent_entry_type')->find($query, $fields);
+    }
+    // }}}
 
+    // save methods
     // {{{ public static function save_entry($entry, $entry_type)
     public static function save_entry($entry, $entry_type)
     {
@@ -910,8 +913,8 @@ class MPContent
         return $entry_data;
     }
     // }}}
-    // {{{ public static function save_entry_type($entry_type)
-    public static function save_entry_type($entry_type)
+    // {{{ public static function save_type($entry_type)
+    public static function save_type($entry_type)
     {
         $etc = MPDB::selectCollection('mpcontent_entry_type');
         if (!ake('_id', $entry_type))
@@ -931,7 +934,7 @@ class MPContent
         return $entry_type;
     }
     // }}}
-    // {{{ public static function save_entry_field(&$fgs, $data)
+    // {{{ public static function save_field(&$fgs, $data)
     /**
      * This function will register a field with the MPField class and record the
      * field into the proper entry type group
@@ -941,7 +944,7 @@ class MPContent
      * @param array $data The field to be saved
      * @return void
      */
-    public static function save_entry_field(&$fgs, $data)
+    public static function save_field(&$fgs, $data)
     {
         foreach ($fgs as &$group)
         {

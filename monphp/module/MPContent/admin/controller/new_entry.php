@@ -1,6 +1,6 @@
 <?php
 // {{{ prep
-$entry_type = MPContent::get_entry_type_by_name(URI_PART_4);
+$entry_type = MPContent::get_type_by_name(URI_PART_4);
 if (is_null($entry_type))
 {
     MPAdmin::notify(MPAdmin::TYPE_ERROR, 'That entry type does not exist');
