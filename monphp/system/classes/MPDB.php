@@ -57,6 +57,56 @@ class MPDB
         return true;
     }
     // }}}
+    // {{{ public static function merge_queries()
+    /**
+     * This function takes two Mongo queries and merges them appropriately
+     * avoiding key conflicts
+     *
+     * @param array [$query,...]
+     * @return array
+     */
+    public static function merge_queries()
+    {
+        $queries = func_get_args();
+        $query = array();
+        foreach ($queries as &$q)
+        {
+            if (empty($query))
+            {
+                $query = $q;
+            }
+            else
+            {
+                $keys = array_intersect(
+                    array_keys($query),
+                    array_keys($q)
+                );
+                if (!empty($keys))
+                {
+                    foreach ($keys as &$key)
+                    {
+                        if ($key !== '$and')
+                        {
+                            $tmp1[$key] = $query[$key];
+                            $tmp2[$key] = $q[$key];
+                            unset($query[$key], $q[$key]);
+                            $and = array(
+                                '$and' => array(
+                                    $tmp1, 
+                                    $tmp2,
+                                )
+                            );
+                            $query = array_merge_recursive($query, $and);
+                            unset($tmp1, $tmp2);
+                        }
+                    }
+                }
+                $query = array_merge_recursive($query, $q);
+            }
+        }
+        return $query;
+    }
+    // }}}
 }
 
 class MPDBException extends Exception
