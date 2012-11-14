@@ -228,7 +228,7 @@ class MPFileManager
                             {
                                 continue;
                             }
-                            $mime = explode('/', file_mime_type($dir.'/'.$v));
+                            $mime = explode('/', finfo::file($dir.'/'.$v, FILEINFO_MIME_TYPE));
                             $stat = stat($dir.'/'.$v);
                             $stat['nice_mtime'] = date('Y-m-d H:i:s', $stat['mtime']);
                             $stat['nice_size'] = size_readable($stat['size']);

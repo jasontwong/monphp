@@ -265,21 +265,6 @@ function file_extension($filename)
 }
 
 // }}}
-// {{{ function file_mime_type($filename)
-/**
- * Get the mime_type of the file
- *
- * @param string $filename
- * @return string
- */
-function file_mime_type($filename)
-{
-    return version_compare(PHP_VERSION, '5.3.0', '>=')
-        ? $mime = finfo::file($filename, FILEINFO_MIME_TYPE)
-        : $mime = mime_content_type($filename);
-}
-
-// }}}
 // {{{ function get_device_type($desktops = array(), $override = '')
 /**
  * This function should return the device type of client. It's based off of Brett Jankord's
