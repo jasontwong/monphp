@@ -680,8 +680,8 @@ class MPAdmin
             array($static_regex, DIR_MODULE.'/${1}/admin/static/${2}.php'),
         );
         $static_types = array(
-            '.css' => 'text/css',
-            '.js' => 'text/javascript',
+            'css' => 'text/css',
+            'js' => 'text/javascript',
         );
         foreach ($static_routes as &$route)
         {
@@ -699,12 +699,15 @@ class MPAdmin
             {
                 $file = MP_CTRL;
             }
-            list($base, $ext) = file_extension($file);
-            if ($ext === '.php')
+            $pinfo = pathinfo($file);
+            $ext = $pinfo['extensions'];
+            if ($ext === 'php')
             {
-                list($base, $ext) = file_extension($base);
+                $ext = pathinfo($pinfo['filename'], PATHINFO_EXTENSION);
             }
-            $content_type = ake($ext, $static_types) ? $static_types[$ext] : finfo::file($file, FILEINFO_MIME_TYPE);
+            $content_type = ake($ext, $static_types)
+                ? $static_types[$ext]
+                : finfo::file($file, FILEINFO_MIME_TYPE);
             header('Content-type: ' . $content_type);
             if (strpos($content_type, 'image') === 0)
             {

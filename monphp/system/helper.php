@@ -114,8 +114,10 @@ function array_join($master)
  */
 function available_filename($filename)
 {
-    list($name, $ext) = file_extension($filename);
-    $path = dirname($filename);
+    $pinfo = pathinfo($filename);
+    $path = $pinfo['dirname'];
+    $name = $pinfo['filename'];
+    $ext = '.' . $pinfo['extension'];
     if (is_dir($path))
     {
         if (is_file($filename))
@@ -229,23 +231,6 @@ function dir_copy($src, $dest, $inclusive = TRUE, $chmod = 0777)
 function eka($array)
 {
     return !is_null(call_user_func_array('array_drill', func_get_args()));
-}
-
-// }}}
-// {{{ function file_extension($filename)
-/**
- * Get the bare name and extension of a filename
- *
- * @param string $filename
- * @return array
- */
-function file_extension($filename)
-{
-    $filename = basename($filename);
-    $pos = strrpos($filename, '.');
-    return ($pos === FALSE || $pos === 0)
-        ? array($filename, $filename)
-        : array(substr($filename, 0, $pos), substr($filename, $pos));
 }
 
 // }}}

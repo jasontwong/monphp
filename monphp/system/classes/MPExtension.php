@@ -40,7 +40,7 @@ class MPExtension
             foreach (self::$files as $file)
             {
                 include $file;
-                list($class, $fext) = file_extension($file);
+                $class = pathinfo($file, PATHINFO_FILENAME);
                 // This function is not case sensitive
                 if (class_exists($class))
                 {

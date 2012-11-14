@@ -165,10 +165,12 @@ class MPFileManager
                                         break;
                                     }
                                     mkdir($dir.'/_resized');
-                                    list($name, $ext) = file_extension($v);
+                                    $pinfo = pathinfo($v);
+                                    $name = $pinfo['filename'];
+                                    $ext = $pinfo['extension'];
                                     foreach (array_keys(self::$sizes) as $label)
                                     {
-                                        $fname = '/_resized/'.$name.'-'.$label.$ext;
+                                        $fname = '/_resized/'.$name.'-'.$label.'.'.$ext;
                                         if (is_file($old_dir.$fname))
                                         {
                                             copy($old_dir.$fname, $dir.$fname);
@@ -198,10 +200,12 @@ class MPFileManager
                                 $success = unlink($file);
                                 if ($success && is_dir($dir.'/_resized'))
                                 {
-                                    list($name, $ext) = file_extension($v);
+                                    $pinfo = pathinfo($v);
+                                    $name = $pinfo['filename'];
+                                    $ext = $pinfo['extension'];
                                     foreach (array_keys(self::$sizes) as $label)
                                     {
-                                        $fname = '/_resized/'.$name.'-'.$label.$ext;
+                                        $fname = '/_resized/'.$name.'-'.$label.'.'.$ext;
                                         if (is_file($dir.$fname))
                                         {
                                             unlink($dir.$fname);
@@ -245,14 +249,14 @@ class MPFileManager
                             }
                             else
                             {
-                                $filename = file_extension($v);
+                                $pinfo = pathinfo($v);
                                 if ($mime[0] === 'image')
                                 {
                                     $tmp_files[] = array(
                                         'name' => $v,
                                         'stat' => $stat,
                                         'mime' => $mime,
-                                        'ext' => $filename[1],
+                                        'ext' => $pinfo['extension'],
                                         'resized_path' => self::get_resized_image($web.'/'.$v, 'browse'),
                                     );
                                     $tmp_sort_files[] = $v;
@@ -263,7 +267,7 @@ class MPFileManager
                                         'name' => $v,
                                         'stat' => $stat,
                                         'mime' => $mime,
-                                        'ext' => $filename[1],
+                                        'ext' => $pinfo['extension'],
                                         'resized_path' => '',
                                     );
                                     $tmp_sort_files[] = $v;
@@ -309,7 +313,8 @@ class MPFileManager
                         if (count($files) == 2)
                         {
                             $old_file = $dir.'/'.$files[0];
-                            list($name, $ext) = file_extension($files[0]);
+                            $pinfo = pathinfo($files[0]);
+                            $ext = '.'.$pinfo['extension'];
                             $new_file = $dir.'/'.$files[1].$ext;
                             if (file_exists($old_file) && !file_exists($new_file))
                             {
@@ -503,7 +508,7 @@ class MPFileManager
             if (is_dir($resized_path) && list($width, $height, $mime_type) = getimagesize($original_file))
             {
                 $quality = 90;
-                $basename = file_extension($name);
+                $pinfo = pathinfo($name);
                 foreach (self::$sizes as $label => $size)
                 {
                     if ($size['width'] > 0 && $size['height'] > 0 && ($width > $size['width'] || $height > $size['height']))
@@ -520,7 +525,7 @@ class MPFileManager
                         }
                         
                         $image = imagecreatetruecolor($size['width'], $size['height']);
-                        $resized_file = $resized_path.'/'.$basename[0].'-'.$label.$basename[1];
+                        $resized_file = $resized_path.'/'.$pinfo['filename'].'-'.$label.'.'.$pinfo['extension'];
                         switch ($mime_type)
                         {
                             case IMAGETYPE_GIF:
@@ -719,12 +724,12 @@ class MPFileManager
     // {{{ public static function get_resized_image($file, $size)
     public static function get_resized_image($web_file, $size)
     {
-        list($name, $ext) = file_extension($web_file);
+        $pinfo = pathinfo($web_file);
         $web_path = dirname($web_file);
         $web_resized = $web_path.'/_resized';
         if (is_string($size) && ake($size, self::$sizes))
         {
-            $new_web_file = $web_resized.'/'.$name.'-'.$size.$ext;
+            $new_web_file = $web_resized.'/'.$pinfo['filename'].'-'.$size.'.'.$pinfo['extension'];
             if (is_file(self::$file_path.str_replace('/file/upload', '', $new_web_file)))
             {
                 return $new_web_file;

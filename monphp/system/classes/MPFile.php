@@ -260,7 +260,7 @@ class MPFile
             $file_ids['original'] = $id;
 
             $quality = 90;
-            $basename = file_extension($name);
+            $pinfo = pathinfo($name);
             $resized_path = dirname($filename);
             foreach ($sizes as $label => $size)
             {
@@ -276,7 +276,7 @@ class MPFile
                        $size['height'] = $size['width'] / $ratio_orig;
                     }
                     $image = imagecreatetruecolor($size['width'], $size['height']);
-                    $resized_filename = $basename[0] . '-' . $label.$basename[1];
+                    $resized_filename = $pinfo['filename'] . '-' . $label.'.'.$pinfo['extension'];
                     $resized_file = $resized_path . '/' . $resized_filename;
                     $orig_image = NULL;
                     switch ($mime_type)
