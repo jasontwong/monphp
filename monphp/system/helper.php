@@ -232,22 +232,6 @@ function eka($array)
 }
 
 // }}}
-// {{{ function extension($string, $ext)
-/**
- * Adds or removes extension to string
- * Mainly used for filename handling
- *
- * @param string $string
- * @param string $ext extension to add or remove
- * @return string
- */
-function extension($string, $ext)
-{
-    $c = strlen($string) - strlen($ext);
-    return substr($string, $c) === $ext ? substr($string, 0, $c) : $string.$ext;
-}
-
-// }}}
 // {{{ function file_extension($filename)
 /**
  * Get the bare name and extension of a filename
