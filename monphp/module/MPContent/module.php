@@ -774,6 +774,26 @@ class MPContent
         return self::get_entries($query, $fields)
     }
     // }}}
+    // {{{ public static function get_entries_by_type_name_and_filter($name, $filter = array(), $fields = array())
+    /**
+     * Helper function to get all entries by the entry type name
+     *
+     * @param string $name
+     * @param array $filter additional filtering in the form of a mongo query
+     * @param array $fields
+     * @return MongoCursor
+     */
+    public static function get_entries_by_type_name_and_filter($name, $filter = array(), $fields = array())
+    {
+        $query = array(
+            '$or' => array(
+                array('entry_type.name' => $name),
+                array('entry_type.nice_name' => $name),
+            ),
+        );
+        return self::get_entries(MPDB::merge_queries($query, $filter), $fields)
+    }
+    // }}}
     // {{{ public static function get_entries_by_type_name_and_status($name, $status, $fields = array())
     /**
      * Helper function to get all entries by the entry type name
@@ -793,6 +813,28 @@ class MPContent
             'status' => $status,
         );
         return self::get_entries($query, $fields)
+    }
+    // }}}
+    // {{{ public static function get_entries_by_type_name_and_status_and_filter($name, $status, $filter = array(), $fields = array())
+    /**
+     * Helper function to get all entries by the entry type name
+     *
+     * @param string $name
+     * @param string $status
+     * @param array $filter additional filtering in the form of a mongo query
+     * @param array $fields
+     * @return MongoCursor
+     */
+    public static function get_entries_by_type_name_and_status_and_filter($name, $status, $filter = array(), $fields = array())
+    {
+        $query = array(
+            '$or' => array(
+                array('entry_type.name' => $name),
+                array('entry_type.nice_name' => $name),
+            ),
+            'status' => $status,
+        );
+        return self::get_entries(MPDB::merge_queries($query, $filter), $fields)
     }
     // }}}
     // {{{ public static function get_entry($query = array(), $fields = array())
