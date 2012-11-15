@@ -3,6 +3,7 @@
 ob_start('ob_gzhandler');
 // {{{ defining constants
 define('MP_SESSION', 'monphp');
+define('MP_GRIDFS', 'monphp');
 define('MP_DEBUG', TRUE);
 define('WEB_DIR_INSTALL', '/install');
 define('DIR_WEB', dirname(__FILE__));

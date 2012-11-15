@@ -12,7 +12,7 @@ class MPFile
      */
     public static function download_file($query = array(), $fields = array())
     {
-        $file = MPDB::getGridFS('mp')->findOne($query, $fields);
+        $file = MPDB::getGridFS(MP_GRIDFS)->findOne($query, $fields);
         /*
         header('Content-type: '.$v['mime']);
         header('Content-Length: '.$v['length']);
@@ -34,7 +34,7 @@ class MPFile
      */
     public static function force_download_file($query = array(), $fields = array())
     {
-        $file = MPDB::getGridFS('mp')->findOne($query, $fields);
+        $file = MPDB::getGridFS(MP_GRIDFS)->findOne($query, $fields);
         /*
         header('Content-type: '.$v['mime']);
         header('Content-Length: '.$v['length']);
@@ -55,7 +55,7 @@ class MPFile
      */
     public static function get_file($query = array(), $fields = array())
     {
-        return MPDB::getGridFS('mp')->findOne($query, $fields);
+        return MPDB::getGridFS(MP_GRIDFS)->findOne($query, $fields);
     }
     // }}}
     // {{{ public static function get_files($query = array(), $fields = array())
@@ -68,7 +68,7 @@ class MPFile
      */
     public static function get_files($query = array(), $fields = array())
     {
-        return MPDB::getGridFS('mp')->find($query, $fields);
+        return MPDB::getGridFS(MP_GRIDFS)->find($query, $fields);
     }
     // }}}
     // {{{ public static function get_image($query = array(), $fields = array())
@@ -82,7 +82,7 @@ class MPFile
     public static function get_image($query = array(), $fields = array())
     {
         $images = array();
-        $grid_fs = MPDB::getGridFS('mp');
+        $grid_fs = MPDB::getGridFS(MP_GRIDFS);
         $image = $grid_fs->findOne($query, $fields);
         if (!is_null($image))
         {
@@ -110,7 +110,7 @@ class MPFile
     public static function get_images($query = array(), $fields = array())
     {
         $all_images = array();
-        $grid_fs = MPDB::getGridFS('mp');
+        $grid_fs = MPDB::getGridFS(MP_GRIDFS);
         $images = $grid_fs->find($query, $fields);
         foreach ($images as $image)
         {
@@ -139,7 +139,7 @@ class MPFile
      */
     public static function remove_files($query = array())
     {
-        return MPDB::getGridFS('mp')->remove($query, array('safe' => TRUE));
+        return MPDB::getGridFS(MP_GRIDFS)->remove($query, array('safe' => TRUE));
     }
     // }}}
     // {{{ public static function remove_images($query = array())
@@ -151,7 +151,7 @@ class MPFile
      */
     public static function remove_images($query = array())
     {
-        $grid_fs = MPDB::getGridFS('mp');
+        $grid_fs = MPDB::getGridFS(MP_GRIDFS);
         $images = $grid_fs->find($query, $fields);
         $filenames = $ids = array()
         foreach ($images as $image)
@@ -188,16 +188,14 @@ class MPFile
      * and add the proper metadata to the files.
      * 
      * @param string $file full path of the file on the server to save
-     * @param string $filename the location of the file to be moved to
      * @param array $meta additional metadata that needs to be added to the file
      * @return mixed MongoId if successful, else NULL
      */
-    public static function save_file($file, $filename, $meta = array())
+    public static function save_file($file, $meta = array())
     {
-        $success = move_uploaded_file($file, $filename);
-        if ($success)
+        if (is_file($file))
         {
-            $grid = MPDB::getGridFS('mp');
+            $grid = MPDB::getGridFS(MP_GRIDFS);
             $grid->ensureIndex(
                 array(
                     'files_id' => 1,
@@ -207,23 +205,23 @@ class MPFile
                     'unique' => 1, 
                 )
             );
-            $stat = stat($filename);
+            $stat = stat($file);
             $stat['nice_mtime'] = date('Y-m-d H:i:s', $stat['mtime']);
             $stat['nice_size'] = size_readable($stat['size']);
-            $mime_type = finfo::file($filename, FILEINFO_MIME_TYPE);
-            $name = basename($filename);
+            $mime_type = finfo::file($file, FILEINFO_MIME_TYPE);
+            $name = basename($file);
             $meta = array(
                 'metadata' => array_merge(
                     $meta,
                     array(
                         'filename' => $name,
                         'mime' => $mime_type,
-                        'location' => $filename,
+                        'location' => $file,
                         'stat' => $stat,
                     )
                 ),
             );
-            return $grid->storeFile($filename, $meta, array('safe' => TRUE));
+            return $grid->storeFile($file, $meta, array('safe' => TRUE));
         }
         return NULL;
     }
@@ -234,12 +232,11 @@ class MPFile
      * and add the proper metadata to the files.
      * 
      * @param string $file full path of the file on the server to save
-     * @param string $filename the location of the file to be moved to
      * @param array $meta additional metadata that needs to be added to the file
      * @param array $sizes an array of sizes to create besides the original
      * @return array the array of ids returned from GridFS
      */
-    public static function save_image($file, $filename, $meta = array(), $sizes = array())
+    public static function save_image($file, $meta = array(), $sizes = array())
     {
         if (is_file($file))
         {
@@ -253,7 +250,7 @@ class MPFile
                 )
             );
         }
-        $id = self::save_file($file, $filename, $meta);
+        $id = self::save_file($file, $meta);
         $file_ids = array();
         if (!is_null($id))
         {
@@ -317,26 +314,13 @@ class MPFile
                     }
                     if (!is_null($orig_image))
                     {
-                        // this is manually saved because the save_file function
-                        // includes move_uploaded_file
-                        $meta['width'] = $size['width'];
-                        $meta['height'] = $size['height'];
-                        $meta['size'] = $label;
-                        $meta['reference'] = $id;
-                        $meta['filename'] = $resized_filename;
-                        $meta['location'] = $resized_file;
-                        $meta['mime'] = finfo::file($resized_filename, FILEINFO_MIME_TYPE);
-
-                        $stat = stat($resized_filename);
-                        $stat['nice_mtime'] = date('Y-m-d H:i:s', $stat['mtime']);
-                        $stat['nice_size'] = size_readable($stat['size']);
-                        $meta['stat'] = $stat;
-
-                        $file_ids[$label] = $grid->storeFile(
-                            $resized_file, 
-                            array('metadata' => $meta), 
-                            array('safe' => TRUE)
+                        $meta = array(
+                            'height' => $size['height'],
+                            'reference' => $id,
+                            'size' => $label,
+                            'width' => $size['width'],
                         );
+                        self::save_file($resized_file, $meta);
                         imagedestroy($orig_image);
                     }
                     imagedestroy($image);
