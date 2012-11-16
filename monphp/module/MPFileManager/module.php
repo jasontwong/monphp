@@ -496,12 +496,14 @@ class MPFileManager
         );
     }
     // }}}
-    // {{{ public function save_file($path, $name, $tmp_file)
-    public function save_file($path, $name, $tmp_file)
+    // {{{ public function save_file($path, $name, $tmp_file, $type = '')
+    public function save_file($path, $name, $tmp_file, $type = '')
     {
-        $original_file = $path.'/'.$name;
-        $success = move_uploaded_file($tmp_file, $original_file);
-        return MPFile::save_image($original_file, array(), self::$sizes);
+        $file = $path.'/'.$name;
+        $success = move_uploaded_file($tmp_file, $file);
+        return $type === 'image'
+            ? MPFile::save_image_set($file, array(), self::$sizes)
+            : MPFile::save_file($file)
     }
     // }}}
 
