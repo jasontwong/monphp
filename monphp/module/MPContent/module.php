@@ -348,21 +348,25 @@ class MPContent
         // {{{ mpcontent_entry indexes
         $db->mpcontent_entry->ensureIndex(
             array(
+                'is_active' => MPDB::ASC,
                 'modified' => MPDB::DESC,
                 'weight' => MPDB::ASC, 
-                'entry_type.name' => MPDB::ASC,
+                'entry_type._id' => MPDB::ASC,
+                'status' => MPDB::ASC,
             )
         );
         $db->mpcontent_entry->ensureIndex(
             array(
                 'weight' => MPDB::ASC, 
                 'modified' => MPDB::DESC,
+                'is_active' => MPDB::ASC,
                 'entry_type.nice_name' => MPDB::ASC,
+                'status' => MPDB::ASC,
             )
         );
         $db->mpcontent_entry->ensureIndex(
             array(
-                'entry_type.name' => MPDB::ASC, 
+                'entry_type._id' => MPDB::ASC, 
                 'slug' => MPDB::ASC, 
             ),
             array(
@@ -373,20 +377,16 @@ class MPContent
         $db->mpcontent_entry->ensureIndex(
             array(
                 'status' => MPDB::ASC, 
-                'entry_type.name' => MPDB::ASC, 
+                'is_active' => MPDB::ASC, 
+                'entry_type._id' => MPDB::ASC, 
                 'slug' => MPDB::ASC, 
             )
         );
         $db->mpcontent_entry->ensureIndex(
             array(
                 'entry_type.nice_name' => MPDB::ASC, 
-                'slug' => MPDB::ASC, 
+                'is_active' => MPDB::ASC, 
                 'status' => MPDB::ASC, 
-            )
-        );
-        $db->mpcontent_entry->ensureIndex(
-            array(
-                'entry_type._id' => MPDB::ASC, 
                 'slug' => MPDB::ASC, 
             )
         );
@@ -406,7 +406,8 @@ class MPContent
         // {{{ mpcontent_entry_type indexes
         $db->mpcontent_entry_type->ensureIndex(
             array(
-                'name' => MPDB::ASC,
+                'nice_name' => MPDB::ASC,
+                '_id' => MPDB::ASC,
             ), 
             array(
                 'unique' => true, 
@@ -600,7 +601,6 @@ class MPContent
             if ($success)
             {
                 $response = MPDB::selectCollection('mpcontent_entry_revision')->remove($rquery);
-                $success = MPDB::is_success($response);
             }
         }
         return $success;
@@ -646,15 +646,13 @@ class MPContent
     /**
      * Deletes an entry by its id
      *
-     * @param string|object $id
+     * @param MongoId $id
      * @param array $options
      * @return bool
      */
     public static function delete_entry_by_id($id, $options = array())
     {
-        $query = is_object($id) && get_class($id) === 'MongoId'
-            ? array('_id' => $id)
-            : array('_id' => new MongoId($id));
+        $query = array('_id' => $id)
         return self::delete_entry($query, $options);
     }
     // }}}
@@ -711,7 +709,7 @@ class MPContent
      */
     public static function delete_type_by_name($name, $options = array())
     {
-        $query['name'] = $name;
+        $query['_id'] = $name;
         return self::delete_type($query, $options);
     }
     // }}}
@@ -752,7 +750,14 @@ class MPContent
      */
     public static function get_entries($query = array(), $fields = array())
     {
-        return MPDB::selectCollection('mpcontent_entry')->find($query, $fields);
+        $base_query = array(
+            'is_active' => true,
+        );
+        return MPDB::selectCollection('mpcontent_entry')
+            ->find(
+                MPDB::merge_queries($base_query, $query), 
+                $fields
+            );
     }
     // }}}
     // {{{ public static function get_entries_by_type_name($name, $fields = array())
@@ -767,7 +772,7 @@ class MPContent
     {
         $query = array(
             '$or' => array(
-                array('entry_type.name' => $name),
+                array('entry_type._id' => $name),
                 array('entry_type.nice_name' => $name),
             ),
         );
@@ -787,7 +792,7 @@ class MPContent
     {
         $query = array(
             '$or' => array(
-                array('entry_type.name' => $name),
+                array('entry_type._id' => $name),
                 array('entry_type.nice_name' => $name),
             ),
         );
@@ -807,7 +812,7 @@ class MPContent
     {
         $query = array(
             '$or' => array(
-                array('entry_type.name' => $name),
+                array('entry_type._id' => $name),
                 array('entry_type.nice_name' => $name),
             ),
             'status' => $status,
@@ -847,28 +852,33 @@ class MPContent
      */
     public static function get_entry($query = array(), $fields = array())
     {
-        return MPDB::selectCollection('mpcontent_entry')->findOne($query, $fields);
+        $base_query = array(
+            'is_active' => true,
+        );
+        return MPDB::selectCollection('mpcontent_entry')
+            ->findOne(
+                MPDB::merge_queries($base_query, $query), 
+                $fields
+            );
     }
     // }}}
     // {{{ public static function get_entry_by_id($id, $fields = array())
     /**
      * Gets an entry based on the ID
      *
-     * @param string|MongoId $id
+     * @param MongoId $id
      * @param array $fields
      * @return MongoCursor
      */
     public static function get_entry_by_id($id, $fields = array())
     {
-        $query = is_object($id) && get_class($id) === 'MongoId'
-            ? array('_id' => $id)
-            : array('_id' => new MongoId($id));
+        $query = array('_id' => $id);
         return self::get_entry($query, $fields);
     }
     // }}}
     // {{{ public static function get_entry_by_type_name_and_slug($name, $slug, $fields = array())
     /**
-     * Gets the entry based on the entry type name or nice name and slug
+     * Gets the entry based on the entry type _id or nice name and slug
      *
      * @param string $name
      * @param string $slug
@@ -879,10 +889,33 @@ class MPContent
     {
         $query = array(
             '$or' => array(
-                array('entry_type.name' => $name),
+                array('entry_type._id' => $name),
                 array('entry_type.nice_name' => $name),
             ),
             'slug' => $slug,
+        );
+        return self::get_entry($query, $fields);
+    }
+    // }}}
+    // {{{ public static function get_entry_by_type_name_and_slug_status($name, $slug, $status, $fields = array())
+    /**
+     * Gets the entry based on the entry type _id or nice name, slug, and status
+     *
+     * @param string $name
+     * @param string $slug
+     * @param string $status
+     * @param array $fields
+     * @return MongoCursor
+     */
+    public static function get_entry_by_type_name_and_slug_status($name, $slug, $status, $fields = array())
+    {
+        $query = array(
+            '$or' => array(
+                array('entry_type._id' => $name),
+                array('entry_type.nice_name' => $name),
+            ),
+            'slug' => $slug,
+            'status' => $status,
         );
         return self::get_entry($query, $fields);
     }
@@ -904,17 +937,17 @@ class MPContent
     /**
      * Gets a specific revision for an entry
      *
-     * @param string|object $id
+     * @param MongoId $id
      * @param int $revision
      * @param array $fields
      * @return array|NULL
      */
     public static function get_revision_by_entry_id_and_revision($id, $revision, $fields = array())
     {
-        $query = is_object($id) && get_class($id) === 'MongoId'
-            ? array('entry._id' => $id)
-            : array('entry._id' => new MongoId($id));
-        $query['revision'] = $revision;
+        $query = array(
+            'entry._id' => $id,
+            'revision' => $revision,
+        );
         return self::get_revision($query, $fields);
     }
     // }}}
@@ -972,7 +1005,7 @@ class MPContent
     {
         $query = array(
             '$or' => array(
-                array('name' => $name),
+                array('_id' => $name),
                 array('nice_name' => $name),
             ),
         );
@@ -998,11 +1031,22 @@ class MPContent
     public static function save_entry($entry, $entry_type)
     {
         $entry_type_data_format = array_fill_keys(
-            array('_id', 'name', 'nice_name'),
+            array('_id', 'nice_name'),
             ''
         );
         $entry_data_format = array_fill_keys(
-            array('_id', 'title', 'slug', 'weight', 'revision', 'entry_type', 'modified', 'data', 'status'),
+            array(
+                '_id', 
+                'title', 
+                'slug', 
+                'weight', 
+                'revision', 
+                'entry_type', 
+                'modified', 
+                'data', 
+                'status', 
+                'is_active'
+            ),
             ''
         );
         $entry_type_data = array_join($entry_type_data_format, $entry_type);
@@ -1032,8 +1076,7 @@ class MPContent
                 'entry' => $entry_data,
                 'revision' => ++$num_revisions,
             );
-            MPDB::selectCollection('mpcontent_entry_revision')
-                ->save($revision, array('safe' => true));
+            MPDB::selectCollection('mpcontent_entry_revision')->save($revision);
         }
         return $entry_data;
     }
@@ -1043,22 +1086,18 @@ class MPContent
     {
         if (!ake('_id', $entry_type))
         {
-            $entry_type['name'] = slugify($entry_type['nice_name']);
+            $entry_type['_id'] = slugify($entry_type['nice_name']);
             $entry_type['ordering'] = FALSE;
             $entry_type['statuses'] = array();
             $entry_type['field_groups'] = array(
                 array(
-                    'name' => $entry_type['name'],
+                    'name' => $entry_type['_id'],
                     'nice_name' => $entry_type['nice_name'],
                     'fields' => array(),
                 ),
             );
-            $query = array('name' => $entry_type['name']);
         }
-        else
-        {
-            $query = array('_id' => $entry_type['_id']);
-        }
+        $query = array('_id' => $entry_type['_id']);
 
         $oet = $db->command(
             array(
@@ -1069,30 +1108,23 @@ class MPContent
             )
         );
 
-        if ($oet['name'] !== $entry_type['name'] 
-            || $oet['nice_name'] !== $entry_type['nice_name'])
-            {
-                $query = array(
-                    '$or' => array(
-                        array('entry_type.name' => $oet['name']),
-                        array('entry_type.nice_name' => $oet['nice_name']),
+        if ($oet['nice_name'] !== $entry_type['nice_name'])
+        {
+            $query = array(
+                'entry_type.nice_name' => $oet['nice_name'],
+            );
+            $data = array(
+                '$set' => array(
+                    'entry_type.nice_name' => $entry_type['nice_name'],
                     ),
-                );
-                $data = array(
-                    '$set' => array(
-                        'entry_type' => array(
-                            '_id' => $entry_type['_id'],
-                            'name' => $entry_type['name'],
-                            'nice_name' => $entry_type['nice_name'],
-                        ),
-                    ),
-                );
-                MPDB::selectCollection('mpcontent_entry')
-                    ->update($query, $data, array(
-                        'safe' => true,
-                        'multi' => true,
-                    ));
-            }
+                ),
+            );
+            MPDB::selectCollection('mpcontent_entry')
+                ->update($query, $data, array(
+                    'safe' => true,
+                    'multi' => true,
+                ));
+        }
 
         return $entry_type;
     }

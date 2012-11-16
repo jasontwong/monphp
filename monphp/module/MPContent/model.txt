@@ -1,8 +1,7 @@
 [entry]
     - _id
     - entry_type
-        - _id
-        - name
+        - _id (name)
         - nice_name
     - title
     - slug
@@ -10,6 +9,7 @@
     - modified 
     - revision
     - weight
+    - is_active
     - data (array)
 
 [entry_revision]
@@ -18,9 +18,9 @@
     - revision
 
 [entry_type]
-    - _id
-    - name
+    - _id (name)
     - nice_name
+    - plural_name
     - description
     - ordering
     - statuses
