@@ -131,6 +131,24 @@ class MPSystem
         }
     }
     //}}}
+    //{{{ public function cb_mpsystem_routes($routes = array())
+    public function cb_mpsystem_routes($routes = array())
+    {
+        foreach ($routes as $mod => &$rs)
+        {
+            foreach ($rs as &$r)
+            {
+                MPRouter::add(
+                    $r[0],
+                    $r[1],
+                    deka(MPRouter::ROUTE_STATIC, $r, 2),
+                    deka(MPRouter::PRIORITY_NORMAL, $r, 3),
+                    $mod
+                );
+            }
+        }
+    }
+    //}}}
     // {{{ public function hook_mpsystem_foot()
     public function hook_mpsystem_foot()
     {

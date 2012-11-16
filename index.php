@@ -5,10 +5,8 @@ ob_start('ob_gzhandler');
 define('MP_SESSION', 'monphp');
 define('MP_GRIDFS', 'monphp');
 define('MP_DEBUG', TRUE);
-define('WEB_DIR_INSTALL', '/install');
 define('DIR_WEB', dirname(__FILE__));
 define('DIR_FILE', DIR_WEB . '/file');
-
 define('DIR_MP', dirname(__FILE__) . '/monphp');
 define('DIR_SYS', DIR_MP . '/system');
 define('DIR_EXT', DIR_MP . '/extension');
@@ -44,7 +42,6 @@ define('URI_REQUEST', $_SERVER['REQUEST_URI']);
 if (MP_DEBUG)
 {
     ini_set('display_errors', 1);
-    // ini_set('xdebug.profiler_output_dir', '/tmp');
     ini_set('xdebug.profiler_output_name', 'trace.$H.' . URI_PATH . '%R');
     ini_set('xdebug.profiler_enable_trigger', 1);
     error_reporting(E_ALL);
@@ -64,6 +61,7 @@ date_default_timezone_set(is_null($tz) ? 'America/New_York' : $tz);
 $installed = !is_null(MPData::query('_System', 'version'));
 if (MP_DEBUG || !$installed)
 {
+    define('WEB_DIR_INSTALL', '/install');
     MPRouter::add(
         '#^' . WEB_DIR_INSTALL . '/([^/]+/)?$#', 
         DIR_SYS . '/install/index.php', 
@@ -85,20 +83,7 @@ if ($installed)
     session_name(MP_SESSION);
     session_start();
     MPModule::h('mpsystem_active');
-    $routes = MPModule::h('mpsystem_routes');
-    foreach ($routes as $mod => $rs)
-    {
-        foreach ($rs as $r)
-        {
-            MPRouter::add(
-                $r[0],
-                $r[1],
-                deka(MPRouter::ROUTE_STATIC, $r, 2),
-                deka(MPRouter::PRIORITY_NORMAL, $r, 3),
-                $mod
-            );
-        }
-    }
+    MPModule::h('mpsystem_routes');
 }
 
 include DIR_SYS.'/config.routes.php';
