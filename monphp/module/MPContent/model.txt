@@ -1,8 +1,6 @@
 [entry]
     - _id
-    - entry_type
-        - _id (name)
-        - nice_name
+    - entry_type_id (name)
     - title
     - slug
     - status
