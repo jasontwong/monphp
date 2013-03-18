@@ -40,7 +40,7 @@ class MPData
             {
                 $query['name'] = $name;
             }
-            $cursor = MPDB::selectCollection('mpsystem_data')->find($query);
+            $cursor = MPDB::selectCollection('mpsystem.data')->find($query);
             return $cursor->hasNext() ? $cursor : NULL;
         }
         catch (Exception $e)
@@ -83,7 +83,7 @@ class MPData
                 );
                 $key = 'data.' . implode('.', array_slice($args, 2, 1));
                 $query[$key] = $value;
-                $find = MPDB::selectCollection('mpsystem_data')->find($query);
+                $find = MPDB::selectCollection('mpsystem.data')->find($query);
                 return !is_null($find);
             }
             catch (Exception $e)
@@ -121,7 +121,10 @@ class MPData
             self::$adds = array();
             try
             {
-                $rows = MPDB::selectCollection('mpsystem_data')->find(array('autoload' => true));
+                $rows = MPDB::selectCollection('mpsystem.data')
+                    ->find(array(
+                        'autoload' => true
+                    ));
                 foreach ($rows as $row)
                 {
                     self::register($row);
@@ -188,7 +191,7 @@ class MPData
         self::init();
         if (self::$changed)
         {
-            $sdc = MPDB::selectCollection('mpsystem_data');
+            $sdc = MPDB::selectCollection('mpsystem.data');
             if (count(self::$updates))
             {
                 $ids = array_keys(self::$updates);

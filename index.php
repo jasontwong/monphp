@@ -42,6 +42,7 @@ define('URI_REQUEST', $_SERVER['REQUEST_URI']);
 if (MP_DEBUG)
 {
     ini_set('display_errors', 1);
+    ini_set('html_errors', 1);
     ini_set('xdebug.profiler_output_name', 'trace.$H.' . URI_PATH . '%R');
     ini_set('xdebug.profiler_enable_trigger', 1);
     error_reporting(E_ALL);

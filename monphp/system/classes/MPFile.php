@@ -139,7 +139,7 @@ class MPFile
      */
     public static function remove_files($query = array())
     {
-        $files = MPDB::getGridFS(MP_GRIDFS)->find($query, array('safe' => TRUE));
+        $files = MPDB::getGridFS(MP_GRIDFS)->find( $query );
         $data = array();
         foreach ($files as $file)
         {
@@ -166,7 +166,7 @@ class MPFile
             $files[] = $image;
             $ids[] = $image['_id'];
         }
-        $success = $grid_fs->remove($query, array('safe' => TRUE));
+        $success = $grid_fs->remove( $query );
         if (!empty($ids) && MPDB::is_success($success))
         {
             $query = array(
@@ -224,7 +224,7 @@ class MPFile
                     )
                 ),
             );
-            return $grid->storeFile($file, $meta, array('safe' => TRUE));
+            return $grid->storeFile( $file, $meta );
         }
         return NULL;
     }

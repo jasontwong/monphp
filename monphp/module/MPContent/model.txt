@@ -10,12 +10,12 @@
     - is_active
     - data (array)
 
-[entry_revision]
+[entry.revision]
     - _id
     - entry
     - revision
 
-[entry_type]
+[entry.type]
     - _id (name)
     - nice_name
     - plural_name

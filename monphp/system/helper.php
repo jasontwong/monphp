@@ -237,7 +237,7 @@ function eka($array)
 // {{{ function get_device_type($desktops = array(), $override = '')
 /**
  * This function should return the device type of client. It's based off of Brett Jankord's
- * Categorizer {@link http://www.brettjankord.com/2012/01/16/categorizr-a-modern-device-detection-script/}
+ * Categorizr {@link http://www.brettjankord.com/2012/01/16/categorizr-a-modern-device-detection-script/}
  *
  * @param array $desktops An array of views to be treated as desktops
  * @param string $override Override all following get_device_type calls with single device

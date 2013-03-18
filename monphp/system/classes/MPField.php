@@ -279,8 +279,8 @@ class MPField
         $query = is_object($field) && get_class($field) === 'MongoId'
             ? array('_id' => $field)
             : $field;
-        $mpfield = MPDB::selectCollection('mpfield_field');
-        $mpfield->remove($query, array('safe' => TRUE));
+        $mpfield = MPDB::selectCollection('mpfield.field');
+        $mpfield->remove( $query );
     }
 
     //}}}
@@ -296,7 +296,7 @@ class MPField
         $query = is_object($field) && get_class($field) === 'MongoId'
             ? array('_id' => $field)
             : $field;
-        $mpfield = MPDB::selectCollection('mpfield_field');
+        $mpfield = MPDB::selectCollection('mpfield.field');
         $field = $mpfield->findOne($query, $fields);
         return $field;
     }
@@ -386,8 +386,8 @@ class MPField
         {
             $field['_id'] = $data['_id'];
         }
-        $mpfield = MPDB::selectCollection('mpfield_field');
-        $mpfield->save($field, array('safe' => TRUE));
+        $mpfield = MPDB::selectCollection('mpfield.field');
+        $mpfield->save( $field )
         return $field;
     }
 

@@ -15,7 +15,7 @@ class MPDB
         include $db_file === ''
             ? DIR_SYS.'/config.database.php'
             : $db_file;
-        $this->conn = new Mongo($_db_conn[$set]['server'], $_db_conn[$set]['options']);
+        $this->conn = new MongoClient($_db_conn[$set]['server'], $_db_conn[$set]['options']);
         $this->db = $this->conn->selectDB($_db_conn[$set]['options']['db']);
     }
     // }}}
@@ -50,6 +50,10 @@ class MPDB
     // {{{ public static function is_success($response)
     public static function is_success($response)
     {
+        if (is_bool($response))
+        {
+            return $response;
+        }
         if (ake('err', $response) && !is_null($response['err']))
         {
             return false;

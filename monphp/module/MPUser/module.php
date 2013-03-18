@@ -38,9 +38,9 @@ class MPUser
     const GROUP_ADMIN = 'admin';
     const GROUP_ANONYMOUS = 'anonymous';
 
-    const MODULE_AUTHOR = 'Glenn';
+    const MODULE_AUTHOR = 'Jason Wong';
     const MODULE_DESCRIPTION = 'User, group, and permission management';
-    const MODULE_WEBSITE = 'http://www.glennyonemitsu.com/';
+    const MODULE_WEBSITE = 'http://www.jasontwong.com/';
 
     //}}}
 
